@@ -24,16 +24,23 @@ LINKS = [
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
-READING = [  # (title, author), shown in this order on the home page
-    ("The Beginning of Infinity", "David Deutsch"),
-    ("The Fabric of Reality", "David Deutsch"),
-    ("Behave", "Robert M. Sapolsky"),
-    ("Thinking, Fast and Slow", "Daniel Kahneman"),
-    ("Knowledge and Decisions", "Thomas Sowell"),
-    ("Basic Economics", "Thomas Sowell"),
-    ("The Sun Also Rises", "Ernest Hemingway"),
-    ("For Whom the Bell Tolls", "Ernest Hemingway"),
-]
+READING = {  # section -> [(title, author)], shown in this order on the home page
+    "nonfiction": [
+        ("The Beginning of Infinity", "David Deutsch"),
+        ("The Fabric of Reality", "David Deutsch"),
+        ("Behave", "Robert M. Sapolsky"),
+        ("Thinking, Fast and Slow", "Daniel Kahneman"),
+        ("Knowledge and Decisions", "Thomas Sowell"),
+        ("Basic Economics", "Thomas Sowell"),
+        ("Read Write Own", "Chris Dixon"),
+    ],
+    "fiction": [
+        ("The Sun Also Rises", "Ernest Hemingway"),
+        ("For Whom the Bell Tolls", "Ernest Hemingway"),
+        ("Brave New World", "Aldous Huxley"),
+        ("Based on a True Story", "Norm Macdonald"),
+    ],
+}
 # -----------------------------------------------------------------------------
 
 ROOT = Path(__file__).parent
@@ -150,7 +157,10 @@ h2.s::before{content:"// ";color:var(--brass)}
 ul.posts{list-style:none;padding:0;margin:0 0 40px}
 ul.posts li{display:flex;gap:20px;margin:0 0 6px}
 ul.posts span{color:var(--muted);flex:none}
-ul.books{list-style:none;padding:0;margin:0 0 40px}
+.shelves{margin:0 0 40px}
+h3.k{font-size:12px;font-weight:400;color:var(--muted);margin:14px 0 4px;letter-spacing:.04em}
+h3.k:first-child{margin-top:0}
+ul.books{list-style:none;padding:0;margin:0}
 ul.books li{margin:0 0 6px}
 ul.books span{color:var(--muted)}
 .l a{display:inline-block;margin-right:14px;padding:6px 2px;border:0;text-decoration:underline;text-decoration-color:var(--moss);text-underline-offset:5px;text-decoration-thickness:1px}
@@ -257,12 +267,15 @@ def build():
         (d / "index.html").write_text(page(f'{p["title"]} · {SITE_TITLE}', body, p.get("subtitle") or "",
                                            p.get("cover_image") or "", f"p/{p['slug']}/"))
 
-    books = "".join(f'<li>{html.escape(t)} <span>· {html.escape(a)}</span></li>'
-                    for t, a in READING)
+    books = "".join(
+        f'<h3 class="k">{kind}</h3><ul class="books">'
+        + "".join(f'<li>{html.escape(t)} <span>· {html.escape(a)}</span></li>' for t, a in shelf)
+        + "</ul>"
+        for kind, shelf in READING.items())
     links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
-            + f'<h2 class="s">reading</h2><ul class="books">{books}</ul>'
+            + f'<h2 class="s">reading</h2><div class="shelves">{books}</div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
     (OUT / "index.html").write_text(page(SITE_TITLE, home))
 
