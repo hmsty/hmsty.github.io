@@ -113,11 +113,11 @@ def fmt_date(iso):
 FONTS = ("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700"
          "&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap")
 
-# Palette: ink #2B241C, paper #EDE6D6, moss #5C6B47, moss-ink #3A4530,
+# Palette: background #262422 (warm graphite), ink #2B241C, paper #EDE6D6, moss #5C6B47, moss-ink #3A4530,
 # rust #9C4A2E, brass #96721F. Moss/rust/brass are too dark for text on ink,
 # so they're only used for rules, underlines and highlights.
 CSS = """
-:root{--ink:#2B241C;--ink-2:#352d24;--paper:#EDE6D6;--body:#e2dacb;--muted:#a9a295;
+:root{--ink:#262422;--ink-2:#312e2b;--paper:#EDE6D6;--body:#e2dacb;--muted:#a9a295;
 --moss:#5C6B47;--rust:#9C4A2E;--brass:#96721F;--brass-lt:#b9a068;
 --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--serif:"Source Serif 4",Georgia,serif}
 *{box-sizing:border-box}
@@ -194,7 +194,7 @@ def page(title, body, desc="", image="", path=""):
 <meta property="og:title" content="{t}"><meta property="og:description" content="{d}">
 <meta property="og:url" content="{SITE_URL}/{path}"><meta property="og:image" content="{og_img}">
 <meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
-<meta name="theme-color" content="#2B241C">
+<meta name="theme-color" content="#262422">
 <link rel="icon" href="/pfp.jpg">
 <link rel="alternate" type="application/rss+xml" title="{html.escape(SITE_TITLE)}" href="{SUBSTACK}/feed">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
