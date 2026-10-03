@@ -27,7 +27,6 @@ SITE_URL = "https://hmsty.github.io"
 READING = {  # section -> [(title, author)], shown in this order on the home page
     "nonfiction": [
         ("The Beginning of Infinity", "David Deutsch"),
-        ("The Fabric of Reality", "David Deutsch"),
         ("Behave", "Robert M. Sapolsky"),
         ("Thinking, Fast and Slow", "Daniel Kahneman"),
         ("Knowledge and Decisions", "Thomas Sowell"),
