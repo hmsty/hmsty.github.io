@@ -20,7 +20,7 @@ SITE_TITLE = "Will Jensen"
 SITE_TAGLINE = "crypto, stablecoins, money as technology."
 LINKS = [
     ("substack", SUBSTACK),
-    ("x", "https://x.com/WJensenWasTaken"),
+    ("x", "https://x.com/willjen45816414"),
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
