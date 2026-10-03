@@ -52,6 +52,29 @@ def fetch():
         offset += len(batch)
 
 
+def fetch_rss():
+    """Fallback when the API blocks us: the RSS feed has the newest ~20 posts."""
+    import xml.etree.ElementTree as ET
+    from email.utils import parsedate_to_datetime
+    req = urllib.request.Request(f"{SUBSTACK}/feed", headers=UA)
+    with urllib.request.urlopen(req, timeout=30) as r:
+        root = ET.fromstring(r.read())
+    ns = {"content": "http://purl.org/rss/1.0/modules/content/"}
+    CONTENT.mkdir(exist_ok=True)
+    for item in root.iter("item"):
+        link = item.findtext("link")
+        slug = link.rstrip("/").rsplit("/", 1)[-1]
+        body = item.findtext("content:encoded", namespaces=ns) or ""
+        enc = item.find("enclosure")
+        words = len(re.sub(r"<[^>]+>", " ", body).split())
+        date = parsedate_to_datetime(item.findtext("pubDate")).isoformat()
+        (CONTENT / f"{slug}.json").write_text(json.dumps({
+            "slug": slug, "title": item.findtext("title"),
+            "subtitle": item.findtext("description"), "post_date": date,
+            "body_html": body, "cover_image": enc.get("url") if enc is not None else None,
+            "canonical_url": link, "wordcount": words}, indent=1))
+
+
 def clean_body(body):
     # Drop Substack's image toolbar buttons and icons.
     body = re.sub(r"<button\b.*?</button>", "", body, flags=re.S)
@@ -187,6 +210,10 @@ if __name__ == "__main__":
     if "--offline" not in sys.argv:
         try:
             fetch()
-        except Exception as e:  # Substack down or blocking: use the cache
-            print(f"Fetch failed ({e}); building from cache.")
+        except Exception as e:
+            print(f"API fetch failed ({e}); trying RSS.")
+            try:
+                fetch_rss()
+            except Exception as e:  # Substack down or blocking: use the cache
+                print(f"RSS fetch failed ({e}); building from cache.")
     build()
