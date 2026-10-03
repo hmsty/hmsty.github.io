@@ -88,6 +88,15 @@ def clean_body(body):
     # Subscribe widgets and share buttons belong to Substack.
     body = re.sub(r'<p class="button-wrapper".*?</p>', "", body, flags=re.S)
     body = re.sub(r'<div class="subscription-widget-wrap.*?</form></div></div>', "", body, flags=re.S)
+    # A short paragraph that's entirely bold is a section heading.
+    body = re.sub(r"<p><strong>([^<]{1,80})</strong></p>", r"<h2>\1</h2>", body)
+    # The post title is the page's h1; make each post's top heading level h2
+    # so sections look the same no matter which level was used on Substack.
+    levels = [int(n) for n in re.findall(r"<h([1-6])\b", body)]
+    if levels:
+        shift = 2 - min(levels)
+        body = re.sub(r"<(/?)h([1-6])\b",
+                      lambda m: f"<{m.group(1)}h{min(6, int(m.group(2)) + shift)}", body)
     # Make bare URLs in footnotes clickable.
     def linkify(m):
         url = m.group(1)
@@ -117,6 +126,9 @@ body{margin:0;background:var(--ink);color:var(--paper);font:14px/1.75 var(--mono
 .w{max-width:660px;margin:0 auto;padding:56px 20px 40px}
 a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--moss);transition:color .15s,border-color .15s}
 a:hover{color:var(--brass-lt);border-color:var(--brass)}
+a:focus-visible{outline:2px solid var(--brass-lt);outline-offset:3px;border-radius:2px}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 ::selection{background:var(--rust);color:var(--paper)}
 .hd{display:flex;align-items:center;gap:14px;margin:0 0 44px}
 .hd img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none}
@@ -126,9 +138,11 @@ a:hover{color:var(--brass-lt);border-color:var(--brass)}
 h2.s{font-size:14px;font-weight:400;color:var(--muted);margin:0 0 8px}
 h2.s::before{content:"// ";color:var(--brass)}
 ul.posts{list-style:none;padding:0;margin:0 0 40px}
-ul.posts li{display:flex;gap:20px;margin:0 0 2px}
+ul.posts li{display:flex;gap:20px;margin:0 0 6px}
 ul.posts span{color:var(--muted);flex:none}
-.l a{margin-right:20px}
+.l a{display:inline-block;margin-right:14px;padding:6px 2px;border:0;text-decoration:underline;text-decoration-color:var(--moss);text-underline-offset:5px;text-decoration-thickness:1px}
+.l a:hover{text-decoration-color:var(--brass)}
+.l{margin:-6px 0 0 -2px}
 footer{margin-top:72px;color:var(--muted);font-size:12px}
 /* essays */
 article{margin-top:8px}
@@ -138,11 +152,12 @@ article .meta{color:var(--muted);font-size:13px;margin:0 0 40px}
 article .meta::before{content:"// ";color:var(--brass)}
 .body{font:19px/1.75 var(--serif);color:var(--body)}
 .body p{margin:0 0 1.25em}
-.body h1,.body h2,.body h3{font-family:var(--serif);color:var(--paper);line-height:1.25;margin:1.9em 0 .6em}
-.body h1{font-size:27px}.body h2{font-size:24px}.body h3{font-size:20px}
-.body a{color:inherit}
+.body h2,.body h3,.body h4{font-family:var(--serif);color:var(--paper);line-height:1.25;margin:1.9em 0 .6em}
+.body h2{font-size:25px}.body h3{font-size:21px}.body h4{font-size:19px}
+.body a{color:var(--paper);border-bottom:1px solid var(--brass)}
+.body a:hover{color:var(--brass-lt)}
 .body strong{color:var(--paper)}
-.body img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:3px}
+.body img{max-width:100%;height:auto;display:block;margin:0 auto;border-radius:3px;filter:brightness(.92)}
 .body figure{margin:32px 0}
 .body figcaption{font:13px/1.5 var(--mono);color:var(--muted);text-align:center;margin-top:10px}
 .body blockquote{margin:28px 0;padding-left:20px;border-left:2px solid var(--brass);color:var(--muted)}
@@ -152,12 +167,15 @@ article .meta::before{content:"// ";color:var(--brass)}
 .body table{display:block;overflow-x:auto}
 .body ul,.body ol{padding-left:1.3em}
 .body li{margin:.3em 0}
-a.footnote-anchor{font:12px var(--mono);vertical-align:super;line-height:0;border:0;color:var(--brass-lt);padding:0 1px}
+a.footnote-anchor{font:12px var(--mono);vertical-align:super;line-height:0;border:0;color:var(--brass-lt);padding:10px 4px;margin:-10px -2px}
 .footnote{display:flex;gap:12px;font:13px/1.6 var(--mono);color:var(--muted);margin:6px 0;overflow-wrap:anywhere}
 :not(.footnote)+.footnote{border-top:1px solid var(--ink-2);padding-top:28px;margin-top:48px}
 .footnote p{margin:0}
 .footnote a{color:var(--muted)}
-a.footnote-number{border:0;color:var(--brass-lt);min-width:1.6em}
+a.footnote-number{border:0;color:var(--brass-lt);min-width:2em;padding:0 4px;margin:0 -4px}
+.footnote,a.footnote-anchor{scroll-margin-top:30vh}
+.footnote:target{background:var(--ink-2);border-radius:4px;outline:6px solid var(--ink-2)}
+a.footnote-anchor:target{background:var(--rust);color:var(--paper);border-radius:3px}
 .end{margin-top:48px;padding-top:20px;border-top:1px solid var(--ink-2);color:var(--muted);font-size:13px}
 @media (max-width:520px){ul.posts li{flex-direction:column;gap:0;margin-bottom:12px}
 article h1.title{font-size:28px}.body{font-size:18px}}
@@ -190,7 +208,7 @@ def page(title, body, desc="", image="", path=""):
 
 def header(home):
     tag = "h1" if home else "div"
-    return (f'<header class="hd"><a href="/"><img src="/pfp.jpg" alt=""></a>'
+    return (f'<header class="hd"><a href="/"><img src="/pfp.jpg" alt="" width="44" height="44"></a>'
             f'<div><{tag} class="name"><a href="/">{SITE_TITLE.lower()}</a></{tag}>'
             f'<p class="t">{html.escape(SITE_TAGLINE)}</p></div></header>')
 
@@ -223,10 +241,10 @@ def build():
             f'<a href="/">← all writing</a></div></article>')
         d = OUT / "p" / p["slug"]
         d.mkdir(parents=True)
-        (d / "index.html").write_text(page(p["title"], body, p.get("subtitle") or "",
+        (d / "index.html").write_text(page(f'{p["title"]} · {SITE_TITLE}', body, p.get("subtitle") or "",
                                            p.get("cover_image") or "", f"p/{p['slug']}/"))
 
-    links = "".join(f'<a href="{u}">{n}</a>' for n, u in LINKS)
+    links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
