@@ -17,7 +17,7 @@ from pathlib import Path
 # ---- settings ---------------------------------------------------------------
 SUBSTACK = "https://willjensen.substack.com"
 SITE_TITLE = "Will Jensen"
-SITE_TAGLINE = "mostly markets stuff."
+SITE_TAGLINE = "mostly markets stuff"
 LINKS = [
     ("substack", SUBSTACK),
     ("x", "https://x.com/willjen45816414"),
