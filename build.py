@@ -26,6 +26,9 @@ LINKS = [
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
+PROJECTS = [  # (title, path under projects/, one-line description), newest first
+    ("Chess Wrapped", "chess-wrapped", "a data report on 3,500 of my chess games"),
+]
 GOATCOUNTER = "hmsty"  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 # -----------------------------------------------------------------------------
 
@@ -143,6 +146,7 @@ h2.s::before{content:"// ";color:var(--brass)}
 ul.posts{list-style:none;padding:0;margin:0 0 40px}
 ul.posts li{display:flex;gap:20px;margin:0 0 6px}
 ul.posts span{color:var(--muted);flex:none}
+ul.proj li{gap:14px}ul.proj span{flex:1}
 .shelves{margin:0 0 40px}
 h2.s .n{color:var(--muted);opacity:.7;margin-left:8px}
 .jump{margin:0 0 8px;line-height:2.2}
@@ -241,6 +245,7 @@ def build():
     (OUT / ".nojekyll").write_text("")
     shutil.copy(ROOT / "pfp.jpg", OUT / "pfp.jpg")
     shutil.copy(ROOT / "og.png", OUT / "og.png")
+    shutil.copytree(ROOT / "projects", OUT / "projects")
 
     items = []
     for p in posts:
@@ -275,9 +280,13 @@ def build():
         f'<section id="{slug(sec)}"><h3 class="sec">{sec}</h3>'
         + shelf(items) + "</section>"
         for sec, items in READING.items())
+    projects = "".join(
+        f'<li><a href="/projects/{p}/">{html.escape(t)}</a><span>{html.escape(d)}</span></li>'
+        for t, p, d in PROJECTS)
     links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
+            + f'<h2 class="s">projects</h2><ul class="posts proj">{projects}</ul>'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
     (OUT / "index.html").write_text(page(SITE_TITLE, home))
