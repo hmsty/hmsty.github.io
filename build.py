@@ -269,7 +269,6 @@ def build():
             f'<li>{html.escape(t)}' + (f' <span>· {html.escape(a)}</span>' if a else "") + "</li>"
             for t, a in items) + "</ul>"
 
-    total = sum(len(i) for sec in READING.values() for i in sec.values())
     jump = " ".join(f'<a href="#{slug(sec)}">{sec}</a>' for sec in READING)
     books = f'<nav class="jump">{jump}</nav>' + "".join(
         f'<section id="{slug(sec)}"><h3 class="sec">{sec}</h3>'
@@ -285,9 +284,9 @@ def build():
     (OUT / "index.html").write_text(page(SITE_TITLE, home))
 
     (OUT / "reading").mkdir()
-    (OUT / "reading" / "index.html").write_text(page(f"Reading · {SITE_TITLE}",
-        header(False) + f'<h2 class="s">reading <span class="n">{total} books</span></h2><div class="shelves">{books}</div>'
-        + '<p class="t"><a href="/">← home</a></p>', "Books I've read.", path="reading/"))
+    (OUT / "reading" / "index.html").write_text(page(f"Suggested reading · {SITE_TITLE}",
+        header(False) + f'<h2 class="s">suggested reading</h2><div class="shelves">{books}</div>'
+        + '<p class="t"><a href="/">← home</a></p>', "Books I'd suggest.", path="reading/"))
 
     (OUT / "404.html").write_text(page("Not found", header(False)
         + '<p class="t">nothing here. <a href="/">go home</a>.</p>'))
