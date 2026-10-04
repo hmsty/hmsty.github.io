@@ -26,7 +26,7 @@ LINKS = [
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
-GOATCOUNTER = ""  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
+GOATCOUNTER = "hmsty"  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 # -----------------------------------------------------------------------------
 
 ROOT = Path(__file__).parent
