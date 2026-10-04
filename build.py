@@ -253,6 +253,8 @@ def build():
     (OUT / ".nojekyll").write_text("")
     shutil.copy(ROOT / "pfp.jpg", OUT / "pfp.jpg")
     shutil.copy(ROOT / "og.png", OUT / "og.png")
+    for f in ROOT.glob("google*.html"):  # Google Search Console verification
+        shutil.copy(f, OUT / f.name)
     shutil.copytree(ROOT / "projects", OUT / "projects")
 
     items = []
