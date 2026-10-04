@@ -21,8 +21,8 @@ SUBSTACK = "https://willjensen.substack.com"
 SITE_TITLE = "Will Jensen"
 SITE_TAGLINE = "mostly markets stuff"
 LINKS = [
-    ("substack", SUBSTACK),
     ("x", "https://x.com/willjen45816414"),
+    ("substack", SUBSTACK),
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
