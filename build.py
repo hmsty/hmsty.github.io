@@ -273,10 +273,8 @@ def build():
     jump = " ".join(f'<a href="#{slug(sec)}">{sec}</a>' for sec in READING)
     books = f'<nav class="jump">{jump}</nav>' + "".join(
         f'<section id="{slug(sec)}"><h3 class="sec">{sec}</h3>'
-        + "".join((f'<h4 class="k">{sub}</h4>' if sub else "") + shelf(items)
-                  for sub, items in subs.items())
-        + "</section>"
-        for sec, subs in READING.items())
+        + shelf(items) + "</section>"
+        for sec, items in READING.items())
     links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
