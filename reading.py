@@ -43,7 +43,6 @@ READING = {
         "behavioral economics": [
             ("Thinking, Fast and Slow", "Daniel Kahneman"),
             ("Nudge", "Richard Thaler & Cass Sunstein"),
-            ("Misbelief", "Dan Ariely"),
             ("Behavioral Economics", "Edward Cartwright"),
             ("Freakonomics", "Steven Levitt & Stephen Dubner"),
             ("SuperFreakonomics", "Steven Levitt & Stephen Dubner"),
