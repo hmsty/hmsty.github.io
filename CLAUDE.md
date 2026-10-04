@@ -5,14 +5,17 @@ writing, projects, a suggested-reading page, and links elsewhere.
 
 ## Before every change
 
-Run `git pull` first. The site is edited from more than one computer.
+Run `git pull` first. The site is edited from a Mac and a Windows PC, and GitHub is how
+they stay in sync. Finish every change by committing and pushing, even small ones, so
+the other computer picks it up. Don't leave work uncommitted or unpushed.
 
 Commit as `hmsty <277348908+hmsty@users.noreply.github.com>`. Set it for this repo with
 `git config user.name hmsty` and `git config user.email 277348908+hmsty@users.noreply.github.com`.
 The history is public, so a real email or computer name in a commit is published.
 The history was rewritten on 2026-10-03 to remove personal info. If a pull reports
-diverged histories, don't merge or rebase: run `git fetch` and `git reset --hard origin/main`
-so the old commits don't come back.
+diverged histories, don't merge or rebase. First check `git log origin/main..main` and
+`git status` for unpushed or uncommitted work, and tell Will if there is any. If there's none,
+run `git fetch` and `git reset --hard origin/main` so the old commits don't come back.
 
 ## How it works
 
@@ -30,8 +33,11 @@ Commands:
 ```bash
 python3 build.py              # fetch new Substack posts, then build
 python3 build.py --offline    # build from what's already in content/
-python3 -m http.server 8765 --directory site   # preview at localhost:8765
+python3 -m http.server 8766 --directory site   # preview at localhost:8766
 ```
+
+On the Windows PC, use `python` instead of `python3` (`python3` there is a Microsoft Store
+shortcut). Port 8765 is taken by the poker app on the PC, so the preview uses 8766.
 
 To publish, commit and push to `main`. The site is live a minute or two after the
 Action finishes. Check the live page after deploying.
