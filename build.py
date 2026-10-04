@@ -27,9 +27,9 @@ LINKS = [
 ]
 SITE_URL = "https://hmsty.github.io"
 PROJECTS = [  # (title, path under projects/, one-line description), newest first
-    ("Two Ledgers", "two-ledgers", "one tokenized share, from order to finality, in 3D"),
+    ("One Tokenized Share, From Order to Finality", "two-ledgers", "Wall Street and Ethereum settlement, side by side, in 3D"),
     ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
-    ("Chess Wrapped", "chess-wrapped", "a data report on 3,500 of my chess games"),
+    ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
 ]
 GOATCOUNTER = "hmsty"  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 # -----------------------------------------------------------------------------
