@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/pfp.jpg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gto practice tool</title>
+<meta name="description" content="A free poker trainer: play 6-max hands against a solved opponent and get every decision graded.">
+<meta property="og:title" content="GTO Practice Tool">
+<meta property="og:description" content="A free poker trainer: play 6-max hands against a solved opponent and get every decision graded.">
+<meta property="og:image" content="https://hmsty.github.io/projects/gto-practice-tool/review.webp">
+<meta name="theme-color" content="#262422">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#262422;--ink-2:#312e2b;--paper:#EDE6D6;--body:#e2dacb;--muted:#a9a295;
+--moss:#5C6B47;--rust:#9C4A2E;--brass:#96721F;--brass-lt:#b9a068;
+--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--serif:"Source Serif 4",Georgia,serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:dark}
+body{margin:0;background:var(--ink);color:var(--paper);font:14px/1.75 var(--mono);-webkit-font-smoothing:antialiased}
+::selection{background:var(--rust);color:var(--paper)}
+a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--moss);transition:color .15s,border-color .15s}
+a:hover{color:var(--brass-lt);border-color:var(--brass)}
+a:focus-visible{outline:2px solid var(--brass-lt);outline-offset:3px;border-radius:2px}
+.w{max-width:660px;margin:0 auto;padding:72px 20px 56px}
+h1{font-size:20px;font-weight:700;margin:0 0 4px}
+.t{color:var(--muted);margin:0}
+h2{font-size:14px;font-weight:400;color:var(--muted);margin:44px 0 10px}
+h2::before{content:"// ";color:var(--brass)}
+.p{font:17px/1.7 var(--serif);color:var(--body)}
+.p p{margin:0 0 1em}
+.p strong{color:var(--paper);font-weight:600}
+figure{margin:36px auto 0;max-width:1000px;padding:0 20px}
+figure img{display:block;width:100%;height:auto;border-radius:6px;border:1px solid var(--ink-2)}
+figcaption{max-width:620px;margin:10px auto 0;font-size:12px;color:var(--muted);text-align:center}
+ul.f{list-style:none;padding:0;margin:0;font:16px/1.65 var(--serif);color:var(--body)}
+ul.f li{margin:0 0 10px;padding-left:18px;position:relative}
+ul.f li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:1px;background:var(--brass)}
+ul.f b{color:var(--paper);font-weight:600}
+.dl{margin:8px 0 0;padding:20px 22px;background:var(--ink-2);border-left:2px solid var(--moss);border-radius:2px}
+.dl a.btn{display:inline-block;font-weight:700;padding:2px 0;border-bottom:2px solid var(--moss)}
+.dl a.btn:hover{border-color:var(--brass)}
+.dl .meta{color:var(--muted);font-size:12px;margin:2px 0 14px}
+.dl ol{margin:0;padding-left:20px;font:15px/1.6 var(--serif);color:var(--body)}
+.dl ol li{margin:0 0 6px}
+code{font:13px var(--mono);color:var(--paper);background:rgba(237,230,214,.07);padding:1px 5px;border-radius:3px}
+.foot{margin:48px 0 0;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
+
+<div class="w">
+<h1>GTO Practice Tool</h1>
+<p class="t">a free poker trainer that grades every decision against a solver</p>
+
+<h2>what it is</h2>
+<div class="p">
+<p>You get dealt into a 6-max no-limit hold'em hand and play it out against an opponent that follows a solved strategy, mixing its actions the way the equilibrium says to rather than following rules of thumb. Once the hand ends, every decision you made gets graded on a five-step scale from <strong>Perfect</strong> to <strong>Blunder</strong>, and you can step through the hand street by street to see what the solver would have done and why.</p>
+<p>It runs on your own computer. Nothing gets sent anywhere, and it's free.</p>
+</div>
+</div>
+
+<figure>
+<img src="review.webp" width="1920" height="1080" alt="The practice tool after a hand: a poker table on the left showing the board 2 4 3 Q K, and a review panel on the right grading the river check as Perfect, with the solver's mix for the exact hand (check 62.5%, bet 37.5%) and the EV of each option.">
+<figcaption>Reviewing a river decision: the solver's mix for this exact hand, the EV of each option, and the whole range for comparison.</figcaption>
+</figure>
+
+<div class="w" style="padding-top:8px">
+<h2>what you get</h2>
+<ul class="f">
+<li><b>A real solved opponent.</b> Postflop spots are solved with postflop-solver, an open-source CFR solver, to within 0.3% of the pot of a perfect equilibrium. Every solve records how close it got.</li>
+<li><b>Per-decision grading.</b> Where the solver provides EVs (every river, plus the flop and turn on most boards), grades use how much EV you gave up. Elsewhere they use how often the solver takes your action, and the app tells you which method it used.</li>
+<li><b>A hand walkthrough.</b> Each street shows the solver's full mix for your exact hand, your whole range, a 13×13 range grid, the opponent's range, pot odds, and a plain-English note on the spot.</li>
+<li><b>Leak detection.</b> One odd play isn't a leak, since taking a 3% action now and then is what 3% means. The Leaks tab looks for patterns across many similar spots, using an exact statistical test. I checked it against 18,615 real solver decisions: it raised no false alarms on simulated perfect play, and it flagged a player who folds 35% more often than the solver in 5 out of 5 trials.</li>
+<li><b>A second opinion.</b> TexasSolver, a second open-source solver, is included as a backup and to cross-check results.</li>
+<li><b>Keyboard play.</b> Digits act, <code>N</code> deals, arrows step through the review.</li>
+</ul>
+
+<h2>honest limits</h2>
+<ul class="f">
+<li><b>Single-raised pots only</b>, 100bb deep, heads-up after the flop. No 3-bet pots yet.</li>
+<li><b>The bet sizes are simplified</b> (flop 33% / 75% / all-in; turn and river 75% / all-in). An equilibrium depends on the sizes allowed, so the frequencies won't match commercial solvers one-to-one. The reasoning carries over; the exact percentages don't.</li>
+<li><b>Preflop ranges come from published charts</b>, not from a solve of their own. They're accurate to within a few percentage points.</li>
+<li><b>New boards are slow.</b> It ships with 8 boards already solved, so you can start playing right away. Each new board can take ten minutes or more to solve and uses about 4 GB of RAM. It solves them in the background while you play and saves them, so the pool grows. Each saved board takes roughly 100–300 MB of disk.</li>
+<li><b>Windows only.</b></li>
+</ul>
+
+<h2>download</h2>
+<div class="dl">
+<a class="btn" href="https://github.com/hmsty/hmsty.github.io/releases/download/gto-practice-tool-v1/GTO-Practice-Tool.zip">GTO-Practice-Tool.zip</a>
+<div class="meta">246 MB · Windows 10/11 · needs about 8 GB of RAM</div>
+<ol>
+<li>Install <a href="https://www.python.org/downloads/" target="_blank" rel="noopener">Python</a> (latest version, default options).</li>
+<li>Unzip the folder anywhere, such as your Desktop. Don't run it from inside the zip.</li>
+<li>Double-click <code>Start.bat</code>. It opens in your browser. Keep the black window open while you play.</li>
+</ol>
+</div>
+<p class="t" style="margin-top:12px;font-size:12px">Windows may say it "protected your PC" because the app isn't from a known publisher. Click More info, then Run anyway.</p>
+
+<p class="foot">Built on two open-source solvers, postflop-solver and TexasSolver, which are included under their own licenses. Not affiliated with any commercial solver.</p>
+</div>
+</body>
+</html>
