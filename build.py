@@ -61,7 +61,7 @@ def fetch():
             keep = {k: post.get(k) for k in (
                 "slug", "title", "subtitle", "post_date", "body_html",
                 "cover_image", "canonical_url", "wordcount")}
-            path.write_text(json.dumps(keep, indent=1))
+            path.write_text(json.dumps(keep, indent=1), encoding="utf-8")
         offset += len(batch)
 
 
@@ -85,7 +85,7 @@ def fetch_rss():
             "slug": slug, "title": item.findtext("title"),
             "subtitle": item.findtext("description"), "post_date": date,
             "body_html": body, "cover_image": enc.get("url") if enc is not None else None,
-            "canonical_url": link, "wordcount": words}, indent=1))
+            "canonical_url": link, "wordcount": words}, indent=1), encoding="utf-8")
 
 
 def clean_body(body):
@@ -115,7 +115,7 @@ def clean_body(body):
 
 def fmt_date(iso):
     d = datetime.fromisoformat(iso.replace("Z", "+00:00"))
-    return d.strftime("%B %-d, %Y")
+    return f"{d:%B} {d.day}, {d:%Y}"  # %-d is Unix-only; this works on Windows too
 
 
 FONTS = ("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700"
@@ -240,13 +240,13 @@ def header(home):
 
 
 def build():
-    posts = [json.loads(p.read_text()) for p in CONTENT.glob("*.json")]
+    posts = [json.loads(p.read_text(encoding="utf-8")) for p in CONTENT.glob("*.json")]
     posts.sort(key=lambda p: p["post_date"], reverse=True)
 
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir()
-    (OUT / "style.css").write_text(CSS)
+    (OUT / "style.css").write_text(CSS, encoding="utf-8")
     (OUT / ".nojekyll").write_text("")
     shutil.copy(ROOT / "pfp.jpg", OUT / "pfp.jpg")
     shutil.copy(ROOT / "og.png", OUT / "og.png")
@@ -270,7 +270,7 @@ def build():
         d = OUT / "p" / p["slug"]
         d.mkdir(parents=True)
         (d / "index.html").write_text(page(f'{p["title"]} · {SITE_TITLE}', body, p.get("subtitle") or "",
-                                           p.get("cover_image") or "", f"p/{p['slug']}/"))
+                                           p.get("cover_image") or "", f"p/{p['slug']}/"), encoding="utf-8")
 
     def slug(name):
         return re.sub(r"[^a-z0-9]+", "-", name).strip("-")
@@ -294,15 +294,15 @@ def build():
             + f'<h2 class="s">projects</h2><ul class="posts proj">{projects}</ul>'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
-    (OUT / "index.html").write_text(page(SITE_TITLE, home))
+    (OUT / "index.html").write_text(page(SITE_TITLE, home), encoding="utf-8")
 
     (OUT / "reading").mkdir()
     (OUT / "reading" / "index.html").write_text(page(f"Suggested reading · {SITE_TITLE}",
         header(False) + f'<h2 class="s">suggested reading</h2><div class="shelves">{books}</div>'
-        + '<p class="t"><a href="/">← home</a></p>', "Books I'd suggest.", path="reading/"))
+        + '<p class="t"><a href="/">← home</a></p>', "Books I'd suggest.", path="reading/"), encoding="utf-8")
 
     (OUT / "404.html").write_text(page("Not found", header(False)
-        + '<p class="t">nothing here. <a href="/">go home</a>.</p>'))
+        + '<p class="t">nothing here. <a href="/">go home</a>.</p>'), encoding="utf-8")
     print(f"Built {len(posts)} posts into {OUT}")
 
 
