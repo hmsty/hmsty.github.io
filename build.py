@@ -156,6 +156,7 @@ ul.books span{color:var(--muted)}
 .l a{display:inline-block;margin-right:14px;padding:6px 2px;border:0;text-decoration:underline;text-decoration-color:var(--moss);text-underline-offset:5px;text-decoration-thickness:1px}
 .l a:hover{text-decoration-color:var(--brass)}
 .l{margin:-6px 0 0 -2px}
+.gap{height:28px}
 footer{margin-top:72px;color:var(--muted);font-size:12px}
 /* essays */
 article{margin-top:8px}
@@ -277,9 +278,9 @@ def build():
         + "</section>"
         for sec, subs in READING.items())
     links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
-    links += '<a href="/reading/">reading</a>'
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
+            + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
     (OUT / "index.html").write_text(page(SITE_TITLE, home))
 

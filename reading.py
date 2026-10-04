@@ -130,7 +130,6 @@ READING = {
             ("Fahrenheit 451", "Ray Bradbury"),
             ("The Moon Is a Harsh Mistress", "Robert A. Heinlein"),
             ("Solaris", "Stanisław Lem"),
-            ("Do Androids Dream of Electric Sheep?", "Philip K. Dick"),
         ],
         "everything else": [
             ("Catch-22", "Joseph Heller"),
@@ -140,7 +139,6 @@ READING = {
             ("The Grapes of Wrath", "John Steinbeck"),
             ("A Prayer for Owen Meany", "John Irving"),
             ("The World According to Garp", "John Irving"),
-            ("The Dark Eidolon", "Clark Ashton Smith"),
         ],
     },
 }
