@@ -24,6 +24,7 @@ LINKS = [
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
+GOATCOUNTER = ""  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 READING = {  # section -> [(title, author)], shown in this order on the home page
     "nonfiction": [
         ("The Beginning of Infinity", "David Deutsch"),
@@ -207,7 +208,9 @@ article h1.title{font-size:28px}.body{font-size:18px}}
 def page(title, body, desc="", image="", path=""):
     t = html.escape(title)
     d = html.escape(desc or SITE_TAGLINE)
-    og_img = html.escape(image) if image else f"{SITE_URL}/pfp.jpg"
+    og_img = html.escape(image) if image else f"{SITE_URL}/og.png"
+    stats = (f'<script data-goatcounter="https://{GOATCOUNTER}.goatcounter.com/count" '
+             f'async src="https://gc.zgo.at/count.js"></script>' if GOATCOUNTER else "")
     return f"""<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -215,7 +218,8 @@ def page(title, body, desc="", image="", path=""):
 <meta name="description" content="{d}">
 <meta property="og:title" content="{t}"><meta property="og:description" content="{d}">
 <meta property="og:url" content="{SITE_URL}/{path}"><meta property="og:image" content="{og_img}">
-<meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
+<meta property="og:site_name" content="{html.escape(SITE_TITLE)}"><meta property="og:type" content="{'article' if image else 'website'}">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#262422">
 <link rel="icon" href="/pfp.jpg">
 <link rel="alternate" type="application/rss+xml" title="{html.escape(SITE_TITLE)}" href="{SUBSTACK}/feed">
@@ -224,7 +228,7 @@ def page(title, body, desc="", image="", path=""):
 <link rel="stylesheet" href="/style.css">
 </head><body><div class="w">
 {body}
-</div></body></html>
+</div>{stats}</body></html>
 """
 
 
@@ -245,6 +249,7 @@ def build():
     (OUT / "style.css").write_text(CSS)
     (OUT / ".nojekyll").write_text("")
     shutil.copy(ROOT / "pfp.jpg", OUT / "pfp.jpg")
+    shutil.copy(ROOT / "og.png", OUT / "og.png")
 
     items = []
     for p in posts:
