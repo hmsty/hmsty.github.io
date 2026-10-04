@@ -207,7 +207,7 @@ article h1.title{font-size:28px}.body{font-size:18px}}
 """
 
 
-def page(title, body, desc="", image="", path=""):
+def page(title, body, desc="", image="", path="", index=True):
     t = html.escape(title)
     d = html.escape(desc or SITE_TAGLINE)
     og_img = html.escape(image) if image else f"{SITE_URL}/og.png"
@@ -218,6 +218,7 @@ def page(title, body, desc="", image="", path=""):
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{t}</title>
 <meta name="description" content="{d}">
+{f'<link rel="canonical" href="{SITE_URL}/{path}">' if index else '<meta name="robots" content="noindex">'}
 <meta property="og:title" content="{t}"><meta property="og:description" content="{d}">
 <meta property="og:url" content="{SITE_URL}/{path}"><meta property="og:image" content="{og_img}">
 <meta property="og:site_name" content="{html.escape(SITE_TITLE)}"><meta property="og:type" content="{'article' if image else 'website'}">
@@ -304,7 +305,21 @@ def build():
         + '<p class="t"><a href="/">← home</a></p>', "Books I'd suggest.", path="reading/"), encoding="utf-8")
 
     (OUT / "404.html").write_text(page("Not found", header(False)
-        + '<p class="t">nothing here. <a href="/">go home</a>.</p>'), encoding="utf-8")
+        + '<p class="t">nothing here. <a href="/">go home</a>.</p>', index=False), encoding="utf-8")
+
+    # Sitemap and robots.txt so search engines find every page.
+    urls = [("", None), ("reading/", None)]
+    urls += [(f"p/{p['slug']}/", p["post_date"][:10]) for p in posts]
+    urls += [(f"projects/{p}/", None) for _, p, _ in PROJECTS]
+    entries = "".join(
+        f"<url><loc>{SITE_URL}/{u}</loc>" + (f"<lastmod>{d}</lastmod>" if d else "") + "</url>"
+        for u, d in urls)
+    (OUT / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{entries}</urlset>\n',
+        encoding="utf-8")
+    (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {SITE_URL}/sitemap.xml\n",
+                                    encoding="utf-8")
     print(f"Built {len(posts)} posts into {OUT}")
 
 
