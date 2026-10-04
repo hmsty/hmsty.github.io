@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/pfp.jpg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What a blockchain is</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --ink:#23262a; --soft:rgba(35,38,42,.6); --faint:rgba(35,38,42,.28); --line:rgba(35,38,42,.2);
+  --amber:#e0601f; --blue:#2f63ad; --red:#c4331f; --green:#2f8a5e; --graphite:#3a3e44; --bg:#e9e7e2; --halo:rgba(233,231,226,.95);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#e9e7e2; } }
+:root[data-theme="dark"]{ --bg:#e9e7e2; }
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:'Instrument Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+body.framed{background:#d9d6cf}
+#stage{position:fixed;inset:0;overflow:hidden}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;outline:none}
+#labels{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+body.nolabels #labels{display:none}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;max-width:none;font-size:15px;font-weight:500;letter-spacing:-.005em;color:var(--ink);padding-bottom:8px;opacity:0;
+  text-shadow:0 0 2px var(--halo),0 0 8px var(--halo),0 0 14px var(--halo);will-change:transform,opacity}
+.lbl small{display:block;font-weight:400;font-size:12.5px;color:var(--soft);margin-top:1px}
+.lbl.brass{color:#9a7236} .lbl.blue{color:var(--blue)} .lbl.red{color:var(--red)} .lbl.warm{color:var(--amber)} .lbl.green{color:var(--green)} .lbl.graphite{color:var(--graphite)}
+.lbl.stage{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.lbl.num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:400;color:var(--soft);padding:6px 0 0}
+#veil{position:absolute;inset:0;background:var(--bg);pointer-events:none;opacity:0}
+#card{position:absolute;left:0;right:0;top:12%;text-align:center;pointer-events:none;opacity:0}
+#card h2{margin:0;font-size:clamp(26px,4.2vmin,46px);font-weight:500;letter-spacing:-.02em;text-shadow:0 0 12px var(--halo),0 0 24px var(--halo)}
+#card .n{display:block;font-size:clamp(11px,1.5vmin,14px);letter-spacing:.14em;text-transform:uppercase;color:var(--soft);margin-bottom:.5em;text-shadow:0 0 10px var(--halo)}
+#card p{margin:.35em 0 0;font-size:clamp(14px,1.9vmin,19px);color:var(--soft);text-shadow:0 0 10px var(--halo)}
+#close{position:absolute;left:50%;top:14%;transform:translateX(-50%);pointer-events:none;opacity:0;display:grid;gap:10px;font-size:clamp(15px,2.2vmin,22px);font-weight:500;letter-spacing:-.01em}
+#close div{display:flex;align-items:center;gap:12px;text-shadow:0 0 10px var(--halo),0 0 20px var(--halo)}
+#close svg{flex:none}
+#map{position:absolute;left:clamp(12px,2.2vmin,28px);top:clamp(12px,2.2vmin,28px);width:clamp(190px,30vmin,300px);pointer-events:none;opacity:0;transition:opacity .6s}
+@media (max-aspect-ratio:1/1){ #map{width:clamp(120px,36vw,170px);top:auto;bottom:calc(118px + env(safe-area-inset-bottom,0px))} body.clean #map{bottom:clamp(12px,2.2vmin,28px)} #card{top:8%} #close{width:88%;font-size:clamp(14px,3.8vw,18px)} }
+body.nomap #map{display:none}
+#map text{font-family:'Instrument Sans',system-ui,sans-serif}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;
+  padding:12px max(22px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom,0px)) max(22px,env(safe-area-inset-left));font-size:13px}
+.clips{display:flex;flex-wrap:wrap}
+.clips button{margin-right:-1px}
+.clips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.row{display:flex;align-items:center;gap:12px;flex:1;min-width:280px}
+body.clean .bar{display:none}
+button{font:inherit;color:var(--ink);background:rgba(233,231,226,.7);border:1px solid var(--line);border-radius:0;padding:7px 12px;cursor:pointer;min-height:34px}
+button:hover{border-color:var(--soft)}
+button:focus-visible,.track:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.track{position:relative;flex:1;height:28px;cursor:pointer;touch-action:none}
+.track::before{content:"";position:absolute;left:0;right:0;top:13px;height:1px;background:var(--line)}
+.track i{position:absolute;left:0;top:13px;height:1px;background:var(--ink)}
+.track s{position:absolute;top:9px;width:9px;height:9px;margin-left:-4px;background:var(--amber);text-decoration:none}
+.track b{position:absolute;top:10px;width:1px;height:7px;background:var(--faint)}
+@media (max-width:640px){ .clips{flex-wrap:nowrap;width:100%} .clips button{flex:1;padding:6px 0} .clips .cl{display:none} .row{min-width:0;width:100%;gap:8px} .row button{padding:6px 10px;font-size:12px} .bar{gap:8px} #clock,#loop,#frm,#rec{display:none} .track{min-width:80px} }
+#rec[aria-pressed="true"]{background:var(--red);color:#fff;border-color:var(--red)}
+body.recording .bar{display:none}
+#clock{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--soft);min-width:3.2em;text-align:right}
+.err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:16px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/geometries/RoundedBoxGeometry.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/BokehShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/postprocessing/BokehPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/GammaCorrectionShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/shaders/VignetteShader.js"></script>
+</head>
+<body><a href="/" style="position:fixed;top:14px;left:16px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:9999;background:rgba(38,36,34,.6);padding:2px 6px;border-radius:3px">← will jensen</a>
+<div id="stage">
+  <canvas id="gl" tabindex="0" aria-label="An animated explainer that follows one payment through Ethereum in six chapters: copies of one ledger, signatures, a chain of fingerprints, stake and consensus, finality, and programs. Each idea arrives when the story needs it and stays in the scene; each chapter shows the attack it defeats."></canvas>
+  <div id="labels" aria-hidden="true"></div>
+  <svg id="map" viewBox="0 0 240 318" aria-hidden="true"></svg>
+  <div id="card" aria-live="polite"><span class="n"></span><h2></h2><p></p></div>
+  <div id="close" aria-hidden="true"></div>
+  <div id="veil" aria-hidden="true"></div>
+</div>
+<div class="bar">
+  <div class="clips" id="clips" role="group" aria-label="Chapters"></div>
+  <div class="row">
+    <button id="play">Pause</button>
+    <div class="track" id="track" role="slider" tabindex="0" aria-label="Position in film" aria-valuemin="0" aria-valuemax="240" aria-valuenow="0"><i id="fill"></i><s id="knob"></s></div>
+    <span id="clock">0:00</span>
+    <button id="loop" aria-pressed="false">Loop chapter</button>
+    <button id="lbls" aria-pressed="true">Labels</button>
+    <button id="mapb" aria-pressed="true">Map</button>
+    <button id="snd" aria-pressed="false">Sound</button>
+    <button id="frm" aria-pressed="false">16:9</button>
+    <button id="rec" aria-pressed="false" title="Plays the current chapter once in a clean 16:9 frame for screen recording. Esc exits.">Record</button>
+  </div>
+</div>
+<div class="err" id="err">This piece needs WebGL, which this browser has turned off.</div>
+<script>
+(function(){
+'use strict';
+if(!window.THREE){ document.getElementById('err').style.display='flex'; return; }
+THREE.ColorManagement.legacyMode=false;
+const canvas=document.getElementById('gl');
+let renderer; try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }catch(e){ document.getElementById('err').style.display='flex'; return; }
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+
+/* ======================= math ======================= */
+const V=(x,y,z)=>new THREE.Vector3(x,y,z), C=h=>new THREE.Color(h);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v)), seg=(t,a,b)=>clamp((t-a)/(b-a)), lerp=(a,b,u)=>a+(b-a)*u;
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const win=(t,a,b)=>ease(seg(t,a,b));
+const fade=(t,a,b,f=.4)=>Math.min(seg(t,a,a+f),1-seg(t,b-f,b));
+const decay=(t,a,k=2.4)=>t>=a?Math.exp(-(t-a)*k):0;
+const arc=(a,b,u,h,o)=>{ o=o||V(); o.lerpVectors(a,b,u); o.y+=Math.sin(Math.PI*u)*h; return o; };
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+// FNV-1a 32-bit stands in for Keccak-256: every fingerprint on screen is really computed from a block's contents and its parent's fingerprint
+function fnv(str){let h=0x811c9dc5;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return h.toString(16).padStart(8,'0');}
+
+/* ======================= stage ======================= */
+const STAGE=C('#e9e7e2');
+const scene=new THREE.Scene(); scene.background=STAGE.clone(); scene.fog=new THREE.Fog(STAGE.clone(),34,95);
+const camera=new THREE.PerspectiveCamera(30,16/9,.3,260);
+scene.add(new THREE.HemisphereLight(0xfbf8f3,0xc9c3ba,.62));
+const sun=new THREE.DirectionalLight(0xfff4e8,1.0); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-16,right:16,top:16,bottom:-16,near:1,far:100}); sun.shadow.bias=-.0003; sun.shadow.normalBias=.02; sun.shadow.radius=4; scene.add(sun); scene.add(sun.target);
+const fill=new THREE.DirectionalLight(0xdfe8ff,.28); fill.position.set(16,10,-14); scene.add(fill);
+{ const f=new THREE.Mesh(new THREE.PlaneGeometry(900,900),new THREE.MeshStandardMaterial({color:STAGE,roughness:1})); f.rotation.x=-Math.PI/2; f.receiveShadow=true; scene.add(f); }
+
+/* ======================= materials, each tagged with the primitive it belongs to ======================= */
+const MATS=[];
+function mat(tag,o){ const m=new THREE.MeshStandardMaterial(o); m.userData.tag=tag; m.userData.base=m.color.clone(); m.userData.baseE=m.emissive.clone(); m.userData.baseEI=m.emissiveIntensity; m.userData.baseO=m.opacity; MATS.push(m); return m; }
+const M={
+  // context
+  white:mat('ctx',{color:'#f2f0ec',roughness:.62}), stone:mat('ctx',{color:'#cfcbc4',roughness:.8}), stoneD:mat('ctx',{color:'#bdb8b0',roughness:.8}),
+  tile:mat('ctx',{color:'#dfe4ea',roughness:.6}),
+  final:mat('ctx',{color:'#a9a397',roughness:.7}), gateS:mat('ctx',{color:'#9a958c',roughness:.55}), gateF:mat('ctx',{color:'#6f6a62',roughness:.5}),
+  // signature: graphite, only ever used for signatures
+  seal:mat('sig',{color:'#3a3e44',roughness:.45}), signet:mat('sig',{color:'#3a3e44',roughness:.4}),
+  // fingerprint: ridge and socket
+  ridge:mat('hash',{color:'#c9a062',roughness:.34,metalness:.35,emissive:'#6b4a1c',emissiveIntensity:.12}), socket:mat('hash',{color:'#8c6b3e',roughness:.45,metalness:.25}),
+  // stake: blue, only ever ETH
+  coin:mat('stake',{color:'#3a6fbf',emissive:'#1f4f9a',emissiveIntensity:.22,roughness:.45}), coinFresh:mat('stake',{color:'#9cc2ff',emissive:'#5b8fe0',emissiveIntensity:.6,roughness:.35}),
+  well:mat('stake',{color:'#2b2e33',roughness:.9}), spot:mat('stake',{color:'#5b8fe0',emissive:'#2f63ad',emissiveIntensity:.8,roughness:.4}),
+  // state
+  stateBar:mat('state',{color:'#6d8f7e',roughness:.5}), stateBarY:mat('state',{color:'#e08a4f',roughness:.5}), stateBarC:mat('state',{color:'#8a7fb0',roughness:.5}), panel:mat('state',{color:'#f7f5f1',roughness:.6}),
+  gear:mat('state',{color:'#8a7fb0',roughness:.45}),
+  // your transaction
+  amber:mat('you',{color:'#ff7a33',emissive:'#ff5a14',emissiveIntensity:.5,roughness:.45}), amberF:mat('you',{color:'#ffd2b3',emissive:'#ff6a1a',emissiveIntensity:.25,roughness:.6}),
+  // signals are never dimmed
+  flash:mat('signal',{color:'#ffffff',emissive:'#ffffff',emissiveIntensity:.55,roughness:.35}),
+  red:mat('signal',{color:'#e2573f',emissive:'#c4331f',emissiveIntensity:.5,roughness:.5}), green:mat('signal',{color:'#5fb88a',emissive:'#2f8a5e',emissiveIntensity:.6,roughness:.4}),
+  ghost:mat('signal',{color:'#d9dde5',roughness:.5,transparent:true,opacity:.72,depthWrite:false}),
+  ghostR:mat('signal',{color:'#c9a062',roughness:.4,transparent:true,opacity:.8,depthWrite:false}),
+  ghostT:mat('signal',{color:'#dfe4ea',roughness:.6,transparent:true,opacity:.6,depthWrite:false}),
+  ghostS:mat('signal',{color:'#8c6b3e',roughness:.5,transparent:true,opacity:.75,depthWrite:false})
+};
+const DIMC=STAGE.clone();
+function applyLens(lens,amt){ for(const m of MATS){ const tg=m.userData.tag; let d=0;
+  if(lens==='all'){ if(tg==='ctx') d=amt*.55; }
+  else if(lens&&tg!=='signal'&&tg!==lens) d=amt*(tg==='you'?.08:tg==='ctx'?.62:.8);
+  m.color.copy(m.userData.base).lerp(DIMC,d); m.emissive.copy(m.userData.baseE); m.emissiveIntensity=m.userData.baseEI*(1-d);
+  if(m.transparent&&tg!=='signal') m.opacity=m.userData.baseO; } }
+let LENS=null, LENSAMT=0;
+const dimOf=tag=>LENS&&tag!==LENS&&tag!=='signal'?LENSAMT:0;
+
+const RB=(w,h,d,r)=>new THREE.RoundedBoxGeometry(w,h,d,3,r===undefined?Math.min(w,h,d)*.18:r);
+const BOX=new THREE.BoxGeometry(1,1,1);
+function solid(geo,m,x,y,z,parent,cast=true){ const o=new THREE.Mesh(geo,m); o.position.set(x,y,z); o.castShadow=cast; o.receiveShadow=true; (parent||scene).add(o); return o; }
+const GT=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,0,64,64,64); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.25,'rgba(255,255,255,.45)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
+const BLUE=C('#3a6fbf'), RED=C('#c4331f'), GREEN=C('#2f8a5e'), AMB=C('#ff6a1a'), BLACK=C('#000000'), GRAPH=C('#3a3e44'), TRB=C('#8fb0e0'), TRA=C('#ff8a4a'), TRG=C('#6a6f76'), WHITEG=C('#ffffff'), VIOLET=C('#8a7fb0');
+
+/* ======================= pools: everything transient is claimed fresh each frame ======================= */
+function Pool(make){ const arr=[]; let n=0; return { reset(){ for(let i=0;i<n;i++) arr[i].visible=false; n=0; }, get(){ if(n>=arr.length) arr.push(make()); const o=arr[n++]; o.visible=true; o.rotation.set(0,0,0); o.scale.setScalar(1); return o; } }; }
+const P_=[];
+const pool=f=>{ const p=Pool(f); P_.push(p); return p; };
+const QTILE=RB(.3,.04,.22,.015);
+const tiles=pool(()=>{ const m=new THREE.Mesh(QTILE,M.tile); scene.add(m); return m; });
+const SEALG=new THREE.CylinderGeometry(1,1,1,24);
+const seals=pool(()=>{ const m=new THREE.Mesh(SEALG,M.seal); m.castShadow=true; scene.add(m); return m; });
+const COING=new THREE.CylinderGeometry(.22,.22,.07,28);
+const coins=pool(()=>{ const m=new THREE.Mesh(COING,M.coin); m.castShadow=true; scene.add(m); return m; });
+const glows=pool(()=>{ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color:'#ffffff',transparent:true,opacity:0,depthWrite:false})); scene.add(s); return s; });
+const RIPG=new THREE.TorusGeometry(1,.022,8,64);
+const ripples=pool(()=>{ const m=new THREE.Mesh(RIPG,new THREE.MeshBasicMaterial({color:'#3a6fbf',transparent:true,opacity:0,depthWrite:false})); scene.add(m); return m; });
+const RINGG=new THREE.TorusGeometry(.2,.028,10,40);
+const rings=pool(()=>{ const m=new THREE.Mesh(RINGG,new THREE.MeshStandardMaterial({color:'#3a3e44',roughness:.4,emissive:'#000000'})); m.castShadow=true; scene.add(m); return m; });
+const bars=pool(()=>{ const m=new THREE.Mesh(BOX,M.stateBar); m.castShadow=true; scene.add(m); return m; });
+// a vote: a coin (stake) carrying a ridge chip (the fingerprint voted on) and a seal (the signature)
+const TCHIP=RB(.24,.045,.14,.015);
+const tokens=pool(()=>{ const g=new THREE.Group(); const c=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.05,28),M.coin); c.position.y=.025; c.castShadow=true; g.add(c);
+  const ch=new THREE.Mesh(TCHIP,M.ridge); ch.position.y=.072; g.add(ch); const s=new THREE.Mesh(SEALG,M.seal); s.scale.set(.05,.02,.05); s.position.y=.104; g.add(s); g.userData={c}; scene.add(g); return g; });
+function token(p,r,sc){ const g=tokens.get(); g.position.copy(p); g.userData.c.scale.set(r,1,r); if(sc!==undefined) g.scale.setScalar(sc); return g; }
+function glowAt(p,color,size,op){ if(op<=.005) return; const s=glows.get(); s.position.copy(p); s.scale.set(size,size,1); s.material.color.copy(color); s.material.opacity=op; }
+function tileAt(p,m,sc,rotY){ const o=tiles.get(); o.material=m||M.tile; o.position.copy(p); if(sc!==undefined) o.scale.setScalar(sc); if(rotY) o.rotation.y=rotY; return o; }
+function sealAt(p,r,sc){ const s=seals.get(); s.position.copy(p); s.scale.set(r*(sc===undefined?1:sc),.02,r*(sc===undefined?1:sc)); return s; }
+function ripple(p,t0,t,color,size,dur){ size=size||.7; dur=dur||.7; if(t<t0||t>t0+dur) return; const u=(t-t0)/dur; const m=ripples.get(); m.rotation.set(Math.PI/2,0,0); m.position.copy(p); const r=.12+size*ease(u); m.scale.set(r,r,r); m.material.color.copy(color); m.material.opacity=.75*(1-u); }
+function trail(a,b,u,h,color,size,n,du){ size=size||.26; n=n||7; du=du||.03; if(u<=0||u>=1) return; for(let k=1;k<=n;k++){ const uk=u-k*du; if(uk<=0) break; glowAt(arc(a,b,uk,h),color,size*(1-.5*k/n),.42*(1-k/n)); } }
+// public key check: a graphite ring settles over a seal. green if it fits, red and bouncing if it does not
+function checkRing(p,ta,t,ok,r){ r=r||1; if(t<ta-.35||t>ta+1.05) return; const m=rings.get(); m.rotation.set(Math.PI/2,0,0); const d=win(t,ta-.35,ta); let y=p.y+.9-(.9-(ok?0:.14))*d; if(!ok) y+=.4*win(t,ta+.05,ta+.45); m.position.set(p.x,y,p.z); m.scale.setScalar(r*((1-seg(t,ta+.65,ta+1.05))||.001));
+  const v=t>=ta?1:0; const c=GRAPH.clone().lerp(ok?GREEN:RED,v); if(!ok||v===0){} m.material.color.copy(c); m.material.emissive.copy(BLACK).lerp(ok?GREEN:RED,v*.6);
+  if(t>=ta) glowAt(V(p.x,p.y+.05,p.z),ok?GREEN:RED,.9*r,.45*decay(t,ta,2)); }
+function lineGlow(a,b,color,op,n){ n=n||14; for(let k=0;k<=n;k++) glowAt(V().lerpVectors(a,b,k/n),color,.22,op); }
+/* ======================= the ring of nodes ======================= */
+const PT=.3, R=6.5, NN=16;
+const ang=i=>Math.PI/2+(i+.5)*2*Math.PI/NN;                 // half-step offset leaves the -x axis open for the chain
+const nodePos=i=>V(R*Math.cos(ang(i)),0,R*Math.sin(ang(i)));
+const nodeTop=i=>{ const p=nodePos(i); return V(p.x,1.87,p.z); };
+const stackPos=i=>nodePos(i).multiplyScalar((R-1.05)/R);
+const ringDist=(a,b)=>{ const d=Math.abs(a-b)%NN; return Math.min(d,NN-d); };
+solid(new THREE.CylinderGeometry(8.6,8.8,.3,128),M.stone,0,.15,0);
+solid(new THREE.CylinderGeometry(7.9,7.9,.03,128),M.white,0,.315,0,undefined,false);
+const NODES=[];
+const STAKE=[6,9,5,7,6,8,4,8,7,5,9,6,5,11,6,7];     // coins per validator; the proposer (13) holds the most
+for(let i=0;i<NN;i++){ const g=new THREE.Group(); scene.add(g); g.position.copy(nodePos(i)); g.rotation.y=-ang(i);
+  const bm=M.white.clone(); bm.userData=Object.assign({},M.white.userData); bm.emissive=C('#000000'); bm.userData.base=bm.color.clone(); bm.userData.baseE=C('#000000'); MATS.push(bm);
+  solid(RB(.8,1.3,.8,.14),bm,0,PT+.65,0,g);
+  // the node's copy of the ledger: a closed book
+  const pg=M.white.clone(); pg.userData=Object.assign({},M.white.userData); pg.color.set('#f7f5f1'); pg.userData.base=pg.color.clone(); pg.userData.baseE=C('#000000'); MATS.push(pg);
+  const book=new THREE.Group(); book.position.set(0,PT+1.3,0); g.add(book);
+  solid(RB(.76,.05,.56,.015),M.stoneD,0,.025,0,book); solid(RB(.7,.14,.5,.02),pg,0,.12,0,book); solid(RB(.76,.04,.56,.012),M.stoneD,0,.21,0,book);
+  const cs=[]; for(let k=0;k<16;k++){ const c=new THREE.Mesh(COING,M.coin); c.castShadow=true; c.receiveShadow=true; scene.add(c); cs.push(c); }
+  NODES.push({g,bm,pg,book,coins:cs}); }
+const bookSlot=(i,k)=>{ const ox=k%2?.17:-.17, oz=k<2?-.12:.12, a=-ang(i), c=Math.cos(a), s=Math.sin(a), p=nodePos(i); return V(p.x+ox*c+oz*s,1.865,p.z-ox*s+oz*c); };
+const EM=new Array(NN).fill(0).map(()=>({c:C('#000000'),a:0}));
+function pulse(i,color,a){ if(a>EM[i].a){ EM[i].a=a; EM[i].c.copy(color); } }
+function showStake(i,n,yoff,sc){ const N=NODES[i], s=stackPos(i); for(let k=0;k<16;k++){ const c=N.coins[k]; c.visible=k<n&&sc>.01; c.scale.setScalar(sc); c.position.set(s.x,PT+.035+k*.075*sc+(yoff||0),s.z); } }
+
+/* ======================= the chain ======================= */
+const SPC=2.0, RY=.36, BT=.2, CB=.40, N0=10, NMAX=26, YOURS=10;
+const RAIL=solid(RB(92,.36,1.25,.05),M.stone,-45.2,.18,0);
+const pinH=c=>.03+parseInt(c,16)/15*.14;
+const rC=mulberry32(21), hxC=n=>Math.floor(rC()*Math.pow(16,n)).toString(16).padStart(n,'0');
+const CONTENT=[]; for(let j=0;j<NMAX;j++){ const a=[]; for(let k=0;k<4;k++) a.push('0x'+hxC(6)+'>0x'+hxC(6)+':'+(rC()*20).toFixed(2)); CONTENT.push(a); }
+CONTENT[YOURS][0]='0xYOU>0xFRIEND:10.00'; CONTENT[YOURS][3]='0xYOU>contract:call';
+const H=[]; { let p='00000000'; for(let j=0;j<NMAX;j++){ H[j]=fnv(p+CONTENT[j].join('|')); p=H[j]; } }
+function buildBlock(ghost){
+  const g=new THREE.Group(); scene.add(g);
+  const body=solid(RB(1.3,.28,.9,.07),ghost?M.ghost:M.white,0,.14,0,g);
+  solid(RB(1.16,.02,.76,.008),ghost?M.ghost:M.stone,0,.285,0,g,false);
+  const tl=[]; for(let k=0;k<4;k++) tl.push(solid(RB(.36,.04,.26,.015),ghost?M.ghostT:M.tile,k%2?.33:-.33,.31,k<2?-.2:.2,g));
+  const sl=solid(SEALG,M.seal,0,.305,0,g); sl.scale.set(.07,.02,.07);
+  const ridge=new THREE.Group(); g.add(ridge);                      // this block's fingerprint, on its newer side
+  solid(RB(.66,.06,.24,.02),ghost?M.ghostR:M.ridge,.96,BT-.03,0,ridge);
+  const pins=[]; for(let m=0;m<6;m++){ const p=solid(BOX,ghost?M.ghostR:M.ridge,.72+m*.085,BT+.05,0,ridge); p.scale.set(.055,.1,.22); pins.push(p); }
+  const sock=new THREE.Group(); g.add(sock);                        // the parent's fingerprint, recorded as a socket on its older side
+  const sm=ghost?M.ghostS:M.socket;
+  solid(RB(.06,.26,.26,.02),sm,-.69,.36,0,sock); solid(RB(.66,.045,.28,.015),sm,-.99,CB+.022,0,sock);
+  const teeth=[]; for(let m=0;m<6;m++){ const t=solid(BOX,sm,-1.28+m*.085,CB-.05,0,sock); t.scale.set(.055,.1,.22); teeth.push(t); }
+  return {g,body,tl,sl,ridge,pins,sock,teeth,sm};
+}
+const setPins=(B,a,b,u)=>{ for(let m=0;m<6;m++){ const h=lerp(pinH(a[m]),pinH((b||a)[m]),u||0); B.pins[m].scale.y=h; B.pins[m].position.y=BT+h/2; } };
+const setTeeth=(B,a,b,u)=>{ for(let m=0;m<6;m++){ const L=CB-(BT+lerp(pinH(a[m]),pinH((b||a)[m]),u||0)); B.teeth[m].scale.y=L; B.teeth[m].position.y=CB-L/2; } };
+const BLK=[]; for(let j=0;j<NMAX;j++){ const B=buildBlock(false); setPins(B,H[j]); if(j>0) setTeeth(B,H[j-1]); else B.sock.visible=false; BLK.push(B); }
+BLK[YOURS].tl[0].material=M.amber;
+const GEARG=new THREE.CylinderGeometry(.07,.07,.03,10);
+{ const gg=solid(GEARG,M.gear,0,.04,0,BLK[YOURS].tl[3]); }
+
+/* ======================= props ======================= */
+const WAL=V(0,0,10.9);
+const wped=solid(RB(1.0,1.0,1.0,.14),M.stone,WAL.x,.5,WAL.z);
+const signet=new THREE.Group(); scene.add(signet);
+solid(new THREE.CylinderGeometry(.08,.1,.8,24),M.signet,0,.44,0,signet); solid(new THREE.CylinderGeometry(.28,.28,.08,32),M.signet,0,0,0,signet);
+function sealedTile(){ const g=new THREE.Group(); scene.add(g); const body=solid(RB(.9,.08,.6,.03),M.amber,0,0,0,g);
+  const sm=M.seal.clone(); sm.userData=Object.assign({},M.seal.userData); sm.userData.base=sm.color.clone(); sm.userData.baseE=C('#000000'); MATS.push(sm);
+  const hA=solid(new THREE.CylinderGeometry(.15,.15,.025,20,1,false,0,Math.PI),sm,0,.053,0,g), hB=solid(new THREE.CylinderGeometry(.15,.15,.025,20,1,false,Math.PI,Math.PI),sm,0,.053,0,g);
+  g.userData={hA,hB,sm}; return g; }
+const YT=sealedTile(), FT=sealedTile();
+function crack(g,c){ const d=g.userData; d.hA.rotation.set(0,0,.55*c); d.hB.rotation.set(0,0,-.55*c); d.hA.position.x=-.07*c; d.hB.position.x=.07*c; if(c>0){ d.sm.color.copy(GRAPH).lerp(RED,c*.6); d.sm.emissive.copy(BLACK).lerp(RED,c*.5); } }
+const press=new THREE.Group(); scene.add(press);
+solid(RB(.9,.18,.5,.05),M.stoneD,0,0,0,press); { const rod=new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,6,16),M.stoneD); rod.position.y=3.08; press.add(rod); }
+solid(RB(.88,.02,.48,.008),M.red,0,-.1,0,press,false);
+const spot=new THREE.Mesh(new THREE.TorusGeometry(.72,.05,12,64),M.spot); spot.rotation.x=Math.PI/2; scene.add(spot);
+const WELL=new THREE.Group(); scene.add(WELL); WELL.position.set(0,0,3.0);
+solid(new THREE.CylinderGeometry(.75,.75,.04,48),M.well,0,PT+.02,0,WELL,false);
+solid(new THREE.TorusGeometry(.78,.05,12,64),M.stoneD,0,PT+.04,0,WELL,false).rotation.x=Math.PI/2;
+// the vote rack beside the new block: tokens dock here, a bar shows stake-weighted progress toward two-thirds
+const HOVER=V(0,1.95,0);
+const RACK=new THREE.Group(); scene.add(RACK); RACK.position.set(0,1.46,1.05);
+solid(RB(2.3,.06,.36,.02),M.stone,0,0,0,RACK);
+const rackFill=solid(BOX,M.coin,-1.1,.05,.14,RACK,false); rackFill.scale.set(.001,.03,.06);
+const rivals=[0,1].map(k=>{ const B=buildBlock(false); B.g.visible=false; B.g.scale.setScalar(.7); return B; });
+// the forger's copy of three old blocks
+const G0=3, GN=3;
+const GF=[]; { const ed=CONTENT.map(a=>a.slice()); ed[G0][1]=ed[G0][1].replace(/:[\d.]+$/,':99.00'); let p=H[G0-1]; for(let j=G0;j<G0+GN;j++){ GF[j]=fnv(p+ed[j].join('|')); p=GF[j]; } }
+const GH=[]; for(let k=0;k<GN;k++){ const B=buildBlock(true); B.g.visible=false; B.sl.visible=false; GH.push(B); }
+// the state panel: a magnified view of what every node computes
+const PANEL=new THREE.Group(); scene.add(PANEL); PANEL.position.set(0,3.35,0);
+solid(RB(2.6,.1,1.2,.04),M.panel,0,0,0,PANEL);
+const PB=[['You',50,40,M.stateBarY,-.8],['Friend',10,20,M.stateBar,-.1],['Contract',30,35,M.stateBarC,.6]].map(([n,a,b,m,x])=>({n,a,b,m,x,o:solid(RB(.34,1,.34,.05),m,x,.55,0,PANEL)}));
+const PGEAR=new THREE.Group(); PGEAR.position.set(1.12,.36,.2); PANEL.add(PGEAR);
+solid(new THREE.CylinderGeometry(.16,.16,.05,24),M.gear,0,0,0,PGEAR).rotation.x=Math.PI/2;
+for(let k=0;k<8;k++){ const a=k/8*2*Math.PI; const t=solid(RB(.06,.08,.05,.015),M.gear,.19*Math.cos(a),.19*Math.sin(a),0,PGEAR); t.rotation.z=a+Math.PI/2; }
+const PGAS=solid(BOX,M.coin,1.12,.1,-.3,PANEL,false); PGAS.scale.set(.08,.5,.05);
+// gates at checkpoint blocks
+const GATE_CP=[8,12,16,20];
+const GATES=GATE_CP.map(cp=>{ const g=new THREE.Group(); scene.add(g); const gm=M.gateS.clone(); gm.userData=Object.assign({},M.gateS.userData); gm.userData.base=gm.color.clone(); gm.userData.baseE=C('#000000'); MATS.push(gm); gm.emissive=C('#000000');
+  solid(RB(.08,1.2,.08,.03),gm,0,.6,-.62,g); solid(RB(.08,1.2,.08,.03),gm,0,.6,.62,g); solid(RB(.14,.08,1.4,.03),gm,0,1.22,0,g);
+  const fillb=solid(BOX,M.coin,0,1.3,-.6,g,false); fillb.scale.set(.06,.03,.001); solid(RB(.02,.1,.02,.005),M.stoneD,0,1.32,-.6+1.2*2/3,g,false);
+  return {cp,g,gm,fillb}; });
+/* ======================= slot choreography (slot clock s, 0 to 26) ======================= */
+const P=13, CHN=11, COM=[1,3,6,8,10,15], HOPS=[0,4,9,2,7,12,15,10,6,P];
+const SL={stamp:3.2,fly0:5.5,fly1:6.6,hop:.33,spot0:9.5,spot1:11.3,lift0:11.4,ridge0:13.0,ridge1:13.5,bseal:13.7,carry0:14.0,carry1:15.0,vote0:15.1,voteDt:.42,shift0:18.6,shift1:19.2,land:19.6,bcheck:20.0,upd0:20.6,updDt:.2,fee0:21.0,tip0:21.6,iss0:23.2};
+const gosT=i=>SL.fly1+ringDist(0,i)*SL.hop;
+const updT=i=>SL.upd0+ringDist(P,i)*SL.updDt;
+const hopT=k=>SL.spot0+(SL.spot1-SL.spot0)*Math.pow(k/9,1.6);
+const COMS=COM.reduce((a,c)=>a+STAKE[c],0);
+const tokR=s=>.08+.013*s;
+const dockPos=k=>V(-.9+k*.36,1.515,1.03);
+const cumStake=k=>COM.slice(0,k+1).reduce((a,c)=>a+STAKE[c],0);
+const crossK=(()=>{ for(let k=0;k<COM.length;k++) if(cumStake(k)>=COMS*2/3) return k; return COM.length-1; })();
+const voteLand=k=>SL.vote0+k*SL.voteDt+.7;
+const bpSlot=s=>{ const a=nodeTop(P).add(V(0,.72,0)); if(s<SL.carry0) return a; if(s<SL.carry1) return arc(a,HOVER,win(s,SL.carry0,SL.carry1),.8); return HOVER.clone(); };
+const blkTileOff=k=>V(k%2?.33:-.33,.31,k<2?-.2:.2);
+
+/* ======================= shots: one continuous film ======================= */
+// kind: 'slot' runs the slot clock from s0 to s1; 'hold' freezes it at s while something else happens
+const SHOTS=[
+  {id:'scarcity',ch:0, dur:13, kind:'pre', lens:null},
+  {id:'copies', ch:0, dur:14, kind:'pre', lens:null},
+  {id:'sign',   ch:1, dur:6.5,kind:'slot',s0:0,  s1:5.5, lead:1, lens:'sig'},
+  {id:'spread', ch:1, dur:4.5,kind:'slot',s0:5.5,s1:9.5, lens:'sig'},
+  {id:'wSig',   ch:1, dur:10.2,kind:'hold',s:9.5, lens:'sig', wlead:1.7},
+  {id:'chain',  ch:2, dur:6.5,kind:'hold',s:9.5, lens:'hash'},
+  {id:'wHash',  ch:2, dur:13, kind:'hold',s:9.5, lens:'hash'},
+  {id:'stake',  ch:3, dur:5,  kind:'hold',s:9.5, lens:'stake'},
+  {id:'propose',ch:3, dur:6.5,kind:'slot',s0:9.5,s1:15, lens:null},
+  {id:'vote1',  ch:3, dur:.9, kind:'slot',s0:15, s1:15.8, lens:null},
+  {id:'explode',ch:3, dur:7.5,kind:'hold',s:15.8, lens:'all'},
+  {id:'append', ch:3, dur:5,  kind:'slot',s0:15.8,s1:20.5, lens:null},
+  {id:'update', ch:3, dur:5.5,kind:'slot',s0:20.5,s1:26, lens:null},
+  {id:'wStake', ch:3, dur:12.2,kind:'hold',s:26, lens:'stake', wlead:1.7},
+  {id:'final',  ch:4, dur:29, kind:'post', lens:null},
+  {id:'programs',ch:5,dur:20, kind:'post', lens:'state'},
+  {id:'close',  ch:6, dur:12, kind:'post', lens:null}
+];
+const SHOT={}; { let s=0; SHOTS.forEach((sh,k)=>{ sh.k=k; sh.T0=s; s+=sh.dur; SHOT[sh.id]=sh; }); }
+const FILM=SHOTS[SHOTS.length-1].T0+SHOTS[SHOTS.length-1].dur;
+const CHAPTERS=[['One Book, Many Copies','copies'],['Proving It\u2019s You','sign'],['A Chain of Fingerprints','chain'],['Who Writes the Next Page','stake'],['When Is It Final','final'],['The Ledger Runs Programs','programs']];
+const CHSHORT=['Copies','Signatures','Fingerprints','Consensus','Finality','Programs'];
+function shotAt(T){ let k=0; while(k<SHOTS.length-1&&T>=SHOTS[k+1].T0) k++; const sh=SHOTS[k]; return {sh,t:Math.min(T-sh.T0,sh.dur)}; }
+function slotClock(sh,t){ if(sh.kind==='hold') return sh.s; if(sh.kind!=='slot') return null; const lead=sh.lead||0; return lerp(sh.s0,sh.s1,clamp((t-lead)/(sh.dur-lead))); }
+const at=(id,t)=>SHOT[id].T0+t;
+// ideas persist once introduced: these globals are functions of film time
+const stakeSc=(i,T)=>T<SHOT.stake.T0?0:win(T,at('stake',.5+i*.07),at('stake',1.1+i*.07));
+const ejU=T=>T<SHOT.wStake.T0?0:win(T,at('wStake',8.7),at('wStake',10.3));
+const chainRev=(j,T)=>{ if(T<SHOT.chain.T0) return 0; const a=at('chain',1.2+(N0-1-j)*.2); return win(T,a,a+.55); };
+const queueSc=T=>T<SHOT.sign.T0?0:win(T,at('sign',.2),at('sign',1.2));
+const KNOW={sig:at('sign',4.2),hash:at('chain',3.2),stake:at('stake',1),state:at('programs',1.6)};
+
+/* ======================= world helpers ======================= */
+function railAt(T){ const u=T<SHOT.chain.T0?0:win(T,at('chain',.6),at('chain',3.4)); RAIL.visible=u>0; const L=92*u; RAIL.scale.x=Math.max(u,.0001); RAIL.position.x=.8-L/2; }
+function resetWorld(){ for(const p of P_) p.reset(); for(let i=0;i<NN;i++){ EM[i].a=0; const N=NODES[i]; N.g.visible=true; N.g.position.copy(nodePos(i)); N.book.visible=true; N.book.position.set(0,PT+1.3,0); N.book.scale.setScalar(1); N.book.rotation.set(0,0,0); }
+  RCP.forEach(r=>r.m.visible=false); YT.visible=FT.visible=false; signet.visible=false; press.visible=false; press.scale.setScalar(1); spot.visible=false; RACK.visible=false; PANEL.visible=false; WELL.visible=true; wped.visible=true; EXP.visible=false; PED.visible=false; BIGB.visible=false;
+  rivals.forEach(B=>B.g.visible=false); GH.forEach(B=>B.g.visible=false); GATES.forEach(G=>G.g.visible=false);
+  crack(YT,0); crack(FT,0); for(const tl of [YT,FT]){ tl.userData.sm.color.copy(GRAPH); tl.userData.sm.emissive.copy(BLACK); tl.userData.hA.scale.setScalar(1); tl.userData.hB.scale.setScalar(1); }
+  for(let j=0;j<NMAX;j++){ const B=BLK[j]; B.g.visible=false; B.g.scale.setScalar(1); B.body.material=M.white; B.sock.children.forEach(c=>c.material=M.socket); B.ridge.position.set(0,0,0); B.ridge.scale.set(1,1,1); B.sock.scale.set(1,1,1); B.ridge.visible=true; B.sock.visible=j>0; B.sl.visible=true; B.sl.scale.set(.07,.02,.07); B.tl.forEach((m,k)=>{ m.visible=true; m.material=(j===YOURS&&k===0)?M.amber:M.tile; }); setPins(B,H[j]); if(j>0) setTeeth(B,H[j-1]); } }
+function layChain(cnt,upto,finalUpTo,freshT,T,TF){ for(let j=0;j<upto;j++){ const B=BLK[j]; const rv=j<N0?chainRev(j,TF===undefined?T:TF):1; if(rv<=0) continue; B.g.visible=true; B.g.position.set(-(cnt-1-j)*SPC,RY-1+rv,0); B.g.scale.setScalar(rv);
+    if(j<=finalUpTo){ const fresh=freshT&&freshT(j)!==undefined&&T<freshT(j)+.35&&T>=freshT(j); B.body.material=fresh?M.flash:M.final; if(j===YOURS) B.tl[0].material=fresh?M.flash:M.amberF; } }
+  for(let j=0;j<NMAX;j++){ const B=BLK[j]; if(!B.g.visible) continue; const nx=BLK[j+1]; const seated=nx&&nx.g.visible&&Math.abs(nx.g.position.x-B.g.position.x-SPC)<.05&&Math.abs(nx.g.position.y-RY)<.02; if(!seated) B.ridge.position.set(-.3,-.14,0); } }
+function stakes(extra,T){ const e=ejU(T); for(let i=0;i<NN;i++){ let n=STAKE[i]+(extra[i]||0); let y=0; if(i===CHN&&T>=at('wStake',7.3)){ n-=2; } if(i===CHN){ y=-2.6*e; NODES[i].g.position.y=y; } showStake(i,n,y,stakeSc(i,T)); } }
+const postExtra=(()=>{ const e={}; e[P]=3; COM.forEach(c=>e[c]=(e[c]||0)+1); return e; })();
+
+/* the double spend: two recipients, one payment copied */
+const RCP=[V(-2.7,0,4.6),V(2.7,0,4.6)].map(p=>{ const m=solid(RB(.8,.9,.8,.12),M.stone,p.x,.45,p.z); return {m,p}; });
+const DS_SRC=V(0,1.9,3.4);
+function scarcity(t){
+  RCP.forEach(r=>{ r.m.visible=t<12.4; r.m.scale.setScalar((win(t,.6,1.4)||.001)*(1-win(t,11.4,12.4))+.001); });
+  const top=k=>RCP[k].p.clone().setY(.96);
+  const copyU=win(t,3.4,4.2);
+  for(let k=0;k<2;k++){ if(k===1&&t<3.4) continue;
+    const start=DS_SRC.clone().add(V(k?.95*copyU:0,0,0));
+    const u=win(t,4.6+k*.2,6.0+k*.2); let p=arc(start,top(k),u,.45);
+    let mat=M.amber, sc=3; if(k===1&&t>=8.2){ mat=M.red; const d=win(t,8.4,9.4); sc=3*(1-d)+.001; p.y+=.6*d; }
+    if(k===0&&t>=11.4) sc=3*(1-win(t,11.4,12.2))+.001;
+    const m=tileAt(p,mat,sc); if(u>0&&u<1) trail(start,top(k),u,.45,TRA,.3);
+    if(k===1&&t>=8.2&&t<9.6) glowAt(p,RED,1.6,.5*decay(t,8.2,1.4));
+    if(k===0&&t>=8.2&&t<9.6) glowAt(p,GREEN,1.6,.5*decay(t,8.2,1.4)); }
+  if(t>=1.4&&t<3.6) glowAt(DS_SRC,C('#ffb27a'),1.4,.25*fade(t,1.4,3.6));
+  // the keeper arrives and decides
+  const ku=win(t,6.6,7.6); PED.visible=ku>0; PED.position.y=PT+.65-1.6*(1-ku); BIGB.visible=ku>0; BIGB.scale.setScalar(2.2*ku+.001); BIGB.position.set(0,PED.position.y+.65,0);
+  if(t>=7.9) { ripple(V(0,PED.position.y+.9,0),7.9,t,GRAPH,1.2); }
+  for(let i=0;i<NN;i++){ NODES[i].g.visible=false; } WELL.visible=false; wped.visible=false; }
+
+/* the lone keeper at the start, and the exploded vote */
+const BIGB=new THREE.Group(); scene.add(BIGB);
+solid(RB(.76,.05,.56,.015),M.stoneD,0,.025,0,BIGB); solid(RB(.7,.14,.5,.02),M.white,0,.12,0,BIGB); solid(RB(.76,.04,.56,.012),M.stoneD,0,.21,0,BIGB);
+const PED=solid(new THREE.CylinderGeometry(.75,.8,1.3,48),M.stone,0,PT+.65,0);
+const EXP=new THREE.Group(); scene.add(EXP);
+const EXc=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.05,40),M.coin); EXc.castShadow=true; EXP.add(EXc);
+const EXh=new THREE.Mesh(TCHIP,M.ridge); EXP.add(EXh);
+const EXpins=[]; for(let m=0;m<5;m++){ const p=new THREE.Mesh(BOX,M.ridge); p.scale.set(.02,.04+m%3*.02,.1); EXh.add(p); p.position.set(-.08+m*.04,.035,0); EXpins.push(p); }
+const EXs=new THREE.Mesh(SEALG,M.seal); EXP.add(EXs);
+const EXPP=V(-.9,2.45,1.9);
+function exploded(t){ // t is local to the hold: rise, separate, name, recombine, return
+  const d=dockPos(0), r=tokR(STAKE[COM[0]]);
+  const up=win(t,.3,1.3)*(1-win(t,6.2,7.3)); const sep=win(t,1.3,2.2)*(1-win(t,5.4,6.2)); const S=lerp(1,2.4,up);
+  EXP.visible=true; EXP.position.copy(d.clone().lerp(EXPP,up)); EXP.scale.setScalar(S);
+  EXc.scale.set(r,1,r); EXc.position.set(0,.025,0);
+  EXh.position.set(0,.072+sep*.2,0); EXs.scale.set(.05,.02,.05); EXs.position.set(0,.104+sep*.42,0);
+  if(t>=1.3&&t<5.6) glowAt(EXP.position.clone().add(V(0,.3*S*.3,0)),WHITEG,2.2,.25*fade(t,1.3,5.6));
+  return {S,sep}; }
+
+/* ======================= the slot ======================= */
+function slot(s,T){
+  const extra={}; const qs=queueSc(T);
+  if(s<SL.fly1){ YT.visible=true; const a=V(WAL.x,1.04,WAL.z); if(s<SL.fly0){ YT.position.copy(a); YT.scale.setScalar(1); YT.rotation.y=0; } else { const u=win(s,SL.fly0,SL.fly1); YT.position.copy(arc(a,bookSlot(0,0),u,1.4)); YT.scale.setScalar(lerp(1,.34,u)); YT.rotation.y=-ang(0)*u; trail(a,bookSlot(0,0),u,1.4,TRA,.34); }
+    const sp=win(s,SL.stamp-.05,SL.stamp+.2); YT.userData.hA.scale.setScalar(sp||.001); YT.userData.hB.scale.setScalar(sp||.001); }
+  if(s<4.6){ signet.visible=true; const y=s<SL.stamp?lerp(3.4,1.12,win(s,SL.stamp-.8,SL.stamp)):lerp(1.12,3.6,win(s,SL.stamp+.2,SL.stamp+1.0)); signet.position.set(WAL.x,y,WAL.z); }
+  if(s>=SL.stamp) ripple(V(WAL.x,1.1,WAL.z),SL.stamp,s,GRAPH,.5);
+  if(qs>0) for(let i=0;i<NN;i++){ const ut=updT(i);
+    for(let k=0;k<4;k++){ if(s>=ut) continue; if(i===P&&s>=SL.lift0+k*.35) continue; if(k===0&&s<gosT(i)) continue;
+      const p=bookSlot(i,k); tileAt(p,k===0?M.amber:M.tile,k===0?1:qs,-ang(i)); sealAt(p.clone().add(V(0,.03,0)),.055,k===0?1:qs); if(k===3){ const g=seals.get(); g.material=M.gear; g.position.copy(p).add(V(.07,.03,.04)); g.scale.set(.05*qs,.02,.05*qs); } }
+    if(i>0){ const ta=gosT(i); if(s>=ta-SL.hop&&s<ta){ const from=bookSlot(i<=NN/2?i-1:(i+1)%NN,0), to=bookSlot(i,0); const u=seg(s,ta-SL.hop,ta); const p=arc(from,to,ease(u),.7); tileAt(p,M.amber,1,-ang(i)); sealAt(p.clone().add(V(0,.03,0)),.055); trail(from,to,ease(u),.7,TRA,.22); } }
+    if(s>=gosT(i)&&s<gosT(i)+1.1) checkRing(bookSlot(i,0).add(V(0,.03,0)),gosT(i),s,true,.55); }
+  if(s>=SL.spot0-.2&&s<SL.lift0+1.4&&T>=SHOT.propose.T0){ spot.visible=true; let k=0; while(k<HOPS.length-1&&s>=hopT(k+1)) k++; const p=stackPos(HOPS[k]); spot.position.set(p.x*1.12,PT+.06,p.z*1.12); pulse(HOPS[k],BLUE,k===HOPS.length-1?.7:.45); }
+  const B=BLK[YOURS];
+  if(s>=SL.lift0){ B.g.visible=true; B.g.scale.setScalar(win(s,SL.lift0,SL.lift0+.4)||.001);
+    let pos; if(s<SL.shift1){ pos=bpSlot(s); pos.y-=.14; } else pos=HOVER.clone().setY(HOVER.y-.14).lerp(V(0,RY,0),win(s,SL.shift1,SL.land));
+    B.g.position.copy(pos);
+    for(let k=0;k<4;k++){ const a0=SL.lift0+k*.35,e=a0+.6; B.tl[k].visible=s>=e; if(s>=a0&&s<e){ const a=bookSlot(P,k), b=bpSlot(s).add(blkTileOff(k)).add(V(0,-.14,0)); const u=win(s,a0,e); tileAt(arc(a,b,u,.8),k===0?M.amber:M.tile,1.2); trail(a,b,u,.8,k===0?TRA:TRB,.22); } }
+    const rg=win(s,SL.ridge0,SL.ridge1); B.ridge.visible=rg>0; B.sock.visible=rg>0; B.ridge.scale.set(1,rg||.001,1); B.sock.scale.set(1,rg||.001,1);
+    if(s>=SL.ridge0&&s<SL.ridge1+.8) glowAt(pos.clone().add(V(.95,.3,0)),C('#e8c78f'),1.3,.6*fade(s,SL.ridge0,SL.ridge1+.8));
+    B.sl.visible=s>=SL.bseal; const sw=.07*(win(s,SL.bseal,SL.bseal+.2)||.001); B.sl.scale.set(sw,.02,sw);
+    if(s>=SL.bseal) ripple(pos.clone().add(V(0,.33,0)),SL.bseal,s,GRAPH,.45); }
+  if(s>=SL.vote0-.3&&s<SL.land+1){ RACK.visible=true; RACK.scale.setScalar((win(s,SL.vote0-.3,SL.vote0)||.001)*(1-win(s,SL.land+.3,SL.land+.9))+.001); }
+  let cum=0; const exploding=T>=SHOT.explode.T0&&T<SHOT.explode.T0+SHOT.explode.dur;
+  COM.forEach((c,k)=>{ const a0=SL.vote0+k*SL.voteDt, e=a0+.7; const r=tokR(STAKE[c]); const d=dockPos(k);
+    if(s>=a0-.4&&s<SL.upd0) pulse(c,GRAPH,.35);
+    if(s>=a0&&s<e){ const a=nodeTop(c).add(V(0,.15,0)); const u=win(s,a0,e); token(arc(a,d,u,1.3),r); trail(a,d,u,1.3,BLUE,.22); }
+    if(s>=e&&s<SL.land+.9){ if(!(k===0&&exploding)) token(d,r,1-win(s,SL.land+.3,SL.land+.9)+.001); ripple(d,e,s,BLUE,.4); cum+=STAKE[c]; } });
+  rackFill.scale.x=Math.max(.001,2.2*cum/COMS); rackFill.position.x=-1.1+1.1*cum/COMS;
+  const cnt=N0+win(s,SL.shift0,SL.shift1);
+  layChain(cnt,N0,-1,null,T);
+  if(s>=SL.land-.2){ const b9=BLK[YOURS-1]; const k2=win(s,SL.land-.2,SL.land+.1); b9.ridge.position.set(-.3*(1-k2),-.14*(1-k2),0); }
+  if(s>=SL.land){ glowAt(V(-1,RY+.3,0),GREEN,1.6,.6*decay(s,SL.land,1.6)); ripple(V(0,RY+.02,0),SL.land,s,GREEN,1); }
+  if(s>=SL.bcheck-.4&&s<SL.bcheck+1.1) checkRing(V(0,RY+.33,0),SL.bcheck,s,true,.7);
+  for(let i=0;i<NN;i++){ const ut=updT(i); if(s>=ut){ pulse(i,GREEN,.5*decay(s,ut,1.5)); ripple(nodeTop(i),ut,s,GREEN,.55); } }
+  const src=V(0,RY+.5,0), well=V(0,PT+.08,WELL.position.z);
+  for(let k=0;k<3;k++){ const a0=SL.fee0+k*.3,e=a0+.8; if(s>=a0-.2&&s<e+.4){ const m=coins.get(); if(s>=e) m.material=M.red; const a=src.clone().add(V(-.3+k*.3,.1,0)); m.position.copy(s<a0?a:arc(a,well,win(s,a0,e),.8)); m.scale.setScalar(s<e?1:1-seg(s,e,e+.4)+.001); if(s>=a0) trail(a,well,win(s,a0,e),.8,AMB,.24); }
+    if(s>=e) glowAt(V(0,PT+.2,WELL.position.z),AMB,1.8,.45*decay(s,e,1.6)); ripple(V(0,PT+.06,WELL.position.z),e,s,AMB,.9); }
+  for(let k=0;k<2;k++){ const a0=SL.tip0+k*.3,e=a0+.9; if(s>=e){ extra[P]=(extra[P]||0)+1; } else if(s>=a0-.2){ const m=coins.get(); const a=src.clone().add(V(.3,.1,.2)); const b=stackPos(P); b.y=PT+.035+(STAKE[P]+k)*.075; m.position.copy(s<a0?a:arc(a,b,win(s,a0,e),1.4)); if(s>=a0) trail(a,b,win(s,a0,e),1.4,BLUE,.24); }
+    ripple(stackPos(P).add(V(0,PT+.06,0)),e,s,BLUE,.55); }
+  [P,...COM].forEach((i,idx)=>{ const a0=SL.iss0+idx*.08,e=a0+.6; if(s>=e){ extra[i]=(extra[i]||0)+1; if(s<e+1) pulse(i,BLUE,decay(s,e)); } else if(s>=SL.iss0-.5){ const m=coins.get(); m.material=M.coinFresh; const b=stackPos(i); const top=PT+.035+(STAKE[i]+(extra[i]||0))*.075; m.position.set(b.x,lerp(top+1.4,top,win(s,a0,e)),b.z); m.scale.setScalar(win(s,SL.iss0-.5,SL.iss0)||.001); } });
+  stakes(extra,T);
+}
+
+/* ======================= the three attacks, each played while the story holds still ======================= */
+const FA=bookSlot(15,0).add(V(0,.1,0)), FB=bookSlot(14,0).add(V(0,.14,0)), FM=arc(FA,FB,.5,.55);
+const fPos=t=>{ let u; if(t<1.2) u=.5*win(t,.4,1.2); else if(t<3.2) u=.5; else u=lerp(.5,1,win(t,3.2,4.0)); return arc(FA,FB,u,.55); };
+function wSig(t){
+  if(t<6){ FT.visible=true; const dr=win(t,4.7,5.7); FT.position.copy(fPos(t)); FT.position.y-=1.1*dr; FT.scale.setScalar(.5*(1-dr)+.001); FT.rotation.y=-ang(14.5); crack(FT,win(t,2.1,2.6)); }
+  if(t>=1.2&&t<3.2){ press.visible=true; const y=t<2.1?lerp(FM.y+3,FM.y+.14,win(t,1.4,2.1)):lerp(FM.y+.14,FM.y+3.2,win(t,2.4,3.1)); press.position.set(FM.x,y,FM.z); press.rotation.y=-ang(14.5)+Math.PI/2; }
+  if(t>=4.0&&t<5.1){ checkRing(FB.clone().add(V(0,.02,0)),4.0,t,false,.8); }
+  if(t>=4.0) pulse(14,RED,decay(t,4,1.2));
+  if(t>=4.3) for(let i=0;i<NN;i++) if(i!==14) pulse(i,RED,.3*decay(t,4.3+ringDist(14,i)*.12,1.6)); }
+function wHash(t){
+  const up=1.5*win(t,.5,1.6), gone=win(t,11.2,12.6);
+  const hw=[[3.6,4.1],[6.3,6.8],[8.6,9.1]], rw=[0,5.5,7.9];
+  M.ghost.opacity=.72*(1-gone); M.ghostT.opacity=.7*(1-gone); M.ghostS.opacity=.75*(1-gone); M.ghostR.opacity=.8*(1-gone);
+  for(let k=0;k<GN;k++){ const j=G0+k, B=GH[k]; if(t<.5||gone>=1) continue; B.g.visible=true; const x=BLK[j].g.position.x; B.g.position.set(x,RY+up,0);
+    setPins(B,H[j],GF[j],win(t,hw[k][0],hw[k][1]));
+    if(k===0) B.sock.visible=false; else { B.sock.visible=true; setTeeth(B,H[j-1],GF[j-1],win(t,rw[k]-.2,rw[k]+.2)); }
+    let o=0, red=0; if(k<GN-1){ const nx=rw[k+1]; o=win(t,hw[k][0],hw[k][0]+.4)*(1-win(t,nx+.1,nx+.5)); red=seg(t,hw[k][0]+.1,hw[k][0]+.3)*(1-seg(t,nx-.1,nx+.2)); } else { o=win(t,hw[k][0],hw[k][0]+.4); red=seg(t,hw[k][0]+.1,hw[k][0]+.3); }
+    B.ridge.position.set(-.3*o,-.14*o,0);
+    if(red>0) glowAt(V(x+1,RY+up+.3,0),RED,1.3,red*.5*(1-gone));
+    B.tl.forEach(m=>{ m.position.y=.31; m.material=M.ghostT; });
+    if(k===0){ const m=B.tl[1]; const lift=win(t,2.0,2.6)*(1-win(t,3.0,3.5)); m.position.y=.31+lift*.5; if(t>=2.6) m.material=M.red; } }
+  for(let n=0;n<2;n++){ const tf=rw[n+1], x=BLK[G0+n+1].g.position.x-.99; if(t>=tf-.9&&t<tf+.6){ press.visible=true; press.scale.setScalar(.8); press.rotation.y=0; const hi=RY+up+2.2, lo=RY+up+CB+.045+.08; const y=t<tf-.2?lerp(hi,lo,win(t,tf-.6,tf-.2)):(t<tf+.2?lo:lerp(lo,hi,win(t,tf+.2,tf+.5))); press.position.set(x,y,0); } }
+  if(t>=9.2){ const f=fade(t,9.2,12.4); const a=V(BLK[G0+GN-1].g.position.x+1.1,RY+up+.2,0), b=V(BLK[G0+GN].g.position.x-1,RY+.4,0); lineGlow(a,b,RED,.35*f,16); BLK[G0+GN].sock.children.forEach(c=>c.material=f>.1?M.red:M.socket); for(let i=0;i<NN;i++) pulse(i,RED,.3*decay(t,9.4+ringDist(4,i)*.1,1.4)); } }
+function wStake(t){ const tang=V(-Math.sin(ang(CHN)),0,Math.cos(ang(CHN)));
+  if(t>=5.6&&t<6.8){ for(let k=0;k<2;k++){ const m=coins.get(); m.material=M.red; const s=stackPos(CHN); const top=PT+.035+(STAKE[CHN]+(postExtra[CHN]||0)-2+k)*.075; m.position.set(s.x,top+2.2*win(t,5.6,6.6),s.z); m.scale.setScalar(1-seg(t,6.2,6.8)+.001); } }
+  const gone=win(t,6.6,7.4);
+  rivals.forEach((B,k)=>{ if(t<.8||gone>=1) return; B.g.visible=true; const p=nodeTop(CHN).add(V(0,.8,0)).add(tang.clone().multiplyScalar(k?.62:-.62)); p.y-=.5*gone; B.g.position.copy(p); B.g.scale.setScalar(.62*(win(t,.8,1.2)||.001)*(1-gone)+.001);
+    setPins(B,k?'5a1c9e3f':'c2e7085b'); B.ridge.position.set(-.3,-.14,0); B.sock.visible=false; B.sl.visible=t>=(k?2.1:1.6); B.sl.scale.set(.07,.02,.07);
+    const rd=seg(t,3.4,3.9); B.body.material=rd>.5?M.red:M.white; if(rd>0) glowAt(p.clone().add(V(0,.2,0)),RED,1.4,.45*rd*(1-gone)); if(t>=(k?2.1:1.6)) ripple(p.clone().add(V(0,.2,0)),k?2.1:1.6,t,GRAPH,.4); });
+  if(t>=1.6&&t<2.6) pulse(CHN,GRAPH,.5); if(t>=3.4) pulse(CHN,RED,.55*(1-ejU(at('wStake',t+1.7)))); }
+
+/* ======================= finality over many slots ======================= */
+const LF={}; for(let j=11;j<=20;j++) LF[j]=1.6+(j-11)*1.45;
+const propF=j=>{ let p=(j*7+3)%NN; if(p===CHN) p=(p+1)%NN; return p; };
+const cntF=t=>{ let c=N0+1; for(let j=11;j<=20;j++) c+=win(t,LF[j]-.8,LF[j]-.2); return c; };
+const Jf=cp=>LF[cp+4]!==undefined?LF[cp+4]-.1:Infinity, Ff=cp=>Jf(cp+4);
+const gStart=cp=>cp===8?0:LF[cp];
+const vFrac=(cp,t)=>{ const a=gStart(cp), j=Jf(cp); if(t<a) return 0; if(j===Infinity) return (2/3)*seg(t,a,a+6); return t<j?(2/3)*seg(t,a,j):lerp(2/3,.8,seg(t,j,j+1.5)); };
+const finF=t=>t>=Ff(12)?12:(t>=Ff(8)?8:4);
+const freshF=j=>j<=4?undefined:(j<=8?Ff(8):(j<=12?Ff(12):undefined));
+function final(t,T){ const cnt=cntF(t);
+  let landed=N0+1; for(let j=11;j<=20;j++) if(t>=LF[j]) landed=j+1;
+  layChain(cnt,landed,finF(t),freshF,t,T);
+  stakes(postExtra,T);
+  for(let j=11;j<=20;j++){ const L=LF[j]; if(t<L-1.25||t>=L) continue; const B=BLK[j], pr=propF(j); B.g.visible=true; const a=nodeTop(pr).add(V(0,.6,0));
+    let pos; if(t<L-.35){ const u=win(t,L-1.25,L-.45); pos=arc(a,V(0,1.4,0),u,.8); if(u>0&&u<1) trail(a,V(0,1.4,0),u,.8,TRB,.24,5); } else pos=V(0,1.4,0).lerp(V(0,RY,0),win(t,L-.35,L));
+    B.g.position.copy(pos); B.g.scale.setScalar(win(t,L-1.25,L-1.0)||.001); B.ridge.position.set(-.3,-.14,0); pulse(pr,BLUE,.5); }
+  for(let j=11;j<=20;j++){ const L=LF[j]; if(t>=L-.2&&t<L+.8){ const b=BLK[j-1]; const s=win(t,L-.2,L+.1); b.ridge.position.set(-.3*(1-s),-.14*(1-s),0); ripple(V(0,RY+.02,0),L,t,GREEN,.9); } }
+  GATES.forEach(G=>{ const cp=G.cp; if(!BLK[cp].g.visible||(cp>8&&t<LF[cp])) return; G.g.visible=true; const x=BLK[cp].g.position.x; G.g.position.set(x,RY,0); G.g.scale.setScalar(cp===8?(win(t,0,.8)||.001):(win(t,LF[cp],LF[cp]+.5)||.001));
+    const f=vFrac(cp,t); G.fillb.scale.z=Math.max(.001,1.2*f/.8); G.fillb.position.z=-.6+.6*f/.8;
+    const jd=t>=Jf(cp), fz=t>=Ff(cp); G.gm.color.copy(fz?M.gateF.color:M.gateS.color); G.gm.emissive.copy(BLACK).lerp(GREEN,jd&&!fz?.45:0);
+    if(jd&&t<Jf(cp)+1.4) glowAt(V(x,RY+1.25,0),GREEN,2.4,.55*decay(t,Jf(cp),1.6));
+    if(fz&&t<Ff(cp)+1.4) glowAt(V(x,RY+.6,0),WHITEG,3.6,.5*decay(t,Ff(cp),1.4));
+    const end=Jf(cp)===Infinity?gStart(cp)+6:Jf(cp);
+    for(let k=0;k<40;k++){ const s0=gStart(cp)+.08+k*.3, e0=s0+.6; if(s0>=end) break; if(t>=s0&&t<e0){ let nd=(k*5+cp)%NN; if(nd===CHN) nd=(nd+3)%NN; const src=nodeTop(nd), dst=V(x,RY+1.32,0); const u=win(t,s0,e0); token(arc(src,dst,u,1.5),tokR(STAKE[nd])*.8); trail(src,dst,u,1.5,BLUE,.18,4); pulse(nd,GRAPH,.3); } } });
+  if(t>=16.4&&t<29.4){ const cx=BLK[YOURS].g.position.x, y0=2.75, a=fade(t,16.4,29.2,.6);
+    for(let k=0;k<12;k++){ const m=coins.get(); const ov=k>=4&&k<8&&t>=22; m.material=ov?M.red:M.coin; m.position.set(cx-2.09+k*.38,y0,0); m.rotation.x=Math.PI/2; m.scale.setScalar(a*.9+.001); }
+    const wA=7.6*.38; const bA=bars.get(); bA.material=M.stoneD; bA.scale.set(wA*win(t,17,17.8)*a+.001,.035,.06); bA.position.set(cx-2.09+3.5*.38,y0+.42,0);
+    if(t>=19.2){ const bB=bars.get(); bB.material=M.stoneD; bB.scale.set(wA*win(t,19.2,20)*a+.001,.035,.06); bB.position.set(cx-2.09+7.5*.38,y0-.42,0); }
+    if(t>=22) glowAt(V(cx-2.09+5.5*.38,y0,0),RED,2.6,.35*fade(t,22,29,1)); } }
+
+/* ======================= programs ======================= */
+const PV0=[40,20,30], PV1=[35,20,35];
+const callPos=t=>{ const a=bookSlot(0,0); if(t<3.6) return a.clone().add(V(0,.5*(1-win(t,3,3.4)),0)); return arc(a,PANEL.position.clone().add(V(1.12,.55,.2)),win(t,3.6,4.9),.9); };
+function programs(t,T){ final(29,T);
+  PANEL.visible=true; PANEL.scale.setScalar(win(t,1,1.8)||.001);
+  const u=win(t,8,9.4); PB.forEach((b,q)=>{ const val=lerp(PV0[q],PV1[q],u); const h=val*.022; b.o.scale.y=h; b.o.position.y=.05+h/2; });
+  PGEAR.rotation.z=-5*Math.max(0,Math.min(t,8)-5); const g=1-.5*win(t,5,8); PGAS.scale.y=.5*g; PGAS.position.y=.1-.25+.25*g;
+  if(t>=5&&t<8.2) glowAt(PANEL.position.clone().add(V(1.12,.4,.3)),VIOLET,1.2,.4);
+  if(t>=3&&t<5.1){ const p=callPos(t); const m=tileAt(p,M.tile,1.2); m.scale.setScalar(1.2*(1-seg(t,4.8,5.1))+.001); const sl=sealAt(p.clone().add(V(0,.03,0)),.055); const gg=seals.get(); gg.material=M.gear; gg.position.copy(p).add(V(.07,.035,.04)); gg.scale.set(.05,.02,.05); if(t>=3.6) trail(bookSlot(0,0),PANEL.position.clone().add(V(1.12,.55,.2)),win(t,3.6,4.9),.9,TRB,.24); }
+  ripple(bookSlot(0,0),3.2,t,BLUE,.5);
+  for(let i=0;i<NN;i++){ if(i===CHN) continue; const ta=9.8+ringDist(0,i)*.2; const k=win(t,ta,ta+.4); const v=PV0.map((a,q)=>lerp(a,PV1[q],k));
+    const aa=-ang(i), c=Math.cos(aa), sn=Math.sin(aa), p=nodePos(i);
+    if(t>=1.6) v.forEach((val,q)=>{ const ox=(q-1)*.13; const m=bars.get(); m.material=[M.stateBarY,M.stateBar,M.stateBarC][q]; const h=val*.012*win(t,1.6+i*.03,2.2+i*.03); m.scale.set(.09,h+.001,.09); m.position.set(p.x+ox*c,2.25+h/2,p.z-ox*sn); });
+    if(t>=ta){ pulse(i,VIOLET,.5*decay(t,ta,1.6)); ripple(nodeTop(i).add(V(0,.5,0)),ta,t,VIOLET,.5); } } }
+/* ======================= labels ======================= */
+const labelsEl=document.getElementById('labels'), LABELS=[];
+function lab(id,o){ const el=document.createElement('div'); el.className='lbl'; labelsEl.appendChild(el); o.id=id; o.el=el; o.last=''; o.lc=null;
+  if(typeof o.html==='string'){ const h=o.html; o.html=()=>h; } if(!o.cls) o.cls=()=>''; else if(typeof o.cls==='string'){ const c=o.cls; o.cls=()=>c; } if(o.pos instanceof THREE.Vector3){ const p=o.pos; o.pos=()=>p; } LABELS.push(o); }
+let tNow=0, sNow=0;
+const WL=V(WAL.x,1.55,WAL.z);
+// prologue: digital scarcity
+lab('scarcity',{pos:V(0,1.72,3.4),below:true,vis:t=>fade(t,1.2,3.3),html:'Digital things copy for free'});
+lab('scarcity',{pos:V(.45,1.72,3.4),below:true,vis:t=>fade(t,3.7,6.4),cls:'warm',html:'So one payment could be spent twice<small>the double spend problem</small>'});
+lab('scarcity',{pos:()=>RCP[0].p.clone().setY(.1),below:true,vis:t=>fade(t,1.2,11.4),cls:'num',html:'a shop'});
+lab('scarcity',{pos:()=>RCP[1].p.clone().setY(.1),below:true,vis:t=>fade(t,1.2,11.4),cls:'num',html:'a friend'});
+lab('scarcity',{pos:V(0,3.7,0),vis:t=>fade(t,7.8,12.4),html:'The usual fix: one keeper decides which counts'});
+lab('scarcity',{pos:()=>RCP[1].p.clone().setY(1.9),vis:t=>fade(t,8.4,10.6),cls:'red',html:'Rejected'});
+// 1 one book, many copies
+lab('copies',{pos:V(0,2.8,0),vis:t=>fade(t,1.4,4.4),html:'One ledger, one keeper<small>whoever holds it decides what is true</small>'});
+lab('copies',{pos:V(0,3.5,0),vis:t=>fade(t,8.2,13.4),html:'Every node keeps a full copy<small>no single keeper decides what is true</small>'});
+// 2 proving it's you
+lab('sign',{pos:WL,vis:t=>fade(t,1.2,3.8),cls:'warm',html:'Your payment<small>10 ETH to a friend</small>'});
+lab('sign',{pos:()=>signet.position.clone().add(V(0,1.0,0)),vis:t=>fade(t,2.2,4.0),cls:'graphite',html:'Your private key'});
+lab('sign',{pos:WL,vis:t=>fade(t,4.3,6.5),cls:'graphite',html:'It leaves a seal<small>bound to these exact contents</small>'});
+lab('spread',{pos:()=>nodeTop(0).add(V(0,1.0,0)),vis:t=>fade(t,.9,4.5),cls:'graphite',html:'Every node checks it with your public key<small>then queues it with other waiting payments</small>'});
+lab('wSig',{pos:()=>FM.clone().add(V(0,1.3,0)),vis:t=>fade(t,.2,2.2),html:'What if someone alters it in transit?'});
+lab('wSig',{pos:()=>fPos(tNow).add(V(0,-.1,0)),below:true,vis:t=>fade(t,.6,4.8),html:t=>t<2.1?'10.0 ETH':'100.0 ETH',cls:'num'});
+lab('wSig',{pos:()=>FM.clone().add(V(0,.9,0)),vis:t=>fade(t,2.5,4.1),cls:'red',html:'The seal no longer matches'});
+lab('wSig',{pos:()=>nodeTop(14).add(V(0,.9,0)),vis:t=>fade(t,4.2,8.4),cls:'red',html:'Rejected by every node'});
+// 3 a chain of fingerprints
+lab('chain',{pos:V(-4,1.8,0),vis:t=>fade(t,1.4,3.6),html:'While it waits: the chain it will join'});
+lab('chain',{pos:V(-5,1.5,0),vis:t=>fade(t,3.7,6.5),cls:'brass',html:'Each block carries its parent\u2019s fingerprint<small>its ridge must fit the socket on the next block</small>'});
+lab('wHash',{pos:()=>V(BLK[G0+1].g.position.x,2.9,0),vis:t=>fade(t,.2,2),html:'What if someone rewrites old history?'});
+lab('wHash',{pos:()=>V(BLK[G0].g.position.x,2.7,0),vis:t=>fade(t,2.1,3.5),cls:'red',html:'Edit one transaction'});
+lab('wHash',{pos:()=>V(BLK[G0].g.position.x+1,2.95,0),vis:t=>fade(t,3.8,5.3),cls:'red',html:'Its fingerprint changes<small>the next block no longer fits</small>'});
+lab('wHash',{pos:()=>V(BLK[G0+1].g.position.x+1,3.1,0),vis:t=>fade(t,5.4,8.6),html:'Repair one link, and the next fingerprint changes'});
+lab('wHash',{pos:()=>V(BLK[G0+GN].g.position.x,2.5,0),vis:t=>fade(t,9.2,12.8),cls:'red',html:'The copy never reconnects<small>every node still holds the original</small>'});
+// 4 who writes the next page
+lab('stake',{pos:V(0,3.2,0),vis:t=>fade(t,1.2,5),cls:'blue',html:'Validators lock up ETH as stake<small>it can be taken away</small>'});
+lab('propose',{pos:()=>nodeTop(P).add(V(0,1.35,0)),vis:t=>fade(t,.8,2.4),cls:'blue',html:'One is drawn to propose<small>odds in proportion to stake</small>'});
+lab('propose',{pos:()=>nodeTop(P).add(V(0,1.35,0)),vis:t=>fade(t,2.5,6.5),html:'It builds a block from its queue<small>fingerprints it, then signs it</small>'});
+lab('vote1',{pos:()=>HOVER.clone().add(V(0,.95,0)),vis:t=>fade(t,0,.9,.3),html:'A committee votes on it'});
+lab('explode',{pos:()=>EXP.position.clone().add(V(-1.15,.12,0)),vis:t=>fade(t,2.2,5.5),cls:'blue',html:'Stake<small>how much this vote counts</small>'});
+lab('explode',{pos:()=>EXP.position.clone().add(V(0,(.072+.2)*EXP.scale.x,0)).add(V(1.05,0,0)),vis:t=>fade(t,2.5,5.5),cls:'brass',html:'Fingerprint<small>the block it vouches for</small>'});
+lab('explode',{pos:()=>EXP.position.clone().add(V(0,(.104+.42)*EXP.scale.x+.1,0)),vis:t=>fade(t,2.8,5.5),cls:'graphite',html:'Signature<small>who is voting</small>'});
+lab('explode',{pos:()=>EXP.position.clone().add(V(0,1.7,0)),vis:t=>fade(t,.4,2.2),html:'Look closer at one vote'});
+lab('explode',{pos:()=>EXP.position.clone().add(V(0,1.75,0)),vis:t=>fade(t,5.5,7.4),html:'One vote, all three at once'});
+lab('append',{pos:()=>V(0,1.95,1.1),vis:t=>fade(t,.4,2.6),cls:'blue',html:'Votes add weight, in proportion to stake<small>nodes follow the chain with the most support</small>'});
+lab('append',{pos:V(-1.3,1.5,0),vis:t=>fade(t,3.2,5),cls:'green',html:'It fits the fingerprint of the block before'});
+lab('update',{pos:V(0,3.3,0),vis:t=>fade(t,.1,2.3),html:'Every node applies it'});
+lab('update',{pos:V(0,1.1,WELL.position.z+.9),vis:t=>fade(t,.6,2.9),html:'The base fee is burned'});
+lab('update',{pos:()=>stackPos(P).add(V(0,1.6,0)),vis:t=>fade(t,1.4,3.6),cls:'blue',html:'The tip goes to the proposer'});
+lab('update',{pos:V(0,3.3,0),vis:t=>fade(t,2.8,5.5),cls:'blue',html:'New ETH rewards honest validators'});
+lab('wStake',{pos:()=>nodeTop(CHN).add(V(0,1.5,0)),vis:t=>fade(t,.3,3.2),html:'What if a validator signs two versions of one slot?'});
+lab('wStake',{pos:()=>nodeTop(CHN).add(V(0,1.5,0)),vis:t=>fade(t,3.4,5.6),cls:'red',html:'Two signatures for one slot are proof'});
+lab('wStake',{pos:()=>nodeTop(CHN).add(V(0,1.2,0)),vis:t=>fade(t,5.8,10.4),cls:'red',html:'Part of its stake is burned, and it is removed'});
+// 5 when is it final
+lab('final',{pos:()=>V(BLK[8].g.position.x,2.2,0),vis:t=>fade(t,.6,3.9),html:'Validators vote on each epoch\u2019s first block<small>epochs are 32 slots; shown here as 4</small>'});
+lab('final',{pos:()=>V(BLK[8].g.position.x,2.2,0),vis:t=>fade(t,4,7),cls:'green',html:'Two-thirds of stake: justified'});
+lab('final',{pos:()=>V(BLK[8].g.position.x,2.2,0),vis:t=>fade(t,7.4,10.8),html:'The next checkpoint is justified, so this one is final'});
+lab('final',{pos:()=>V(BLK[YOURS].g.position.x,1.35,0),vis:t=>fade(t,14.6,17),cls:'warm',html:'Your payment is final'});
+lab('final',{pos:()=>V(BLK[YOURS].g.position.x-.8,3.45,0),vis:t=>fade(t,17.2,28.8),html:'Two-thirds of stake finalized this history'});
+lab('final',{pos:()=>V(BLK[YOURS].g.position.x+.8,2.0,0),below:true,vis:t=>fade(t,19.4,28.8),html:'A rival history would need two-thirds too'});
+lab('final',{pos:()=>V(BLK[YOURS].g.position.x,4.05,0),vis:t=>fade(t,22.2,28.8),cls:'red',html:'At least a third would have signed both<small>and all of it would be slashed</small>'});
+// 6 the ledger runs programs
+lab('programs',{pos:()=>PANEL.position.clone().add(V(0,1.55,0)),vis:t=>fade(t,2.9,4.7),html:'The ledger also holds programs<small>smart contracts, stored in the state</small>'});
+lab('programs',{pos:()=>callPos(tNow).add(V(0,.35,0)),vis:t=>fade(t,3.8,5.2),html:'A payment calls one'});
+lab('programs',{pos:()=>PANEL.position.clone().add(V(1.12,1.1,0)),vis:t=>fade(t,5.2,8),cls:'blue',html:'Every step costs gas<small>paid in ETH, so no call runs forever</small>'});
+lab('programs',{pos:()=>PANEL.position.clone().add(V(-.3,1.55,0)),vis:t=>fade(t,8.1,9.8),html:'The state changes'});
+lab('programs',{pos:V(0,5.4,0),vis:t=>fade(t,10,14.8),html:'Every node runs the same code<small>and lands on the same state</small>'});
+lab('programs',{pos:V(0,5.4,0),vis:t=>fade(t,15,19.8),html:'Every copy agrees<small>and no single keeper holds the books</small>'});
+const pv=V();
+function placeLabels(sh,t,W,Hh){ const vis=[];
+  for(const L of LABELS){ const o=L.id===sh.id?L.vis(t):0;
+    if(o<=.01){ if(L.shown){L.el.style.opacity=0;L.shown=false;} continue; }
+    pv.copy(L.pos(t)).project(camera); if(pv.z>1){ L.el.style.opacity=0; L.shown=false; continue; }
+    const h=L.html(t); if(h!==L.last){ L.el.innerHTML=h; L.last=h; L.mw=0; }
+    const c=L.cls(t); if(c!==L.lc){ L.el.className='lbl '+c; L.lc=c; L.mw=0; }
+    if(!L.mw){ L.mw=L.el.offsetWidth; L.mh=L.el.offsetHeight; }
+    const x=(pv.x*.5+.5)*W, y=(-pv.y*.5+.5)*Hh;
+    let left=x-L.mw/2, top=L.below?y:y-L.mh; left=clamp(left,10,Math.max(10,W-L.mw-10));
+    vis.push({L,o,left,top,w:L.mw,h:L.mh}); }
+  vis.sort((a,b)=>a.top-b.top);
+  for(let i=0;i<vis.length;i++) for(let j=0;j<i;j++){ const a=vis[j], b=vis[i];
+    if(b.left<a.left+a.w&&a.left<b.left+b.w&&b.top<a.top+a.h&&a.top<b.top+b.h){ b.top=a.top+a.h+2; } }
+  for(const v of vis){ v.top=clamp(v.top,8,Math.max(8,Hh-v.h-8)); v.L.el.style.transform=`translate(${v.left.toFixed(1)}px,${v.top.toFixed(1)}px)`; v.L.el.style.opacity=v.o.toFixed(3); v.L.shown=true; } }
+
+/* ======================= one continuous camera ======================= */
+const out=(i,k,h)=>{ const p=nodePos(i); return [p.x*k,h,p.z*k]; };
+const SK={
+  scarcity:[[0,[0,4.4,12.8],[0,1.2,3.4]],[6,[0,4.8,13.4],[0,1.2,3.2]],[12.4,[0,3.5,8.2],[0,1.9,.6]]],
+  copies:[[0,[0,3.3,6.4],[0,1.95,0]],[3.6,[0,3.8,7.4],[0,1.95,0]],[7.6,[0,10,16.5],[0,1.2,0]],[12.6,[2,9,17],[0,1.2,1]]],
+  sign:[[2.2,[2.2,2.6,14.3],[0,1.1,10.9]],[5.6,[1.8,2.4,13.6],[0,1.15,10.9]]],
+  spread:[[1.4,[1.6,5.2,15],[-.6,1.4,5.6]],[4.5,[3,8,16],[0,1.3,2.5]]],
+  wSig:[[2.0,[FM.x*.1,8.6,FM.z*.1+4],[FM.x*.7,1.6,FM.z*.7]],[3.1,[FM.x*.25,4.0,FM.z*.25],[FM.x,1.9,FM.z]],[5.3,[FM.x*.32,3.8,FM.z*.32],[FM.x,1.9,FM.z]],[8.1,[FM.x*.22,4.4,FM.z*.22],[FM.x,1.6,FM.z]]],
+  chain:[[2,[1,8.4,11.5],[-4,.5,0]],[6.5,[-2.6,6.6,9.4],[-7,.7,0]]],
+  wHash:[[1.4,[-6.4,3.6,6.6],[-10,1.4,0]],[3,[-8.6,3.2,5],[-11.6,1.6,0]],[5,[-7.6,3.2,5.2],[-10.6,1.8,0]],[8,[-6.8,3.8,6.4],[-9,1.8,0]],[10.2,[-8.4,8.6,5.4],[-8.2,.9,.2]],[13,[-1,6.4,12],[-3.6,1,0]]],
+  stake:[[1.6,[4,10.5,16.5],[0,1,0]],[5,[5,9.4,15.8],[0,1.2,0]]],
+  propose:[[2.3,out(P,2.0,4.8),out(P,.95,1.9)],[4.6,out(P,1.85,4.4),out(P,.85,2.3)],[6.5,[2.4,4.4,9.2],[0,1.7,.5]]],
+  vote1:[[.9,[2,3.6,7.6],[0,1.7,.8]]],
+  explode:[[1.6,[1.2,3.3,6.4],[-.9,2.95,1.9]],[6,[1.35,3.4,6.6],[-.9,2.95,1.9]],[7.5,[2.2,3.6,7.8],[0,1.7,.6]]],
+  append:[[2.4,[2.8,3.8,8.2],[0,1.5,.6]],[4.2,[2.6,2.4,5.6],[-.6,.8,0]],[5,[2.8,2.6,6.2],[-.6,.8,0]]],
+  update:[[2,[3.6,5.6,12],[-1,1.1,1.2]],[5.5,[5,8,13.5],[0,1.2,0]]],
+  wStake:[[2.0,[out(CHN,.3,0)[0],9,out(CHN,.3,0)[2]+3],out(CHN,.8,1.4)],[3.3,out(CHN,.2,4.6),out(CHN,1.0,2.0)],[7.7,out(CHN,.28,4.4),out(CHN,1.0,1.8)],[12.2,out(CHN,.1,5.6),out(CHN,1.0,1.4)]],
+  final:[[3,[4,8,15],[-4,.8,0]],[3.6,[0,8,14.5],[-5.4,.9,0]],[7.2,[-6,7.6,14.5],[-11,.9,0]],[11,[-11,7,14],[-15,.9,0]],[14.6,[-15.4,5.4,11],[-18.6,.9,0]],[17,[-17,4.4,9.4],[-20,2.3,0]],[22,[-17.4,4.2,9],[-20,2.6,0]],[28,[-15.6,5.4,11.6],[-20,2.2,0]]],
+  programs:[[3.4,[0,5.8,10.6],[0,3.2,0]],[8,[.7,5.5,10.2],[0,3.35,0]],[10.4,[0,10,17],[0,2,0]],[15.6,[7,10,16],[0,2,0]],[20,[8,10.5,16],[0,2,0]]],
+  close:[[3,[-6,8,16],[-9,.6,0]],[12,[16,24,36],[-12,0,0]]]
+};
+const KEYS=[]; SHOTS.forEach(sh=>SK[sh.id].forEach(k=>KEYS.push([sh.T0+k[0],k[1],k[2]]))); KEYS.sort((a,b)=>a[0]-b[0]);
+const _a=V(),_b=V(),_c=V(),_d=V(),_m1=V(),_m2=V(), curP=V(), curT=V();
+function herm(A,B,Cc,D,u,o){ _a.fromArray(A);_b.fromArray(B);_c.fromArray(Cc);_d.fromArray(D); const l=_c.distanceTo(_b);
+  _m1.subVectors(_c,_a).multiplyScalar(.5); { const lim=Math.min(l,_b.distanceTo(_a)||l); if(_m1.length()>lim) _m1.setLength(lim); }
+  _m2.subVectors(_d,_b).multiplyScalar(.5); { const lim=Math.min(l,_d.distanceTo(_c)||l); if(_m2.length()>lim) _m2.setLength(lim); }
+  const u2=u*u,u3=u2*u; o.set(0,0,0).addScaledVector(_b,2*u3-3*u2+1).addScaledVector(_m1,u3-2*u2+u).addScaledVector(_c,-2*u3+3*u2).addScaledVector(_m2,u3-u2); }
+function camAt(T){ let i=0; while(i<KEYS.length-2&&T>KEYS[i+1][0]) i++; const a=KEYS[Math.max(0,i-1)],b=KEYS[i],c=KEYS[i+1],d=KEYS[Math.min(KEYS.length-1,i+2)]; const u=ease(clamp((T-b[0])/(c[0]-b[0]))); herm(a[1],b[1],c[1],d[1],u,curP); herm(a[2],b[2],c[2],d[2],u,curT); }
+
+/* ======================= the map fills in as you learn ======================= */
+const mapEl=document.getElementById('map');
+const STAGES=['Sign','Spread','Propose','Vote','Append','Update'];
+const STR=[[1.0,5.5],[5.5,9.5],[9.5,15],[15,18.5],[18.5,20.5],[20.5,26]];
+const TOUCH={sig:[0,1,2,3,4],hash:[2,3,4],stake:[2,3,5],state:[5]};
+const CX=120,CY=100,RR=62;
+const stXY=(k,r)=>{ const a=-Math.PI/2+k*Math.PI/3; return [CX+(r||RR)*Math.cos(a),CY+(r||RR)*Math.sin(a)]; };
+const glyph=(p,x,y,s)=>{ s=s||1; if(p==='sig') return `<circle cx="${x}" cy="${y}" r="${5*s}" fill="#3a3e44"/><circle cx="${x}" cy="${y}" r="${2.6*s}" fill="none" stroke="#e9e7e2" stroke-width="${.9*s}"/>`;
+  if(p==='hash'){ let o=`<rect x="${x-6*s}" y="${y+2.4*s}" width="${12*s}" height="${2.6*s}" fill="#c9a062"/>`; [4,7,5,8].forEach((h,i)=>o+=`<rect x="${x-5*s+i*2.8*s}" y="${y+2.4*s-h*s}" width="${1.8*s}" height="${h*s}" fill="#c9a062"/>`); return o; }
+  if(p==='stake') return `<circle cx="${x}" cy="${y}" r="${5*s}" fill="#3a6fbf"/><circle cx="${x}" cy="${y}" r="${3*s}" fill="none" stroke="#9cc2ff" stroke-width="${.8*s}"/>`;
+  return `<rect x="${x-5.5*s}" y="${y-2*s}" width="${3*s}" height="${7*s}" fill="#e08a4f"/><rect x="${x-1.5*s}" y="${y-5*s}" width="${3*s}" height="${10*s}" fill="#6d8f7e"/><rect x="${x+2.5*s}" y="${y-3*s}" width="${3*s}" height="${8*s}" fill="#8a7fb0"/>`; };
+let mh=`<rect x="0" y="0" width="240" height="318" fill="rgba(233,231,226,.72)"/><g id="mRing"><circle cx="${CX}" cy="${CY}" r="${RR}" fill="none" stroke="rgba(35,38,42,.22)" stroke-width="1"/>`;
+STAGES.forEach((n,k)=>{ const [x,y]=stXY(k); const [lx,ly]=stXY(k,RR+17); mh+=`<circle id="mS${k}" cx="${x}" cy="${y}" r="4.5" fill="#e9e7e2" stroke="#23262a" stroke-width="1.2"/><text id="mT${k}" x="${lx}" y="${ly+3.5}" text-anchor="middle" font-size="10.5" fill="#23262a">${n}</text>`;
+  const prims=Object.keys(TOUCH).filter(p=>TOUCH[p].includes(k)); prims.forEach((p,q)=>{ const a=-Math.PI/2+k*Math.PI/3; const r2=RR-13; const off=(q-(prims.length-1)/2)*.2; const gx=CX+r2*Math.cos(a+off), gy=CY+r2*Math.sin(a+off); mh+=`<g class="mg" data-p="${p}">${glyph(p,gx,gy,.62)}</g>`; }); });
+mh+=`<circle id="mDot" cx="${CX}" cy="${CY-RR}" r="4" fill="#ff7a33"/></g>`;
+mh+=`<text id="mTitle" x="${CX}" y="${CY-4}" text-anchor="middle" font-size="12.5" font-weight="600" fill="#23262a"></text><text id="mSub" x="${CX}" y="${CY+13}" text-anchor="middle" font-size="10.5" fill="rgba(35,38,42,.6)"></text>`;
+[['sig','Signature','who authorized it'],['hash','Fingerprint','what it holds, what came before'],['stake','Stake','what cheating costs'],['state','State','what every node computes']].forEach(([p,n,s],q)=>{ const y=206+q*27;
+  mh+=`<g class="mr" data-p="${p}"><rect class="mhl" x="6" y="${y-13}" width="228" height="26" fill="#ffffff" opacity="0"/><g>${glyph(p,22,y,1)}</g><text x="38" y="${y-1}" font-size="11.5" font-weight="600" fill="#23262a">${n}</text><text x="38" y="${y+11}" font-size="10" fill="rgba(35,38,42,.6)">${s}</text></g>`; });
+mapEl.innerHTML=mh;
+const mDot=document.getElementById('mDot'), mTitle=document.getElementById('mTitle'), mSub=document.getElementById('mSub'), mRing=document.getElementById('mRing');
+const mRows=[...mapEl.querySelectorAll('.mr')], mGs=[...mapEl.querySelectorAll('.mg')];
+function updateMap(T,sh,t,s){
+  const known=p=>T>=KNOW[p];
+  mapEl.style.opacity=T<at('copies',6)?0:1;
+  mRing.style.opacity=T<SHOT.sign.T0?.35:1;
+  mTitle.textContent=CHSHORT[Math.min(5,sh.ch)]||'One system'; if(sh.id==='close') mTitle.textContent='One system';
+  let sub=''; if(s!==null) sub=sh.kind==='hold'?'paused':'one 12-second slot'; if(sh.id.startsWith('w')) sub='what if'; if(sh.id==='final') sub='many slots'; if(sh.id==='explode') sub='one vote'; mSub.textContent=sub;
+  let stage=-1, a=null;
+  if(s!==null){ for(let k=0;k<6;k++) if(s>=STR[k][0]&&s<STR[k][1]) stage=k; let k=0; while(k<5&&s>=STR[k+1][0]) k++; const u=clamp((s-STR[k][0])/(STR[k][1]-STR[k][0])); a=-Math.PI/2+(k+(s<STR[0][0]?0:u))*Math.PI/3; }
+  else if(sh.id==='final'||sh.id==='programs'||sh.id==='close'){ let pr=((t-.8)/1.45)%1; if(pr<0) pr+=1; a=-Math.PI/2+pr*2*Math.PI; }
+  if(a!==null){ mDot.setAttribute('cx',CX+RR*Math.cos(a)); mDot.setAttribute('cy',CY+RR*Math.sin(a)); mDot.style.opacity=1; } else mDot.style.opacity=0;
+  const lens=LENS&&LENS!=='all'?LENS:null;
+  for(let k=0;k<6;k++){ const on=k===stage; const lit=!lens||TOUCH[lens].includes(k); const c=document.getElementById('mS'+k); c.setAttribute('fill',on?'#23262a':'#e9e7e2'); c.style.opacity=lit?1:.3; const tx=document.getElementById('mT'+k); tx.style.opacity=lit?1:.3; tx.setAttribute('font-weight',on?'600':'400'); }
+  mRows.forEach(r=>{ const p=r.dataset.p; const kn=known(p); r.style.opacity=!kn?0:(lens&&lens!==p?.35:1); r.querySelector('.mhl').setAttribute('opacity',(.9*decay(T,KNOW[p],1.2)).toFixed(3)); });
+  mGs.forEach(g=>{ const p=g.dataset.p; g.style.opacity=!known(p)?0:(lens&&lens!==p?.2:1); }); }
+
+/* ======================= cards and closing ======================= */
+const cardEl=document.getElementById('card'), cardN=cardEl.querySelector('.n'), cardH=cardEl.querySelector('h2'), cardP=cardEl.querySelector('p');
+const closeEl=document.getElementById('close');
+const CLOSE=[['sig','Signatures prove who authorized it'],['hash','Fingerprints prove what it holds and what came before'],['stake','Stake makes cheating expensive'],['state','Every node computes the same result']];
+closeEl.innerHTML=CLOSE.map(([p,s])=>`<div><svg width="26" height="26" viewBox="0 0 26 26">${glyph(p,13,13,1.7)}</svg><span>${s}</span></div>`).join('');
+const closeRows=[...closeEl.children];
+const CARDS=[{T:0,d:3.4,n:'',h:'What a blockchain is',p:'Follow one payment through the whole system'},{T:3.3,d:2.6,n:'Prologue',h:'Digital Scarcity',p:''}];
+CHAPTERS.forEach(([h,id],k)=>CARDS.push({T:SHOT[id].T0+(k===0?4.4:.2),d:k===0?3.4:2.8,n:(k+1)+' of 6',h,p:''}));
+let cardKey=-1;
+function updateOverlays(T,sh,t){ let o=0, ci=-1; CARDS.forEach((c,k)=>{ const f=fade(T,c.T,c.T+c.d,.5); if(f>o){ o=f; ci=k; } });
+  if(ci>=0&&ci!==cardKey){ const c=CARDS[ci]; cardN.textContent=c.n; cardH.textContent=c.h; cardP.textContent=c.p; cardKey=ci; }
+  cardEl.style.opacity=o.toFixed(3);
+  if(sh.id==='close'){ closeEl.style.opacity=1; closeRows.forEach((r,k)=>r.style.opacity=fade(t,1+k*1.1,11.8,.6).toFixed(3)); } else closeEl.style.opacity=0;
+  document.getElementById('veil').style.opacity=(T>FILM-.6?seg(T,FILM-.6,FILM):(T<.6?1-seg(T,0,.6):0)).toFixed(3); }
+
+/* ======================= the world as a function of film time ======================= */
+function lensAt(sh,t){ const prev=SHOTS[sh.k-1]; const L=sh.lens, Pv=prev?prev.lens:null;
+  if(L===Pv) return [L,L?1:0];
+  if(!Pv) return [L,win(t,0,.9)];
+  if(!L) return [Pv,1-win(t,0,.9)];
+  return t<.45?[Pv,1-win(t,0,.45)]:[L,win(t,.45,.9)]; }
+function world(T){
+  const {sh,t}=shotAt(T); const wl=sh.wlead||0; tNow=Math.max(0,t-wl);
+  resetWorld();
+  const [L,la]=lensAt(sh,t); LENS=la>0?L:null; LENSAMT=la; applyLens(LENS,LENSAMT);
+  const s=slotClock(sh,t); sNow=s;
+  if(sh.id==='scarcity'){ scarcity(t); stakes({},T); }
+  else if(sh.id==='copies'){ // one keeper, then many copies
+    PED.visible=true; PED.position.y=PT+.65-1.5*win(t,6.6,7.6);
+    const bs=2.2*(1-win(t,6.2,7.0)); if(bs>.01){ BIGB.visible=true; BIGB.scale.setScalar(bs); BIGB.position.set(0,PED.position.y+.65+.35*win(t,3.4,4.4),0); }
+    for(let i=0;i<NN;i++){ const N=NODES[i], tr=4.0+i*.05, rise=win(t,tr,tr+.9); if(t<tr){ N.g.visible=false; continue; }
+      N.g.position.y=lerp(-2.4,0,rise); const u=win(t,4.6+i*.06,6.4+i*.06);
+      if(u<=0) N.book.visible=false; else { const home=V(0,PT+1.3,0); const w=N.g.localToWorld(home.clone()); N.g.updateMatrixWorld(); const src=V(0,2.35,0); const p=arc(src,N.g.localToWorld(home.clone()),u,1.6); N.book.position.copy(N.g.worldToLocal(p)); if(N.book.position.y<PT+1.3) N.book.position.y=PT+1.3; } }
+    WELL.visible=false; wped.visible=false; stakes({},T); layChain(N0,N0,-1,null,T); }
+  else if(sh.kind==='slot'||sh.kind==='hold'){ slot(s,T);
+    if(sh.id==='wSig') wSig(tNow); else if(sh.id==='wHash') wHash(t); else if(sh.id==='wStake') wStake(tNow); else if(sh.id==='explode') exploded(t);
+    if(sh.id==='chain'){ for(let j=0;j<N0;j++){ const a=at('chain',1.2+(N0-1-j)*.2)+.55; if(T>=a&&T<a+1) glowAt(V(BLK[j].g.position.x+1,RY+.3,0),C('#e8c78f'),1.1,.55*decay(T,a,2)); } }
+    WELL.visible=T>=SHOT.stake.T0; }
+  else if(sh.id==='final') final(t,T);
+  else if(sh.id==='programs') programs(t,T);
+  else if(sh.id==='close') final(29,T);
+  if(sh.kind==='post'){ YT.visible=false; signet.visible=false; wped.visible=false; }
+  for(let i=0;i<NN;i++){ const e=EM[i], N=NODES[i]; N.bm.emissive.copy(BLACK).lerp(e.c,e.a*.55); N.pg.emissive.copy(BLACK).lerp(e.c,e.a*.6); }
+  railAt(T); camAt(T);
+  return {sh,t,s,tl:tNow}; }
+
+
+/* ======================= sound: one voice per idea, synthesized, off by default ======================= */
+let AC=null, MASTER=null, soundOn=false;
+function ac(){ if(!AC){ const Ctx=window.AudioContext||window.webkitAudioContext; if(!Ctx) return null; AC=new Ctx(); MASTER=AC.createGain(); MASTER.gain.value=.55; const comp=AC.createDynamicsCompressor(); MASTER.connect(comp); comp.connect(AC.destination); } return AC; }
+function env(g,t0,a,d,peak){ g.gain.setValueAtTime(0,t0); g.gain.linearRampToValueAtTime(peak,t0+a); g.gain.exponentialRampToValueAtTime(.0001,t0+a+d); }
+function tone(f,d,type,peak,a,f2,delay){ const c=ac(); if(!c) return; const t0=c.currentTime+(delay||0); const o=c.createOscillator(), g=c.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t0); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t0+d); env(g,t0,a||.005,d,peak||.2); o.connect(g); g.connect(MASTER); o.start(t0); o.stop(t0+d+.05); }
+let NB=null; function noise(d,peak,lp,delay){ const c=ac(); if(!c) return; if(!NB){ NB=c.createBuffer(1,c.sampleRate*.5,c.sampleRate); const ch=NB.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1; } const t0=c.currentTime+(delay||0); const src=c.createBufferSource(); src.buffer=NB; const fl=c.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=lp||1200; const g=c.createGain(); env(g,t0,.003,d,peak||.2); src.connect(fl); fl.connect(g); g.connect(MASTER); src.start(t0); src.stop(t0+d+.05); }
+const SFX={
+  seal:()=>{ tone(92,.22,'sine',.5,.004,58); noise(.07,.18,900); },                      // signature: a soft stamp
+  fit:p=>{ tone(880*(p||1),.12,'sine',.07,.004); },                                          // a check that passes
+  ridge:()=>{ tone(520,.05,'triangle',.18,.002,420); noise(.03,.1,3000); },                // fingerprint: a wooden click
+  brass:()=>{ [660,990,1320].forEach((f,k)=>tone(f,.5,'sine',.05,.02,null,k*.04)); },
+  coin:p=>{ tone(1560*(p||1),.35,'sine',.07,.002); tone(2340*(p||1),.2,'sine',.03,.002); }, // stake: a small ping
+  red:()=>{ tone(196,.35,'sawtooth',.06,.01,150); tone(207,.35,'sawtooth',.05,.01,160); }, // something fails
+  burn:()=>{ noise(.5,.12,500); tone(110,.4,'sine',.08,.05,70); },
+  vote:p=>{ tone(440*(p||1),.25,'triangle',.08,.004); },
+  lock:()=>{ [196,294,392].forEach((f,k)=>tone(f,1.6,'sine',.09,.03,null,k*.02)); tone(784,1.2,'sine',.03,.2); }, // finality
+  gear:()=>{ noise(.02,.08,4000); },
+  swell:()=>{ [262,330,392,523].forEach((f,k)=>tone(f,2.6,'sine',.05,.4,null,k*.12)); }
+};
+const sT=s=>{ for(const sh of SHOTS){ if(sh.kind==='slot'&&s>=sh.s0&&s<=sh.s1){ const lead=sh.lead||0; return sh.T0+lead+(s-sh.s0)/(sh.s1-sh.s0)*(sh.dur-lead); } } return null; };
+const EV=[]; const ev=(T,k,p)=>{ if(T!==null&&isFinite(T)) EV.push([T,k,p]); };
+ev(sT(SL.stamp),'seal'); for(let i=0;i<NN;i++) ev(sT(gosT(i)),'fit',1+ringDist(0,i)*.06);
+ev(at('wSig',1.7+2.1),'red'); ev(at('wSig',1.7+4.0),'red');
+for(let j=0;j<N0;j++) ev(at('chain',1.2+(N0-1-j)*.2+.45),'ridge');
+ev(at('wHash',2.6),'red'); ev(at('wHash',3.8),'red'); ev(at('wHash',5.5),'seal'); ev(at('wHash',7.9),'seal'); ev(at('wHash',9.2),'red');
+for(let i=0;i<NN;i+=2) ev(at('stake',1.0+i*.07),'coin',.9+i*.02);
+for(let k=1;k<10;k++) ev(sT(hopT(k)),'fit',.75);
+ev(sT(SL.ridge0),'brass'); ev(sT(SL.bseal),'seal');
+COM.forEach((c,k)=>ev(sT(voteLand(k)),'vote',1+k*.12));
+ev(at('explode',1.3),'brass'); ev(at('explode',6.2),'ridge');
+ev(sT(SL.land),'ridge'); ev(sT(SL.land)+.05,'fit',1.5); ev(sT(SL.bcheck),'fit',1.2);
+for(let k=0;k<3;k++) ev(sT(SL.fee0+k*.3+.8),'burn');
+for(let k=0;k<2;k++) ev(sT(SL.tip0+k*.3+.9),'coin');
+[P,...COM].forEach((i,idx)=>ev(sT(SL.iss0+idx*.08+.6),'coin',1.2));
+ev(at('wStake',1.7+1.6),'seal'); ev(at('wStake',1.7+2.1),'seal'); ev(at('wStake',1.7+3.4),'red'); ev(at('wStake',1.7+5.6),'burn');
+for(let j=11;j<=20;j++) ev(at('final',LF[j]),'ridge');
+[8,12,16].forEach(cp=>ev(at('final',Jf(cp)),'fit',1.3)); [8,12].forEach(cp=>ev(at('final',Ff(cp)),'lock'));
+ev(at('final',22),'red');
+for(let k=0;k<12;k++) ev(at('programs',5+k*.25),'gear');
+for(let i=0;i<NN;i++) if(i!==CHN) ev(at('programs',9.8+ringDist(0,i)*.2),'fit',1+ringDist(0,i)*.05);
+ev(at('close',1),'swell');
+ev(at('scarcity',3.5),'coin'); ev(at('scarcity',8.2),'fit',1.2); ev(at('scarcity',8.25),'red');
+EV.sort((a,b)=>a[0]-b[0]);
+let lastEvT=0;
+function fireSounds(prevT,T){ if(!soundOn||!AC||T<prevT||T-prevT>.2) return; for(const [t,k,p] of EV){ if(t>prevT&&t<=T) SFX[k](p); if(t>T) break; } }
+
+/* ======================= post ======================= */
+let composer=null, bokeh=null;
+try{ const rt=new THREE.WebGLRenderTarget(2,2,{samples:4}); composer=new THREE.EffectComposer(renderer,rt); composer.addPass(new THREE.RenderPass(scene,camera));
+  bokeh=new THREE.BokehPass(scene,camera,{focus:10,aperture:.00042,maxblur:.0065}); composer.addPass(bokeh);
+  const vig=new THREE.ShaderPass(THREE.VignetteShader); vig.uniforms.offset.value=1.05; vig.uniforms.darkness.value=.5; composer.addPass(vig);
+  composer.addPass(new THREE.ShaderPass(THREE.GammaCorrectionShader)); }catch(e){ composer=null; renderer.outputEncoding=THREE.sRGBEncoding; }
+
+/* ======================= controls ======================= */
+const stageEl=document.getElementById('stage');
+let W=1,Hh=1,framed=false,PULL=1;
+function resize(){ const ww=window.innerWidth, wh=window.innerHeight; let x=0,y=0; W=ww; Hh=wh; if(framed){ W=Math.min(ww,wh*16/9); Hh=W*9/16; x=(ww-W)/2; y=(wh-Hh)/2; }
+  stageEl.style.inset='auto'; stageEl.style.left=x+'px'; stageEl.style.top=y+'px'; stageEl.style.width=W+'px'; stageEl.style.height=Hh+'px';
+  renderer.setSize(W,Hh,false); if(composer) composer.setSize(W,Hh); camera.aspect=W/Hh;
+  const hf=2*Math.atan(Math.tan(15*Math.PI/180)*16/9), vf=2*Math.atan(Math.tan(hf/2)/camera.aspect);
+  camera.fov=clamp(vf*180/Math.PI,30,66); const ha=2*Math.atan(Math.tan(camera.fov*Math.PI/360)*camera.aspect);
+  PULL=clamp(Math.tan(hf/2)/Math.tan(ha/2),1,2.2); camera.updateProjectionMatrix(); }
+window.addEventListener('resize',resize);
+const clipsEl=document.getElementById('clips'), playBtn=document.getElementById('play'), track=document.getElementById('track'), fillEl=document.getElementById('fill'), knob=document.getElementById('knob'), clock=document.getElementById('clock');
+const lb=document.getElementById('lbls'), loopBtn=document.getElementById('loop'), frm=document.getElementById('frm'), mapb=document.getElementById('mapb');
+track.setAttribute('aria-valuemax',FILM.toFixed(0));
+const chStart=k=>k===0?0:SHOT[CHAPTERS[k][1]].T0, chEnd=k=>k<5?chStart(k+1):FILM;
+CHAPTERS.forEach((c,k)=>{ const b=document.createElement('b'); b.style.left=(chStart(k)/FILM*100)+'%'; track.appendChild(b); });
+const reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let T=0, playing=!reduce, loopCh=false, last=performance.now();
+const chOf=T=>{ let c=0; for(let k=0;k<6;k++) if(T>=chStart(k)) c=k; return c; };
+const btns=CHSHORT.map((n,k)=>{ const b=document.createElement('button'); b.innerHTML=`<span class="cn">${k+1}</span><span class="cl"> ${n}</span>`; b.setAttribute('aria-label',`Chapter ${k+1}: ${CHAPTERS[k][0]}`); b.onclick=()=>{ T=chStart(k); setPlaying(true); }; clipsEl.appendChild(b); return b; });
+const setPlaying=v=>{playing=v;playBtn.textContent=v?'Pause':'Play';};
+setPlaying(playing);
+playBtn.onclick=()=>setPlaying(!playing);
+loopBtn.onclick=()=>{ loopCh=!loopCh; loopBtn.setAttribute('aria-pressed',String(loopCh)); };
+function seekFrom(e){ const r=track.getBoundingClientRect(); T=clamp((e.clientX-r.left)/r.width)*FILM; }
+track.addEventListener('pointerdown',e=>{ track.setPointerCapture(e.pointerId); setPlaying(false); seekFrom(e); });
+track.addEventListener('pointermove',e=>{ if(track.hasPointerCapture(e.pointerId)) seekFrom(e); });
+track.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){T=Math.min(FILM,T+1);setPlaying(false);} if(e.key==='ArrowLeft'){T=Math.max(0,T-1);setPlaying(false);} });
+lb.onclick=()=>{ const off=document.body.classList.toggle('nolabels'); lb.setAttribute('aria-pressed',String(!off)); };
+mapb.onclick=()=>{ const off=document.body.classList.toggle('nomap'); mapb.setAttribute('aria-pressed',String(!off)); };
+frm.onclick=()=>{ framed=!framed; document.body.classList.toggle('framed',framed); frm.setAttribute('aria-pressed',String(framed)); resize(); };
+window.addEventListener('keydown',e=>{ if(e.key===' '){ e.preventDefault(); setPlaying(!playing); } else if(e.key==='h'||e.key==='H'){ document.body.classList.toggle('clean'); } else if(e.key==='l'||e.key==='L'){ lb.click(); } else if(e.key==='m'||e.key==='M'){ mapb.click(); } else if(e.key==='f'||e.key==='F'){ frm.click(); } else if(/^[1-6]$/.test(e.key)){ T=chStart(+e.key-1); setPlaying(true); } });
+window.__seekShot=(id,s)=>{ T=SHOT[id].T0+s; setPlaying(false); };
+const sndBtn=document.getElementById('snd'); sndBtn.onclick=()=>{ soundOn=!soundOn; if(soundOn){ const c=ac(); if(c&&c.state==='suspended') c.resume(); } sndBtn.setAttribute('aria-pressed',String(soundOn)); };
+const recBtn=document.getElementById('rec'); let rec=null;
+function startRec(){ const c=chOf(T); rec={c,prevFramed:framed}; document.body.classList.add('recording','clean'); if(!framed) frm.click(); T=chStart(c); setPlaying(true); recBtn.setAttribute('aria-pressed','true'); }
+function stopRec(){ if(!rec) return; document.body.classList.remove('recording','clean'); if(!rec.prevFramed&&framed) frm.click(); rec=null; recBtn.setAttribute('aria-pressed','false'); }
+recBtn.onclick=()=>rec?stopRec():startRec();
+window.addEventListener('keydown',e=>{ if(e.key==='Escape') stopRec(); else if(e.key==='r'||e.key==='R') recBtn.click(); });
+// adaptive quality: if frames run slow, drop resolution, then depth of field
+let fAvg=16, fN=0, qLevel=0;
+function adapt(dtMs){ fAvg=fAvg*.95+dtMs*.05; fN++; if(fN<90||rec) return; if(fAvg>30&&qLevel===0){ qLevel=1; renderer.setPixelRatio(1); resize(); fN=0; } else if(fAvg>30&&qLevel===1&&bokeh){ qLevel=2; bokeh.enabled=false; fN=0; } }
+function frame(now){
+  const dtRaw=now-last; const dt=Math.min(.05,dtRaw/1000); last=now; if(playing) adapt(dtRaw);
+  if(rec&&playing&&T+dt>=chEnd(rec.c)-.02){ T=chEnd(rec.c)-.02; setPlaying(false); }
+  const T_before=T;
+  if(playing){ const c0=chOf(T); T+=dt; if(loopCh&&c0<6&&T>=chEnd(c0)-.01&&c0<5) T=chStart(c0); if(T>FILM) T=0; }
+  if(playing) fireSounds(T_before,T);
+  const st=world(T);
+  camera.position.copy(curT).addScaledVector(curP.clone().sub(curT),PULL); camera.lookAt(curT);
+  sun.position.set(curT.x-14,26,curT.z+18); sun.target.position.set(curT.x,0,curT.z);
+  const ch=chOf(T); btns.forEach((b,k)=>b.setAttribute('aria-pressed',String(k===ch)));
+  const f=T/FILM; fillEl.style.width=(f*100)+'%'; knob.style.left=(f*100)+'%'; track.setAttribute('aria-valuenow',T.toFixed(0));
+  clock.textContent=Math.floor(T/60)+':'+String(Math.floor(T%60)).padStart(2,'0');
+  if(composer){ bokeh.uniforms.focus.value=camera.position.distanceTo(curT); composer.render(); } else renderer.render(scene,camera);
+  placeLabels(st.sh,st.sh.wlead?st.tl:st.t,W,Hh); updateMap(T,st.sh,st.t,st.s); updateOverlays(T,st.sh,st.t);
+  requestAnimationFrame(frame);
+}
+resize(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

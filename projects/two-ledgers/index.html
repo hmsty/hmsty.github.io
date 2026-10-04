@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/pfp.jpg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Two ledgers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --ink:#1f262c; --soft:rgba(31,38,44,.66); --line:rgba(31,38,44,.24); --amber:#d9571a; --bg:#e3e0d8; --halo:rgba(238,236,230,.92);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#10151f; } }
+:root[data-theme="dark"]{ --bg:#10151f; }
+body.night{ --ink:#e8edf1; --soft:rgba(232,237,241,.68); --line:rgba(232,237,241,.25); --amber:#ff9a5c; --halo:rgba(8,12,18,.85); }
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+#labels{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.lbl{position:absolute;left:0;top:0;white-space:nowrap;font-size:13.5px;letter-spacing:.01em;color:var(--ink);text-shadow:0 0 2px var(--halo),0 0 7px var(--halo),0 0 12px var(--halo);
+  padding-bottom:6px;will-change:transform,opacity;transition:color .6s}
+.lbl.inst{color:var(--soft);font-family:'Barlow Condensed','Barlow',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.lbl.tick{color:rgba(226,231,235,.88);font-family:'JetBrains Mono',monospace;font-size:10px;padding:0;text-shadow:none}
+.lbl.event{font-weight:600;font-size:14px}
+.lbl.num{font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px}
+.lbl.warm{color:var(--amber)}
+.hud{position:fixed;left:max(20px,env(safe-area-inset-left));top:calc(18px + env(safe-area-inset-top,0px));
+  font-size:12.5px;color:var(--soft);font-family:'JetBrains Mono',monospace;transition:opacity .8s,color .6s}
+.hud b{font-weight:500;color:var(--ink);margin-right:10px}
+.title{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.title h1{margin:0;font-weight:400;font-size:clamp(34px,5vw,60px);letter-spacing:-.02em}
+.title p{margin:.6em 0 0;font-size:clamp(15px,1.5vw,18px);color:var(--soft)}
+.bar{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;
+  padding:14px max(20px,env(safe-area-inset-right)) calc(16px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left));font-size:13px}
+button{font:inherit;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:0;padding:7px 14px;cursor:pointer;min-height:34px;transition:color .6s,border-color .6s}
+button:hover{border-color:var(--soft)}
+button:focus-visible,.track:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.track{position:relative;flex:1;height:28px;cursor:pointer}
+.track::before{content:"";position:absolute;left:0;right:0;top:13px;height:1px;background:var(--line)}
+.track i{position:absolute;left:0;top:13px;height:1px;background:var(--ink);transition:background .6s}
+.track s{position:absolute;top:9px;width:9px;height:9px;margin-left:-4px;background:var(--amber);text-decoration:none}
+.hint{position:fixed;left:50%;bottom:74px;transform:translateX(-50%);font-size:13px;color:var(--soft);pointer-events:none;text-align:center}
+.err{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:16px}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+</head>
+<body><a href="/" style="position:fixed;top:14px;left:16px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:9999;background:rgba(38,36,34,.6);padding:2px 6px;border-radius:3px">← will jensen</a>
+<canvas id="gl" tabindex="0" aria-label="Three-dimensional scene: an order for 100 shares fills in Nasdaq's limit order book, is novated and netted at NSCC, settles at DTC, and is minted as a token on Ethereum through the builder, relay, proposer and attestation process."></canvas>
+<div id="labels" aria-hidden="true"></div>
+<div class="title" id="title"><h1>Two ledgers</h1><p>One tokenized share, from order to finality</p></div>
+<div class="hud" id="hud"><b id="clock"></b><span id="rate"></span></div>
+<div class="hint" id="hint">Drag to look around. The world keeps running.<br><span style="font-size:11.5px">Illustrative. MERI is fictional. DTCC's production runs so far used Besu and Canton, not Ethereum.</span></div>
+<div class="bar">
+  <button id="play">Pause</button>
+  <div class="track" id="track" role="slider" tabindex="0" aria-label="Story position" aria-valuemin="0" aria-valuemax="142" aria-valuenow="0"><i id="fill"></i><s id="knob"></s></div>
+  <button id="mode">Explore</button>
+</div>
+<div class="err" id="err">This piece needs WebGL, which this browser has turned off.</div>
+<script>
+(function(){
+'use strict';
+if(!window.THREE){ document.getElementById('err').style.display='flex'; return; }
+THREE.ColorManagement.legacyMode=false;
+const canvas=document.getElementById('gl');
+let renderer;
+try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true}); }catch(e){ document.getElementById('err').style.display='flex'; return; }
+renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputEncoding=THREE.sRGBEncoding; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.05;
+
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(36,1,0.3,700);
+const V=(x,y,z)=>new THREE.Vector3(x,y,z);
+const C=h=>new THREE.Color(h);
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const seg=(t,a,b)=>clamp((t-a)/(b-a));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const smooth=x=>x*x*x*(x*(x*6-15)+10);
+const win=(t,a,b,f)=>Math.min(seg(t,a,a+f),1-seg(t,b-f,b));
+const frac=x=>x-Math.floor(x);
+const mod=(a,n)=>((a%n)+n)%n;
+const hash=n=>{ n=Math.imul(n^0x9e3779b9,0x85ebca6b); n^=n>>>13; n=Math.imul(n,0xc2b2ae35); n^=n>>>16; return (n>>>0); };
+function rng(seed){ return ()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }; }
+const fmtN=n=>Math.abs(n).toLocaleString('en-US');
+const DUR=142;
+
+/* ================= light and ground ================= */
+const SKY=[[0,'#0d1119'],[5.4,'#0d1119'],[6.6,'#3b3a4c'],[7.5,'#e0c3ad'],[8.8,'#e3e0d8'],[16.2,'#e3e0d8'],[17.6,'#dcb293'],[18.7,'#4a4458'],[19.6,'#0d1119'],[24,'#0d1119']].map(k=>[k[0],C(k[1])]);
+const SUN=[[0,0],[6.2,0],[7.8,1],[16.3,1],[18.4,0],[24,0]];
+function keyColor(keys,h,out){ for(let i=0;i<keys.length-1;i++){ if(h>=keys[i][0]&&h<=keys[i+1][0]){ const u=(h-keys[i][0])/(keys[i+1][0]-keys[i][0]); return out.copy(keys[i][1]).lerp(keys[i+1][1],u); } } return out.copy(keys[0][1]); }
+function keyNum(keys,h){ for(let i=0;i<keys.length-1;i++){ if(h>=keys[i][0]&&h<=keys[i+1][0]){ const u=(h-keys[i][0])/(keys[i+1][0]-keys[i][0]); return lerp(keys[i][1],keys[i+1][1],smooth(u)); } } return keys[0][1]; }
+scene.background=C('#e3e0d8'); scene.fog=new THREE.Fog(scene.background,85,250);
+const hemi=new THREE.HemisphereLight(0xffffff,0xaab3ba,.75); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xffead6,1.6); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+Object.assign(sun.shadow.camera,{left:-95,right:95,top:95,bottom:-95,near:1,far:400}); sun.shadow.bias=-.0004; sun.shadow.normalBias=.03;
+sun.target.position.set(0,0,-6); scene.add(sun,sun.target);
+const nightL=new THREE.DirectionalLight(0x8fa6d6,0); nightL.position.set(-40,80,60); scene.add(nightL);
+if(THREE.RoomEnvironment){ const pm=new THREE.PMREMGenerator(renderer); scene.environment=pm.fromScene(new THREE.RoomEnvironment(),.04).texture; }
+const matForm=new THREE.MeshStandardMaterial({color:'#c9ced2',metalness:.82,roughness:.3});            // brushed stainless
+const matDark=new THREE.MeshStandardMaterial({color:'#2d3238',metalness:.15,roughness:.62});            // graphite pads
+const matCeramic=new THREE.MeshStandardMaterial({color:'#f1efea',roughness:.55});
+const matScreen=new THREE.MeshStandardMaterial({color:'#1b2024',roughness:.4,metalness:.2,emissive:'#0e1418',emissiveIntensity:.4});
+const concreteTex=(()=>{ const c=document.createElement('canvas'); c.width=c.height=512; const g=c.getContext('2d'); g.fillStyle='#b9b6ae'; g.fillRect(0,0,512,512);
+  const R0=rng(3); for(let i=0;i<9000;i++){ const v=150+Math.floor(R0()*60); g.fillStyle=`rgba(${v},${v-2},${v-6},${.05+R0()*.08})`; g.fillRect(R0()*512,R0()*512,1+R0()*3,1+R0()*3); }
+  g.strokeStyle='rgba(70,70,66,.32)'; g.lineWidth=2; g.beginPath(); g.moveTo(0,1); g.lineTo(512,1); g.moveTo(1,0); g.lineTo(1,512); g.stroke();
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(90,90); t.encoding=THREE.sRGBEncoding; t.anisotropy=8; return t; })();
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(900,900),new THREE.MeshStandardMaterial({color:'#ffffff',map:concreteTex,roughness:.92})); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+// painted floor stencils in place of floating name tags
+const STENCILS=[];
+function stencil(text,x,z,w,paint,rot){ const c=document.createElement('canvas'); c.width=1024; c.height=192; const tex=new THREE.CanvasTexture(c); tex.encoding=THREE.sRGBEncoding; tex.anisotropy=8;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,w*192/1024),new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2}));
+  m.rotation.x=-Math.PI/2; m.rotation.z=rot||0; m.position.set(x,.03,z); scene.add(m);
+  const draw=()=>{ const g=c.getContext('2d'); g.clearRect(0,0,1024,192); g.fillStyle=paint; g.textAlign='center'; g.textBaseline='middle';
+    let fs=128; const set=()=>{ g.font=`600 ${fs}px 'Barlow Condensed', 'Arial Narrow', sans-serif`; if('letterSpacing' in g) g.letterSpacing=Math.round(fs*.14)+'px'; };
+    set(); while(g.measureText(text).width>960&&fs>40){ fs-=4; set(); } g.fillText(text,512,100); tex.needsUpdate=true; };
+  draw(); STENCILS.push({draw,m}); return m; }
+const UNIT=new THREE.BoxGeometry(1,1,1);
+function box(w,h,d,x,y,z,mat,cast=true){ const m=new THREE.Mesh(UNIT,mat||matForm); m.scale.set(w,h,d); m.position.set(x,y,z); m.castShadow=cast; m.receiveShadow=true; scene.add(m); return m; }
+const GT=(()=>{ const c=document.createElement('canvas'); c.width=c.height=128; const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,0,64,64,64); gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.22,'rgba(255,255,255,.5)'); gr.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=gr; g.fillRect(0,0,128,128); return new THREE.CanvasTexture(c); })();
+function glow(color,size,op){ const s=new THREE.Sprite(new THREE.SpriteMaterial({map:GT,color,transparent:true,opacity:op===undefined?.6:op,depthWrite:false})); s.scale.set(size,size,1); scene.add(s); return s; }
+function lineMat(color,op){ return new THREE.LineBasicMaterial({color,transparent:true,opacity:op===undefined?1:op,depthWrite:false}); }
+function tube(curve,r,mat){ const m=new THREE.Mesh(new THREE.TubeGeometry(curve,140,r,6,false),mat); scene.add(m); return m; }
+function dynLines(color){ const l=new THREE.LineSegments(new THREE.BufferGeometry(),lineMat(color,0)); scene.add(l); return l; }
+function setLines(l,pts,op){ l.geometry.setFromPoints(pts.length?pts:[V(),V()]); l.material.opacity=pts.length?op:0; }
+const matAmber=new THREE.MeshStandardMaterial({color:'#ff8a45',emissive:'#ff7428',emissiveIntensity:.85,roughness:.45});
+const matBuy=new THREE.MeshStandardMaterial({color:'#5c6b77',roughness:.7});
+const matSell=new THREE.MeshStandardMaterial({color:'#e8edf0',roughness:.8});
+const matTether=new THREE.MeshBasicMaterial({color:'#9aa8b2',transparent:true,opacity:.5});
+const matAccent=new THREE.MeshStandardMaterial({color:'#4a78a6',emissive:'#4a78a6',emissiveIntensity:.25,roughness:.6});
+
+/* ================= layout ================= */
+const N=V(-44,0,-15.8);            // exchange
+const RC=V(-24,4.2,4), RR=4.6;     // clearinghouse tray
+const RCF=V(-24,4.5,6.4);          // where trade reports land on the tray
+const P={ investor:V(-54,0,8), dtc:V(4,0,-10) };
+const D=V(40,0,-2);                // validator dial centre
+const WAL=V(22,0,12);              // broker's registered wallet
+const CON=V(40,0,-2);              // token contract, at the heart of the helix
+const RELAY=V(40,0,20.6);
+const BLD=[V(31,0,26),V(40,0,28),V(49,0,26)];
+
+/* ================= brokers and the clearinghouse ================= */
+const BROK=[];
+for(let i=0;i<10;i++){ const a=Math.PI+i*(Math.PI*2/10); const x=RC.x+15.5*Math.cos(a), z=RC.z+15.5*Math.sin(a);
+  const m=box(3.2,1.1,2,x,.55,z,matDark); m.rotation.y=-a+Math.PI/2;
+  const stem=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.5,10),matForm); stem.position.set(x,1.1+1.25,z); stem.castShadow=true; scene.add(stem);
+  const plate=box(1.05,.06,1.05,x,3.6,z); plate.rotation.y=m.rotation.y;
+  const net=box(.55,1,.55,x,3.6,z,matBuy); net.rotation.y=m.rotation.y;
+  const ghost=new THREE.LineSegments(new THREE.EdgesGeometry(UNIT),lineMat('#56636c',.55)); ghost.position.set(x,3.6,z); ghost.rotation.y=m.rotation.y; scene.add(ghost);
+  BROK.push({x,z,a,rot:m.rotation.y,net,ghost,plateY:3.63,edge:V(RC.x+RR*Math.cos(a),RC.y,RC.z+RR*Math.sin(a))});
+}
+const OURS=0, SELLER=5, OTHERBUYER=3;
+box(1.3,1.3,1.3,P.investor.x,.65,P.investor.z,matCeramic);
+const ring=new THREE.Mesh(new THREE.TorusGeometry(RR,.26,24,180),matForm); ring.position.copy(RC); ring.rotation.x=Math.PI/2; ring.castShadow=true; scene.add(ring);
+const tray=new THREE.Mesh(new THREE.CylinderGeometry(RR-.1,RR-.1,.08,96),matForm); tray.position.set(RC.x,RC.y-.1,RC.z); tray.receiveShadow=tray.castShadow=true; scene.add(tray);
+box(.28,RC.y,.28,RC.x,RC.y/2,RC.z);
+const colOwedTo=box(.7,1,.7,RC.x-.55,RC.y,RC.z,matBuy), colOwedBy=box(.7,1,.7,RC.x+.55,RC.y,RC.z,matSell);
+
+/* trades: earlier today, the story's two fills, and the afternoon */
+const TRADES=[];
+(function(){ const R=rng(77); const pick=()=>[100,200,300,400,500][Math.floor(R()*5)];
+  for(let k=0;k<34;k++){ const b=Math.floor(R()*10); let s=Math.floor(R()*10); if(s===b) s=(s+3)%10; TRADES.push({b,s,size:pick(),tLeg:-1,pre:true}); }
+  { let pn=0; TRADES.forEach(t=>{ if(t.b===OURS) pn+=t.size; if(t.s===OURS) pn-=t.size; }); const need=Math.max(0,300-pn); if(need>0) TRADES.push({b:OURS,s:7,size:need,tLeg:-1,pre:true}); }
+  TRADES.push({b:OURS,s:SELLER,size:100,tEx:26.6,tRing:30.6,tLeg:34.2,ours:true});
+  for(let k=0;k<26;k++){ const t=37.8+k*(5.4/26)+R()*.12; let b=Math.floor(R()*10), s=Math.floor(R()*10); if(s===b) s=(s+4)%10; if(k%4===0) b=OURS; if(s===OURS) s=6; if(s===b) s=(s+1)%10; TRADES.push({b,s,size:pick(),tEx:t-1.3,tRing:t-.45,tLeg:t+.25}); }
+})();
+function positions(s){ const out=BROK.map(()=>({buy:0,sell:0})); let gross=0;
+  TRADES.forEach(t=>{ if(t.pre||s>=t.tLeg){ out[t.b].buy+=t.size; out[t.s].sell+=t.size; gross+=t.size; } }); return {out,gross}; }
+const FINAL=positions(99);
+const K_NET=2.1/Math.max(...FINAL.out.map(p=>Math.abs(p.buy-p.sell)));
+const K_GROSS=3.2/Math.max(...FINAL.out.map(p=>p.buy+p.sell));
+const K_CENTER=2.6/FINAL.gross;
+const SUMPOS=FINAL.out.reduce((a,p)=>a+Math.max(0,p.buy-p.sell),0);
+const legs=[]; for(let i=0;i<14;i++) legs.push(box(.26,.26,.26,0,-9,0,matBuy,false));
+const legsS=[]; for(let i=0;i<14;i++) legsS.push(box(.26,.26,.26,0,-9,0,matSell,false));
+const pairsB=[],pairsS=[]; for(let i=0;i<8;i++){ pairsB.push(box(.3,.3,.3,0,-9,0,matBuy,false)); pairsS.push(box(.3,.3,.3,0,-9,0,matSell,false)); }
+const oblig=[]; for(let i=0;i<30;i++) oblig.push(box(.16,.16,.16,0,-9,0,matBuy,false));
+
+/* ================= the exchange: a limit order book ================= */
+box(10.6,.5,5.6,N.x,.25,N.z,matDark);
+const TICKX=i=>N.x-4.3+i*.9+(i>=5?.4:0);
+const PRICE=i=>(84.16+i*.01).toFixed(2);
+box(9.9,.05,.1,N.x,.53,N.z+.6,matForm);
+for(let i=0;i<10;i++) box(.05,.06,.3,TICKX(i),.53,N.z+.6,matForm);
+// gateway arch at the front, tape panel at the back
+
+box(9.4,1.8,.08,N.x,.5+.9,N.z-2.65,matScreen);
+const H_PER=.0014;
+const STACKS=[
+  [500,300],[400,200,200],[600,300],[200,400,100],
+  [300,200,400],
+  [100,300,{size:200,arrive:21.6}],[400,200],[300,500],[200,200,300],[600]
+].map((arr,i)=>arr.map((o,k)=>{ const ord=typeof o==='number'?{size:o}:o; ord.flick=(i!==4&&i!==5&&k===arr.length-1)?(i*.137%1):-1; ord.side=i<5?'bid':'ask'; if(!ord.ours) ord.mesh=box(.64,ord.size*H_PER*.94,.64,TICKX(i),0,N.z,i<5?matBuy:matSell); return ord; }));
+const incoming=box(.64,400*H_PER,.64,0,-9,0,matSell); incoming.add(new THREE.LineSegments(new THREE.EdgesGeometry(UNIT),lineMat('#27323a',.8)));
+function ordPresent(i,k,s){ const o=STACKS[i][k]; if(o.arrive&&s<o.arrive&&!explore) return false; if(i===5&&k===0&&s>26.05&&!explore) return false; return true; }
+function ordLeft(i,k,s){ if(explore) return 1; if(i===5&&k===0) return 1-ease(seg(s,25.6,26.05)); return 1; }
+function stackY(i,k,s){ let y=.53; for(let j=0;j<k;j++){ if(ordPresent(i,j,s)) y+=STACKS[i][j].size*H_PER*ordLeft(i,j,s); } return y; }
+// the tape: last-sale prints
+const PRINTS=[];
+const tapeGeo=new THREE.BufferGeometry(), TP=40, tapePos=new Float32Array(TP*3); tapeGeo.setAttribute('position',new THREE.BufferAttribute(tapePos,3));
+const tapeDots=new THREE.Points(tapeGeo,new THREE.PointsMaterial({color:'#4a78a6',size:.14,transparent:true,depthWrite:false})); scene.add(tapeDots);
+const tapeLine=new THREE.Line(new THREE.BufferGeometry(),lineMat('#4a78a6',.6)); scene.add(tapeLine);
+
+/* ================= DTC, with Cede & Co. inside it ================= */
+box(6,12,6,P.dtc.x,6,P.dtc.z);
+const STRIPS=[]; for(let i=0;i<19;i++){ const m=new THREE.Mesh(new THREE.PlaneGeometry(4.6,.07),new THREE.MeshBasicMaterial({color:'#c4ccd2'})); m.position.set(P.dtc.x,1.6+i*.5,P.dtc.z+3.01); scene.add(m); STRIPS.push(m); }
+const NSCC_ROW=17, OUR_ROW=8, OTHER_ROWS=[3,5,11,14]; const rowY=i=>1.6+i*.5;
+const faceBars=[0,1,2,3].map(()=>box(1,.16,.12,0,-9,0,matBuy,false));
+// the vitrine on the roof and the folder inside it
+const VIT=V(P.dtc.x,12,P.dtc.z);
+const glassMat=new THREE.MeshStandardMaterial({color:'#d6e7f6',transparent:true,opacity:.16,roughness:.1,depthWrite:false});
+const vit=new THREE.Mesh(UNIT,glassMat); vit.scale.set(4.4,2.6,4.4); vit.position.set(VIT.x,VIT.y+1.3,VIT.z); scene.add(vit);
+vit.add(new THREE.LineSegments(new THREE.EdgesGeometry(UNIT),lineMat('#8aa0b4',.8)));
+const matPaper=new THREE.MeshStandardMaterial({color:'#efe9dd',roughness:.9});
+const folder=new THREE.Group(); folder.position.set(VIT.x,VIT.y+.08,VIT.z); scene.add(folder);
+{ const back=new THREE.Mesh(UNIT,matPaper); back.scale.set(2.8,1.9,.06); back.position.set(0,.95,-.28); back.rotation.x=-.16; back.castShadow=true; folder.add(back);
+  const front=new THREE.Mesh(UNIT,matPaper); front.scale.set(2.8,1.5,.06); front.position.set(0,.75,.28); front.rotation.x=.2; front.castShadow=true; folder.add(front);
+  const tab=new THREE.Mesh(UNIT,matPaper); tab.scale.set(.9,.3,.06); tab.position.set(-.8,2.0,-.43); tab.rotation.x=-.16; folder.add(tab);
+  for(let i=0;i<5;i++){ const sh=new THREE.Mesh(UNIT,new THREE.MeshStandardMaterial({color:'#f7f4ee',roughness:.9})); sh.scale.set(2.5,1.55,.02); sh.position.set(0,.85,-.14+i*.07); folder.add(sh); } }
+const folderGlow=glow('#ff8a45',3.4,0); folderGlow.position.set(VIT.x,VIT.y+1.1,VIT.z);
+const invCurve=new THREE.QuadraticBezierCurve3(V(P.investor.x,1.3,P.investor.z),V(-46,3.2,6),V(BROK[OURS].x,1.2,BROK[OURS].z)); tube(invCurve,.035,matTether);
+const clrMat=matTether.clone(); tube(new THREE.QuadraticBezierCurve3(V(RC.x+RR,RC.y,RC.z),V(-8,9,-2),V(P.dtc.x-3,4,P.dtc.z+1)),.035,clrMat);
+const folderCurve=new THREE.QuadraticBezierCurve3(V(VIT.x,VIT.y+1,VIT.z+1.2),V(P.dtc.x-.5,10,P.dtc.z+4.2),V(P.dtc.x-1.2,rowY(OUR_ROW),P.dtc.z+3.1));
+const claim=box(1.2,.12,.8,0,-9,0,matAmber,false);
+
+/* ================= market data: other exchanges, the SIP, the broker's screen ================= */
+const VEN=[{name:'NYSE',p:V(-58.5,0,-12),bid:[84.20,500],ask:[84.22,300]},{name:'Cboe',p:V(-58,0,-20.5),bid:[84.19,300],ask:[84.23,200]}];
+VEN.forEach(v=>{ box(3.4,.5,2.6,v.p.x,.25,v.p.z,matDark); const hb=v.bid[1]*H_PER, ha=v.ask[1]*H_PER; box(.6,hb,.6,v.p.x-.7,.5+hb/2,v.p.z,matBuy); box(.6,ha,.6,v.p.x+.7,.5+ha/2,v.p.z,matSell); v.top=V(v.p.x,1.3,v.p.z); });
+const NQ_Q=V(N.x-5,1.1,N.z), NQ_ASK=V(TICKX(5),1.3,N.z);
+const SIP=V(-53.5,0,-3.5); box(.9,3.2,.9,SIP.x,1.6,SIP.z); box(1.4,.3,1.4,SIP.x,3.35,SIP.z); const SIPTOP=V(SIP.x,3.5,SIP.z);
+const PANEL=V(-47.6,0,7.2); box(.12,1.3,.12,PANEL.x,.65,PANEL.z); const screen=box(2.8,1.5,.12,PANEL.x,2,PANEL.z,matScreen); 
+const QC=[...VEN.map(v=>v.top),NQ_Q].map(a=>new THREE.QuadraticBezierCurve3(a,a.clone().lerp(SIPTOP,.5).add(V(0,3,0)),SIPTOP));
+QC.forEach(c=>tube(c,.03,matTether));
+const NB=new THREE.QuadraticBezierCurve3(SIPTOP,V(-50,5,2),V(PANEL.x,2.8,PANEL.z)); tube(NB,.03,matTether);
+const dashes=[]; for(let i=0;i<15;i++) dashes.push(box(.16,.16,.16,0,-9,0,matBuy,false));
+const TANG=V(Math.sin(BROK[OURS].a),0,-Math.cos(BROK[OURS].a));
+const ROUTER=V(BROK[OURS].x,1.5,BROK[OURS].z).add(TANG.clone().multiplyScalar(-1.05)); box(.5,.34,.5,ROUTER.x,1.27,ROUTER.z,matAccent,false);
+const APPROACH=V((TICKX(4)+TICKX(5))/2,.6,N.z), HIT=V(TICKX(5)-.64,.6,N.z);
+const ROUTES=[...VEN.map(v=>v.top),APPROACH].map((to,i)=>{ const c=new THREE.QuadraticBezierCurve3(ROUTER.clone().add(V(0,.3,0)),ROUTER.clone().lerp(to,.5).add(V(0,7,0)),to); const m=new THREE.MeshBasicMaterial({color:i<2?'#56636c':'#ff7428',transparent:true,opacity:0,depthWrite:false}); tube(c,.05,m); return {c,m}; });
+const probes=[0,1,2].map(()=>box(.18,.18,.18,0,-9,0,matAccent,false));
+const coinGeo=new THREE.CylinderGeometry(.3,.3,.07,24);
+const takerCoin=new THREE.Mesh(coinGeo,matBuy), rebateCoin=new THREE.Mesh(coinGeo,matBuy); scene.add(takerCoin,rebateCoin); takerCoin.position.y=rebateCoin.position.y=-9;
+
+/* ================= Ethereum: the validator dial ================= */
+const plateau=new THREE.Mesh(new THREE.CylinderGeometry(20,20.8,.6,128),matDark); plateau.position.set(D.x,.3,D.z); plateau.receiveShadow=plateau.castShadow=true; scene.add(plateau);
+const SECT=32, WEDGE=Math.PI*2/SECT, PHI=j=>Math.PI/2+j*WEDGE;
+{ const pts=[]; for(let j=0;j<SECT;j++){ const a=PHI(j)-WEDGE/2; pts.push(V(D.x+7.6*Math.cos(a),.62,D.z+7.6*Math.sin(a)),V(D.x+19.2*Math.cos(a),.62,D.z+19.2*Math.sin(a))); }
+  scene.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts),lineMat('#6c7680',.9))); }
+const wedgeG=new THREE.Group(); wedgeG.position.set(D.x,.63,D.z); scene.add(wedgeG);
+const wedgeMat=new THREE.MeshBasicMaterial({color:'#4a78a6',transparent:true,opacity:.1,depthWrite:false,side:THREE.DoubleSide});
+const wedge=new THREE.Mesh(new THREE.RingGeometry(7.6,19.2,6,1,-WEDGE/2,WEDGE),wedgeMat); wedge.rotation.x=-Math.PI/2; wedgeG.add(wedge);
+const handG=new THREE.Group(); handG.position.set(D.x,.7,D.z); scene.add(handG);
+const hand=new THREE.Mesh(UNIT,matAccent); hand.scale.set(1.3,.34,.34); hand.position.set(19.75,0,0); hand.castShadow=true; handG.add(hand);
+{ const rim=new THREE.Mesh(new THREE.TorusGeometry(19.75,.06,8,180),matForm); rim.rotation.x=Math.PI/2; rim.position.set(D.x,.66,D.z); scene.add(rim); }
+const PILL=[];
+(function(){ const R=rng(19); for(let j=0;j<SECT;j++){ [9.6,12.1,14.6,17.1].forEach(r=>{ const a=PHI(j)+(R()-.5)*WEDGE*.55; const x=D.x+r*Math.cos(a), z=D.z+r*Math.sin(a); const h=1.05+R()*.45;
+  const mat=new THREE.MeshStandardMaterial({color:'#e9edf0',roughness:.8,emissive:'#6fa8ff',emissiveIntensity:0}); box(.36,h,.36,x,.6+h/2,z,mat); PILL.push({x,z,sector:j,top:V(x,.6+h+.05,z),mat,j:R()}); }); } })();
+const PADJ=PILL.map(()=>[]), PEDGES=[];
+(function(){ const key=new Set(); PILL.forEach((p,i)=>{ PILL.map((q,j)=>[j,Math.hypot(q.x-p.x,q.z-p.z)]).filter(d=>d[0]!==i).sort((a,b)=>a[1]-b[1]).slice(0,3).forEach(([j])=>{ const k=i<j?i+'-'+j:j+'-'+i; if(!key.has(k)){ key.add(k); PEDGES.push([i,j]); PADJ[i].push(j); PADJ[j].push(i);} }); }); })();
+const netGeo=new THREE.BufferGeometry(); const netPos=new Float32Array(PEDGES.length*6), netCol=new Float32Array(PEDGES.length*6);
+PEDGES.forEach(([i,j],k)=>{ const a=PILL[i].top,b=PILL[j].top; netPos.set([a.x,a.y-.35,a.z,b.x,b.y-.35,b.z],k*6); });
+netGeo.setAttribute('position',new THREE.BufferAttribute(netPos,3)); netGeo.setAttribute('color',new THREE.BufferAttribute(netCol,3));
+scene.add(new THREE.LineSegments(netGeo,new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.85,depthWrite:false})));
+let ENTRY=0; { let bd=1e9; PILL.forEach((p,i)=>{ const d=Math.hypot(p.x-23.5,p.z+5); if(d<bd){bd=d;ENTRY=i;} }); }
+const GDEP=PILL.map(()=>Infinity), GPAR=PILL.map(()=>-1);
+{ GDEP[ENTRY]=0; const q=[ENTRY]; while(q.length){ const i=q.shift(); for(const j of PADJ[i]) if(GDEP[j]===Infinity){ GDEP[j]=GDEP[i]+1; GPAR[j]=i; q.push(j);} } }
+const G0=69.8, GHOP=.5, tG=i=>G0+GDEP[i]*GHOP+PILL[i].j*.12;
+// each node's own mempool: pending orders resting on the validator
+const PEND=2, pend=new THREE.InstancedMesh(new THREE.BoxGeometry(.15,.15,.15),new THREE.MeshBasicMaterial({color:'#8fa7bc'}),PILL.length*PEND); pend.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(pend);
+const ocop=new THREE.InstancedMesh(new THREE.BoxGeometry(.2,.2,.2),matAmber,PILL.length); ocop.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(ocop);
+// the token contract, the state at the centre
+box(1.7,3.4,1.7,CON.x,.6+1.7,CON.z);
+const conRows=[]; for(let i=0;i<5;i++){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.3,.08),new THREE.MeshBasicMaterial({color:'#c4ccd2'})); m.position.set(CON.x,1.3+i*.5,CON.z+.86); scene.add(m); conRows.push(m); }
+const CON_ROW=2; const conRowY=i=>1.3+i*.5;
+const lamps=[0,1].map(k=>box(.28,.28,.28,CON.x-.4+k*.8,4.15,CON.z,new THREE.MeshStandardMaterial({color:'#dfe6eb',emissive:'#6fa8ff',emissiveIntensity:0}),false));
+{ const c=new THREE.Mesh(new THREE.CylinderGeometry(1,1.1,.9,48),matDark); c.position.set(WAL.x,.45,WAL.z); c.castShadow=c.receiveShadow=true; scene.add(c); }
+const beamCurve=new THREE.CatmullRomCurve3([V(VIT.x+2.2,VIT.y+1.6,VIT.z),V(12,20,-9),V(19,12,-7),PILL[ENTRY].top.clone().add(V(0,.3,0))]);
+const beamMat=matTether.clone(); tube(beamCurve,.05,beamMat);
+const walletCurve=new THREE.QuadraticBezierCurve3(V(BROK[OURS].x,1.2,BROK[OURS].z),V(-8,26,20),V(WAL.x,1.1,WAL.z));
+const walletMat=matTether.clone(); walletMat.opacity=0; tube(walletCurve,.04,walletMat);
+const balCurve=new THREE.QuadraticBezierCurve3(V(CON.x,conRowY(CON_ROW),CON.z+.9),V(31,4,8),V(WAL.x,1.1,WAL.z));
+const balMat=matTether.clone(); balMat.opacity=0; tube(balCurve,.035,balMat);
+const entryCurve=new THREE.QuadraticBezierCurve3(PILL[ENTRY].top.clone(),V(31,6,-4),V(CON.x-.9,3,CON.z));
+
+/* ================= builders and the relay ================= */
+const FEES=[[3,3,2,2,2,1,1,1],[4,3,3,2,2,2,1,1],[3,3,2,2,1,1,1,1]];
+const OURRANK=[1,2,1], PRIVATE=1, NINC=6, WIN=1;
+const BUILD=BLD.map((b,k)=>{
+  box(6.2,.5,3.6,b.x,.25,b.z,matDark);
+  // rack: eight shelves, sorted by fee, highest on top
+  const rack=new THREE.LineSegments(new THREE.EdgesGeometry(UNIT),lineMat('#56636c',.7)); rack.scale.set(.8,2.9,.8); rack.position.set(b.x-2.1,.5+1.45,b.z); scene.add(rack);
+  for(let r=0;r<8;r++) box(.8,.03,.8,b.x-2.1,.5+.2+r*.34,b.z,matForm,false);
+  const tx=[]; for(let r=0;r<8;r++){ const ours=r===OURRANK[k], priv=(k===PRIVATE&&r===0); const m=box(.3,.3,.3,0,-9,0,ours?matAmber:(priv?matBuy:matAccent),false); tx.push({m,ours,priv}); }
+  // candidate block: a frame with capacity for six orders, sealed later
+  const cand=new THREE.Group(); cand.position.set(b.x,.5+.8,b.z); scene.add(cand);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(UNIT),lineMat('#4a78a6',.9)); frame.scale.set(1.4,1.4,1.4); cand.add(frame);
+  const shell=new THREE.Mesh(UNIT,new THREE.MeshStandardMaterial({color:'#9db3c6',transparent:true,opacity:0,roughness:.6})); shell.scale.set(1.46,1.46,1.46); cand.add(shell);
+  const lay=[]; for(let i=0;i<NINC;i++){ const m=new THREE.Mesh(UNIT,matAccent); m.scale.set(1.1,.14,1.1); m.position.y=-.55+i*.2; m.visible=false; cand.add(m); lay.push(m); }
+  // the bid: a stack of fee coins
+  const coins=new THREE.Group(); coins.position.set(b.x+1.75,.5,b.z); scene.add(coins);
+  const total=FEES[k].slice(0,NINC).reduce((a,c)=>a+c,0); const cn=[], mg=[];
+  for(let i=0;i<total-2;i++){ const c=new THREE.Mesh(coinGeo,matAccent); c.position.y=.05+i*.09; c.visible=false; c.castShadow=true; coins.add(c); cn.push(c); }
+  for(let i=0;i<2;i++){ const c=new THREE.Mesh(coinGeo,matAccent); c.position.set(b.x+2.55,.55+i*.09,b.z); c.visible=false; c.castShadow=true; scene.add(c); mg.push(c); }
+  return {pos:b,rack,tx,cand,frame,shell,lay,coins,cn,mg,total};
+});
+// relay: a table with three slots and a raised pedestal
+box(7,.7,2.4,RELAY.x,.35,RELAY.z);
+const pedestal=box(1.9,.3,1.9,RELAY.x,.85,RELAY.z);
+const RSLOT=[V(RELAY.x-2.5,.7,RELAY.z),V(RELAY.x,1.0,RELAY.z),V(RELAY.x+2.5,.7,RELAY.z)];
+const header=box(1.2,.08,.8,0,-9,0,new THREE.MeshStandardMaterial({color:'#9db3c6',roughness:.5}),false);
+const WELL=V(D.x,.62,D.z+4.3);
+{ const w=new THREE.Mesh(new THREE.CylinderGeometry(.95,.95,.05,40),new THREE.MeshStandardMaterial({color:'#39434d',roughness:.9})); w.position.copy(WELL); scene.add(w); }
+const matBase=new THREE.MeshStandardMaterial({color:'#b9c2c9',roughness:.6});
+const matNew=new THREE.MeshStandardMaterial({color:'#ffffff',emissive:'#bfe0ff',emissiveIntensity:.6,roughness:.4});
+const baseCoins=[0,1,2,3].map(()=>{ const c=new THREE.Mesh(coinGeo,matBase); c.position.y=-9; scene.add(c); return c; });
+const COINK=1.7;
+const newCoins=[0,1,2,3,4].map(()=>{ const c=new THREE.Mesh(coinGeo,matNew); c.position.y=-9; c.scale.setScalar(.8); scene.add(c); return c; });
+const burnGlow=glow('#ffb07a',2.2,0); burnGlow.position.copy(WELL).add(V(0,.3,0));
+const sigGlow=glow('#bfe0ff',2.2,0), spot=glow('#8fc0ff',3.6,0);
+
+/* ================= the chain, a helix of epochs ================= */
+const RHX=6.4, Y0=11.6, RH=1.7, BSZ=.9, RINGS=4, POOL=RINGS*32, LAYERS=6, CHIPS=4;
+const bGeo=new THREE.BoxGeometry(BSZ,BSZ,BSZ), eGeo=new THREE.EdgesGeometry(bGeo);
+const M={
+  glass:new THREE.MeshStandardMaterial({color:'#cfe2f4',transparent:true,opacity:.2,roughness:.15,depthWrite:false}),
+  just:new THREE.MeshStandardMaterial({color:'#dfe9f2',transparent:true,opacity:.5,roughness:.4,depthWrite:false}),
+  fin:new THREE.MeshStandardMaterial({color:'#eef1f3',roughness:.85}),
+  aGlass:new THREE.MeshStandardMaterial({color:'#ffc9a6',transparent:true,opacity:.4,emissive:'#ff7428',emissiveIntensity:.35,depthWrite:false}),
+  aFin:new THREE.MeshStandardMaterial({color:'#ffd9c0',emissive:'#ff7428',emissiveIntensity:.2,roughness:.7})
+};
+const E={ glass:lineMat('#4a78a6',.6), fin:lineMat('#a6b1b8',.55), amber:lineMat('#ff7428',1) };
+const matHeader=new THREE.MeshStandardMaterial({color:'#9db3c6',roughness:.6});
+const matLink=new THREE.MeshStandardMaterial({color:'#8aa0b4',roughness:.6});
+const BLOCKS=[];
+for(let i=0;i<POOL;i++){ const m=new THREE.Mesh(bGeo,M.glass); const e=new THREE.LineSegments(eGeo,E.glass); m.add(e);
+  const hd=new THREE.Mesh(UNIT,matHeader); hd.scale.set(BSZ+.04,.1,BSZ+.04); hd.position.y=BSZ/2+.05; m.add(hd);
+  scene.add(m); const lk=new THREE.Mesh(UNIT,matLink); scene.add(lk); BLOCKS.push({m,e,hd,lk}); }
+const layers=new THREE.InstancedMesh(new THREE.BoxGeometry(.64,.045,.64),new THREE.MeshBasicMaterial({color:'#ffffff'}),POOL*LAYERS);
+layers.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(layers); for(let i=0;i<POOL*LAYERS;i++) layers.setColorAt(i,C('#4a78a6'));
+const chips=new THREE.InstancedMesh(new THREE.BoxGeometry(.16,.04,.16),new THREE.MeshStandardMaterial({color:'#6f96bd',roughness:.5}),POOL*CHIPS);
+chips.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(chips);
+const flyChips=[0,1,2,3].map(()=>box(.2,.05,.2,0,-9,0,matAccent,false));
+// one checkpoint gauge per visible epoch: votes toward the 2/3 needed to justify
+const GAUGES=[]; for(let r=0;r<RINGS;r++){ const g=new THREE.Group(); scene.add(g);
+  const tubeM=new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,1.3,16,1,true),glassMat); tubeM.position.y=.65; g.add(tubeM);
+  const fillM=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,1,16),matAccent); g.add(fillM);
+  const notch=new THREE.Mesh(new THREE.TorusGeometry(.15,.022,6,24),matAmber); notch.rotation.x=Math.PI/2; notch.position.y=1.3*2/3; g.add(notch);
+  GAUGES.push({g,fillM}); }
+const propLine=new THREE.Line(new THREE.BufferGeometry().setFromPoints([V(),V()]),lineMat('#4a78a6',.9)); scene.add(propLine);
+const propGlow=glow('#8fc0ff',3,0), aggGlow=glow('#bfe0ff',2.4,0);
+const execLine=dynLines('#ff7428'), sigLine=dynLines('#4a78a6');
+
+/* ================= moving pieces ================= */
+const share=new THREE.Mesh(UNIT,matAmber); share.castShadow=true; scene.add(share);
+const mast=box(.04,.55,.04,0,-9,0,matAmber,false), flagM=box(.22,.13,.02,0,-9,0,matAmber,false);
+const half=new THREE.Mesh(UNIT,matSell); half.castShadow=true; scene.add(half);
+const shareGlow=glow('#ff8a45',3.2,.5);
+const shareLight=new THREE.PointLight(0xff8540,1.5,12,2); scene.add(shareLight);
+const pulse=glow('#ff8a45',2.4,.85);
+const flash=glow('#ffffff',3.5,0);
+const lines=dynLines('#56636c'), obLines=dynLines('#56636c');
+
+/* ================= time ================= */
+const DAY=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+const W0=15*3600+50*60;
+const SEG=[[0,37,0],[37,44,560],[44,49,280],[49,58,62000],[58,64,150],[64,96,0],[96,107,950],[107,142,0]];
+function worldAt(s){ let w=W0; for(const g of SEG){ if(s>=g[1]) w+=(g[1]-g[0])+g[2]; else { if(s>g[0]){ const u=(s-g[0])/(g[1]-g[0]); w+=(s-g[0])+g[2]*smooth(u);} break; } } return w; }
+{ const q=worldAt(86)/12; let t=Math.ceil(q-1e-6); while(t%32!==20) t++; SEG[3][2]+=(t-q)*12; }
+const SLOT_M=Math.round(worldAt(86)/12);
+const cAfter=m=>Math.ceil(m/32)*32;
+const isJust=(m,n)=>n>=cAfter(m)+22;
+const isFinal=(m,n)=>n>=cAfter(m)+54;
+(function(){ const R=rng(55); const t0=W0-90, tEnd=16*3600; let p;
+  const s1=worldAt(25.5), s2=worldAt(26.05);
+  for(let t=t0;t<tEnd;t+=1.8+R()*2.2){ if(Math.abs(t-s1)<1.2||Math.abs(t-s2)<1.2) continue; p=R()<.5?84.20:84.21; if(R()<.08) p=R()<.5?84.19:84.22; PRINTS.push({t,p}); }
+  PRINTS.push({t:s2,p:84.21}); PRINTS.sort((a,b)=>a.t-b.t); })();
+
+/* ================= helix geometry ================= */
+let vslot=0;
+function helix(m,n,ph,out){ const e=Math.floor(m/32), j=mod(m,32), E=Math.floor(n/32);
+  const Eeff=(mod(n,32)===0)?E-1+ease(seg(ph,.12,.35)):E; const L=Eeff-e;
+  const a=PHI(j); out.set(D.x+RHX*Math.cos(a),Y0-L*RH,D.z+RHX*Math.sin(a)); return out; }
+function blockPos(m,out){ return helix(m,Math.floor(vslot),frac(vslot),out); }
+
+/* ================= camera ================= */
+const K=[
+ [0,[-8,72,104],[6,0,-6]],[8,[-53,27,31],[-50,1,-7]],
+ [11,[-53,15,25],[-48.5,1.5,1]],[13.8,[-47,12,23],[-42,1.5,2]],
+ [16.4,[-53,23,22],[-48,1,-9]],
+ [19.8,[-45,6.5,-4.5],[-43.4,.9,-15.6]],[23,[-44.6,5.4,-6.4],[-43.4,.9,-15.8]],
+ [25.2,[-42.6,4.2,-8.4],[-43.2,.8,-15.8]],[27.4,[-42.8,5.2,-7.6],[-43.4,1,-15.4]],[29,[-34,21,13],[-30,1.5,-6]],
+ [30.5,[-37,18,6],[-27,3,1]],[34,[-24,25,27],[-24,3,3]],
+ [38,[-25,32,32],[-24,2,4]],[44,[-26,34,34],[-24,2,3]],[48.5,[-26,36,37],[-24,2,3]],
+ [52,[-2,46,66],[8,4,-6]],[56.5,[0,36,54],[4,6,-8]],
+ [59.5,[15,11,9],[4,8,-7]],[63.5,[15,13.5,9],[4,10,-8]],
+ [66.8,[17,22,22],[16,11,-7]],[69.4,[29,14,11],[27,2,-4]],
+ [72.5,[44,30,30],[40,1,-1]],[75.6,[45,26,38],[40,1,10]],
+ [77.5,[40,14,46],[40,1.4,25.4]],[82.5,[40,14,45.5],[40,1.4,25]],
+ [84.4,[45,12,39],[40,2,15]],[86.4,[47,13,37],[40,2.6,12]],
+ [88.3,[39,21,37],[34,5,1]],[93.4,[39,21,37],[34,5,1]],[95,[57,16,6],[41,8,-4]],
+ [96,[62,16,-18],[41,7.5,-3]],[107,[62,16,-18],[41,7.5,-3]],
+ [109.6,[26,30,34],[10,8,-8]],[112,[15,15,13],[4,9,-8]],
+ [116,[2,34,46],[-6,4,-6]],[121,[0,58,80],[6,2,-2]],[127,[-2,76,110],[10,0,0]],[142,[-2,76,110],[10,0,0]]
+];
+function cr(p0,p1,p2,p3,t){ const t2=t*t,t3=t2*t; return .5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3); }
+function camAt(s,oP,oT){ let i=0; while(i<K.length-2&&s>K[i+1][0]) i++; const a=K[Math.max(0,i-1)],b=K[i],c=K[i+1],d=K[Math.min(K.length-1,i+2)]; const u=clamp((s-b[0])/(c[0]-b[0]));
+  for(let k=0;k<3;k++){ oP.setComponent(k,cr(a[1][k],b[1][k],c[1][k],d[1][k],u)); oT.setComponent(k,cr(a[2][k],b[2][k],c[2][k],d[2][k],u)); } }
+
+/* ================= state ================= */
+let S=0, playing=false, explore=false, world=worldAt(0), seeked=true, snapCam=true, sFin=-1, returning=0;
+vslot=world/12;
+const finPos=V(), camP=V(), camT=V(), curP=V(), curT=V(), tmp=V(), tmp2=V(), col=C('#fff');
+const controls=new THREE.OrbitControls(camera,canvas);
+controls.enabled=false; controls.enableDamping=true; controls.dampingFactor=.08; controls.maxPolarAngle=Math.PI*.48; controls.minDistance=4; controls.maxDistance=190;
+const retFrom={p:V(),t:V()};
+const proposerOf=n=>hash(n*7+3)%PILL.length;
+const committee=n=>{ const out=[]; PILL.forEach((p,i)=>{ if(p.sector===mod(n,32)) out.push(i); }); return out; };
+const arc=(a,b,u,h,out)=>{ out.lerpVectors(a,b,u); out.y+=Math.sin(Math.PI*u)*h; return out; };
+
+/* ================= environment reflections dim with the sun ================= */
+const ENVMATS=new Set(); scene.traverse(o=>{ const ms=o.material?(Array.isArray(o.material)?o.material:[o.material]):[]; ms.forEach(m=>{ if(m&&m.isMeshStandardMaterial) ENVMATS.add(m); }); });
+Object.values(M).forEach(m=>ENVMATS.add(m)); [matAmber,matBuy,matSell,matAccent,matForm,matDark,matCeramic,matScreen,matBase,matNew,matHeader,matLink].forEach(m=>ENVMATS.add(m));
+ENVMATS.forEach(m=>{ m.userData.env=(m===matForm)?1:(m===matDark?.7:.85); });
+
+/* ================= floor stencils ================= */
+const INK='rgba(40,44,48,.78)', PAINT='rgba(236,238,240,.85)';
+stencil('INVESTOR',P.investor.x,P.investor.z+2.4,4,INK);
+stencil('YOUR BROKER',BROK[OURS].x,BROK[OURS].z+2.7,3.8,INK);
+stencil('NASDAQ',N.x,N.z+4.3,6,INK);
+VEN.forEach(v=>stencil(v.name.toUpperCase(),v.p.x,v.p.z+2.4,3,INK));
+stencil('SIP',SIP.x,SIP.z+1.6,1.8,INK);
+stencil('NSCC  CLEARING',RC.x,RC.z+7.4,5.6,INK);
+stencil('DTC  DEPOSITORY',P.dtc.x,P.dtc.z+7.6,6,INK);
+stencil('VALIDATORS',D.x,D.z+18.9,5.5,PAINT);
+stencil('BUILDERS',D.x,30.8,6,INK);
+stencil('RELAY',RELAY.x,RELAY.z+2.2,3,INK);
+stencil('TOKEN CONTRACT',CON.x,CON.z+1.55,2.3,PAINT);
+stencil('BROKER WALLET',WAL.x,WAL.z+1.9,3.4,INK);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>STENCILS.forEach(s=>s.draw()));
+
+/* ================= labels ================= */
+const labelsEl=document.getElementById('labels'); const LABELS=[];
+function label(text,pos,cls,vis){ const el=document.createElement('div'); el.className='lbl '+cls; el.textContent=typeof text==='function'?'':text; labelsEl.appendChild(el); LABELS.push({el,text,pos,vis,last:-1,side:cls.includes('tick')}); }
+const instV=s=>explore?1:seg(s,8,10);
+const ev=(a,b)=>s=>explore?0:win(s,a,b,.45);
+const bpos=(k,off)=>()=>V(BLD[k].x+off[0],off[1],BLD[k].z+off[2]);
+label('Cede & Co., inside DTC',V(VIT.x,VIT.y+2.9,VIT.z),'inst',s=>explore?1:instV(s)*(1-win(s,60.8,65,.5)));
+for(let i=0;i<10;i++) label(PRICE(i),V(TICKX(i),.55,N.z+1.05),'tick',s=>explore?0:win(s,16.5,29.5,.6));
+label('Bids',V(N.x-2.6,.6,N.z+2.3),'tick',s=>explore?0:win(s,16.8,29.5,.6));
+label('Asks',V(N.x+2.8,.6,N.z+2.3),'tick',s=>explore?0:win(s,16.8,29.5,.6));
+label('Tape',V(N.x+4.1,2.55,N.z-2.65),'inst',s=>explore?0:win(s,23,29.5,.6));
+VEN.forEach(v=>{ label(v.bid[0].toFixed(2),V(v.p.x-.7,.55,v.p.z+.9),'tick',s=>explore?0:win(s,8,17.5,.6)); label(v.ask[0].toFixed(2),V(v.p.x+.7,.55,v.p.z+.9),'tick',s=>explore?0:win(s,8,17.5,.6)); });
+label('NBBO   $84.20 bid   \u00d7   $84.21 ask',V(PANEL.x,2.95,PANEL.z),'num',s=>explore?1:win(s,8.4,19,.6));
+label('Each exchange sends its best quote to the SIP',V(SIP.x,4.5,SIP.z),'event',ev(8.6,11.4));
+label('Your broker shows the national best bid and offer',V(PANEL.x,3.5,PANEL.z),'event',ev(10.8,13));
+label('Buy 100 MERI at market',()=>share.position.clone().add(V(0,.5,0)),'event warm',ev(12.6,14.8));
+label('Settle in token form',()=>share.position.clone().add(V(0,.85,0)),'event warm',ev(14.8,16.8));
+label('Router checks every exchange for the best offer',V(ROUTER.x,2.6,ROUTER.z),'event',ev(15.2,17.8));
+label('Best offer is on Nasdaq: $84.21',V(TICKX(5),1.7,N.z+.6),'event',ev(17.8,20.6));
+label("The token flag doesn't change execution",()=>share.position.clone().add(V(0,.85,0)),'event warm',ev(20.8,23.4));
+label('Oldest sell at $84.21 fills first',V(TICKX(5),1.9,N.z),'event',ev(23.4,25.9));
+label('Filled: 100 at $84.21',()=>share.position.clone().add(V(0,.7,0)),'event warm',ev(26.1,28.4));
+label('Taker pays the exchange a fee, the resting seller earns a rebate',V(N.x,1.1,N.z+3.1),'event',ev(26.6,29.8));
+label('Trade report to NSCC',()=>share.position.clone().add(V(0,.7,0)),'event',ev(28.6,30.8));
+label('NSCC sells to your broker',()=>share.position.clone().add(V(0,.6,0)),'event warm',ev(31.6,35.4));
+label('NSCC buys from the seller',()=>half.position.clone().add(V(0,.6,0)),'event',ev(31.6,35.4));
+label('NSCC stays flat: owed out equals owed in',V(RC.x,RC.y+3.4,RC.z),'event',ev(36,43.6));
+label(()=>{ const p=positions(S).out[OURS]; const n=p.buy-p.sell; return 'Bought '+fmtN(p.buy)+'   Sold '+fmtN(p.sell)+'   Net '+(n>=0?'+':'-')+fmtN(n); },V(BROK[OURS].x,7.3,BROK[OURS].z),'num',ev(35.2,48.8));
+label('Gross',()=>{ const p=positions(S).out[OURS]; return V(BROK[OURS].x+.6,BROK[OURS].plateY+(p.buy+p.sell)*K_GROSS+.1,BROK[OURS].z); },'inst',s=>explore?0:win(s,36,45.5,.5));
+label('Netted: one obligation per firm',V(RC.x,RC.y+3.4,RC.z),'event',ev(44.6,48.8));
+label('Settled, T+1',V(P.dtc.x+3.2,rowY(OUR_ROW)+.4,P.dtc.z+3),'event',ev(60.8,64.4));
+label("Cash settles net at day's end",V(P.dtc.x+3.2,rowY(3)+.4,P.dtc.z+3),'event',ev(62,64.6));
+label("Shares stay registered to Cede & Co., DTC's nominee",V(VIT.x,VIT.y+2.9,VIT.z),'event',ev(61.2,65));
+label('Flag triggers the mint',()=>share.position.clone().add(V(0,.6,0)),'event warm',ev(64.4,66.6));
+label('Mint transaction, fee paid by DTC',()=>share.position.clone().add(V(0,.6,0)),'event warm',ev(66.4,69.6));
+label('Gossip: every node keeps a copy',V(28,3.2,-5),'event',ev(70,74.2));
+label("Each node's mempool",()=>PILL[PADJ[ENTRY][0]].top.clone().add(V(0,.6,0)),'event',ev(72.4,75.6));
+label('Private order, only this builder has it',bpos(1,[-2.1,3.4,0]),'event',ev(76.4,78.6));
+label('Builders sort by fee',bpos(1,[-2.1,3.4,0]),'event',ev(78.6,80.4));
+label('Pack until the block is full',bpos(1,[0,2.6,0]),'event',ev(79,81.2));
+label('Low fees wait for a later block',bpos(0,[-2.1,.1,1.4]),'event',ev(80.6,82.6));
+label('Each order offers a tip to get in',bpos(0,[-2.1,3.4,0]),'event',ev(76.3,78.6));
+label('Bid: the tips it will pay the proposer',bpos(1,[1.75,2.4,0]),'event',ev(81.2,82.6));
+label('Builder keeps a margin',bpos(1,[2.55,1.3,0]),'event',ev(82.6,84.2));
+label('Sealed: only header and bid are visible',V(RELAY.x,3,RELAY.z),'event',ev(83,84.6));
+label('Relay lifts the highest bid',V(RELAY.x,3,RELAY.z),'event',ev(84.6,86.2));
+label('Proposer, drawn at random, weighted by stake',()=>spot.position.clone().add(V(0,.8,0)),'event',ev(83.8,86.2));
+label('Proposer signs the header blind',()=>PILL[proposerOf(SLOT_M)].top.clone().add(V(0,.6,0)),'event',ev(86.2,87.3));
+label('Relay reveals the block',V(RELAY.x,3,RELAY.z),'event',ev(87.1,88.3));
+label(()=>'Slot '+(mod(Math.floor(vslot),32)+1)+' of 32',()=>{ const a=PHI(mod(Math.floor(vslot),32)); return V(D.x+19.9*Math.cos(a),1.2,D.z+19.9*Math.sin(a)); },'num',s=>explore?1:win(s,69,107,.8));
+label('Block lands above its slot',()=>blockPos(SLOT_M,V()).add(V(0,1,0)),'event',ev(88.2,89.8));
+label('Checks: minter is DTC, wallet registered',V(CON.x,5,CON.z),'event',ev(88.4,89.8));
+label('Winning builder pays the proposer',()=>PILL[proposerOf(SLOT_M)].top.clone().add(V(0,1.1,0)),'event',ev(87.4,88.8));
+label('Base fee is burned: nobody receives it',V(WELL.x,1.5,WELL.z),'event',ev(91.2,93));
+label('Protocol pays voters and proposer in new ETH',V(D.x+1.5,2.2,D.z+2),'event',ev(92.8,95.2));
+label('Removed from every mempool',()=>PILL[PADJ[ENTRY][1]].top.clone().add(V(0,.6,0)),'event',ev(88.4,90));
+label('Balance +100',V(WAL.x,2.9,WAL.z),'event warm',ev(90,92.6));
+label('Committee votes land on the block',()=>blockPos(SLOT_M,V()).add(V(0,1,0)),'event',ev(90,91.8));
+label('One ring = one epoch of 32 slots',()=>blockPos(Math.floor(SLOT_M/32)*32,V()).add(V(0,1.1,0)),'event',ev(94,98.2));
+label('Checkpoint votes: 2/3 of stake needed',()=>GAUGES[0].g.position.clone().add(V(0,1.8,0)),'event',ev(98,103.2));
+label('Finalized',()=>finPos,'event warm',s=>explore?0:(sFin>0?win(s,sFin,sFin+3.5,.4):0));
+label('DTC tracks the token on chain',V(P.dtc.x+3.2,rowY(OUR_ROW)+.4,P.dtc.z+3),'event warm',ev(109.2,113));
+label('Holder of record',V(VIT.x,VIT.y+3.4,VIT.z),'event',ev(111.2,142));
+label('Tokenized entitlement',V(P.dtc.x+3.2,rowY(OUR_ROW)+.4,P.dtc.z+3),'event warm',ev(112.4,142));
+label('Token: a balance in the contract',V(CON.x,5.4,CON.z),'event warm',ev(115.8,142));
+label("Customer's claim",V(BROK[OURS].x,2.6,BROK[OURS].z),'event warm',ev(119.4,142));
+
+/* ================= the share, in each of its forms ================= */
+const inv=V(P.investor.x,1.9,P.investor.z), router=V(ROUTER.x,1.75,ROUTER.z);
+function placeShare(s){
+  let vis=true, sx=.9,sy=.07,sz=.6, halfVis=false, glowK=1, rot=0, mastBase=null;
+  const ord=()=>{ sx=.64; sy=.14; sz=.64; glowK=.4; };
+  if(s<11.8){ vis=false; }
+  else if(s<12.5){ tmp.copy(inv); const k=ease(seg(s,11.8,12.5)); sx*=k; sz*=k; }
+  else if(s<14){ arc(inv,router,ease(seg(s,12.5,14)),2.5,tmp); }
+  else if(s<17.4){ tmp.copy(router).add(V(0,.1,0)); }
+  else if(s<21){ ROUTES[2].c.getPoint(ease(seg(s,17.4,21)),tmp); const k=seg(s,20.2,21); sx=lerp(.9,.64,k); sy=lerp(.07,.14,k); sz=lerp(.6,.64,k); }
+  else if(s<23.8){ tmp.copy(APPROACH); ord(); }
+  else if(s<25.6){ tmp.lerpVectors(APPROACH,HIT,ease(seg(s,23.8,25.6))); ord(); }
+  else if(s<26.05){ tmp.copy(HIT); ord(); }
+  else if(s<30.6){ const p0=V(TICKX(5)-.3,.8,N.z), p1=RCF.clone(); arc(p0,p1,ease(seg(s,26.6,30.6)),7,tmp);
+    const k=ease(seg(s,26.05,26.5)); sx=lerp(.64,.38,k); sy=lerp(.14,.38,k); sz=lerp(.64,.38,k); halfVis=true; rot=s*.7; }
+  else if(s<31.2){ tmp.copy(RCF); sx=sy=sz=.38; halfVis=true; rot=s*.7; }
+  else if(s<34.2){ arc(RCF.clone().add(V(-.25,0,0)),V(BROK[OURS].x,BROK[OURS].plateY+.1,BROK[OURS].z),ease(seg(s,31.6,34.2)),3,tmp); sx=sy=sz=.38; }
+  else if(s<59.5){ const k=ease(seg(s,34.2,34.8)); const h=Math.max(.12,100*K_NET); tmp.set(BROK[OURS].x,BROK[OURS].plateY+h/2,BROK[OURS].z); sx=lerp(.38,.6,k); sy=lerp(.38,h,k); sz=lerp(.38,.6,k); rot=BROK[OURS].rot; glowK=.6;
+    const nb=BROK[OURS].net; if(nb.visible) mastBase=nb.position.y+nb.scale.y/2; }
+  else if(s<61){ const to=V(P.dtc.x-1.2,rowY(NSCC_ROW),P.dtc.z+3.1); arc(V(BROK[OURS].x,BROK[OURS].plateY+.1,BROK[OURS].z),to,ease(seg(s,59.5,61)),9,tmp); const k=ease(seg(s,60.3,61)); sx=lerp(.6,1.4,k); sy=lerp(.25,.16,k); sz=lerp(.6,.14,k); }
+  else if(s<64.3){ const u=ease(seg(s,61,62.2)); tmp.set(P.dtc.x-1.2,lerp(rowY(NSCC_ROW),rowY(OUR_ROW),u),P.dtc.z+3.1); sx=1.4; sy=.16; sz=.14; }
+  else if(s<66.2){ const k=ease(seg(s,64.3,64.9)), up=ease(seg(s,64.9,66.2)); tmp.set(lerp(P.dtc.x-1.2,VIT.x+2.2,up),lerp(rowY(OUR_ROW),VIT.y+1.6,up),P.dtc.z+3.1+k*.5-up*3.6); sx=lerp(1.4,.3,up); sy=lerp(.16,.3,up); sz=lerp(.14,.3,up); }
+  else if(s<69.2){ beamCurve.getPoint(ease(seg(s,66.2,69.2)),tmp); sx=sy=sz=.3; rot=s; }
+  else if(s<69.8){ tmp.copy(PILL[ENTRY].top).add(V(0,.3,0)); sx=sy=sz=.3; rot=s; }
+  else if(s<89.8){ vis=false; }
+  else { const k=ease(seg(s,89.8,90.5)); tmp.set(WAL.x,1.4+Math.sin(s*1.3)*.06,WAL.z); sx=sy=sz=.75*k+.001; rot=s*.3; }
+  const mastVis=s>=14.8&&s<65.3&&vis;
+  share.visible=shareGlow.visible=vis; shareLight.intensity=vis?1.5*glowK:0;
+  if(!vis){ mast.position.y=flagM.position.y=half.position.y=-9; return; }
+  share.position.copy(tmp); share.scale.set(sx,sy,sz); share.rotation.y=rot;
+  shareGlow.position.copy(tmp); shareGlow.scale.setScalar(3*clamp(Math.max(sx,sy,sz)*1.3,.35,1.1)*glowK);
+  shareLight.position.copy(tmp).add(V(0,.7,0));
+  if(mastVis){ const by=Math.max(tmp.y+sy/2,mastBase||-9); const mk=1-ease(seg(s,64.8,65.3)); mast.scale.y=Math.max(.001,.55*mk); mast.position.set(tmp.x,by+.275*mk,tmp.z); flagM.scale.set(Math.max(.001,.22*mk),Math.max(.001,.13*mk),.02); flagM.position.set(tmp.x+.11,by+.47*mk,tmp.z); }
+  else mast.position.y=flagM.position.y=-9;
+  if(halfVis){ const k=ease(seg(s,26.05,26.5)); half.scale.setScalar(Math.max(.001,.38*k)); half.position.copy(tmp).add(V(Math.cos(rot)*.4,0,-Math.sin(rot)*.4)); half.rotation.y=rot; }
+  else if(s>=31.2&&s<34.8){ arc(RCF.clone().add(V(.25,0,0)),V(BROK[SELLER].x,BROK[SELLER].plateY-.1,BROK[SELLER].z),ease(seg(s,31.6,34.2)),3,half.position); half.scale.setScalar(.38*(1-seg(s,34.2,34.8))+.001); }
+  else half.position.y=-9;
+}
+
+/* ================= world update ================= */
+const dummy=new THREE.Object3D();
+function updateWorld(s,rate,dt){
+  const tod=((world%86400)+86400)%86400/3600, day=Math.floor(world/86400);
+  keyColor(SKY,tod,col); scene.background.copy(col); scene.fog.color.copy(col);
+  const sunK=keyNum(SUN,tod), ang=(tod-6)/12*Math.PI;
+  sun.position.set(-60*Math.cos(ang)+20,Math.max(8,90*Math.sin(clamp(ang,.12,Math.PI-.12))),50);
+  sun.intensity=1.55*sunK; hemi.intensity=.22+.55*sunK; nightL.intensity=.35*(1-sunK);
+  hemi.color.setRGB(lerp(.55,1,sunK),lerp(.62,1,sunK),lerp(.8,1,sunK));
+  document.body.classList.toggle('night',sunK<.45);
+  const nk=1-sunK;
+  const envK=.1+.9*sunK; ENVMATS.forEach(m=>m.envMapIntensity=m.userData.env*envK);
+  const accent=C('#4a78a6').lerp(C('#a9d4ff'),nk), hot=C('#6fa8ff').lerp(C('#bfe0ff'),nk);
+  [E.glass,propLine.material,tapeDots.material,tapeLine.material,sigLine.material].forEach(m=>m.color.copy(accent));
+  const tc=C('#9aa8b2').lerp(C('#5a7288'),nk); [matTether,beamMat,walletMat,clrMat,balMat].forEach(m=>m.color.copy(tc));
+  lines.material.color.copy(C('#56636c').lerp(C('#9fb3c2'),nk)); obLines.material.color.copy(lines.material.color);
+  BROK.forEach(b=>b.ghost.material.color.copy(lines.material.color));
+  const open=day<5&&tod>=9.5&&tod<16;
+
+  /* ---- chain engine ---- */
+  const target=world/12;
+  if(seeked||target<vslot){ vslot=target; seeked=false; }
+  else { if(target-vslot>28) vslot=target-28; vslot=Math.min(target,vslot+Math.max(dt/12,16*dt)); }
+  const n=Math.floor(vslot), ph=frac(vslot), slow=rate<6, E0=Math.floor(n/32);
+  const storyM=!explore&&n===SLOT_M&&s<88.2;
+  let li=0, ci=0; const layerCol=accent.clone().lerp(C('#ffffff'),.45);
+  const P0=V(), P1=V();
+  for(let d=0;d<POOL;d++){
+    const m=n-d, b=BLOCKS[d]; helix(m,n,ph,P0);
+    let scl=1, vis=(E0-Math.floor(m/32))<RINGS&&P0.y>.95;
+    if(d===0&&slow) scl=lerp(.2,1,ease(seg(ph,0,.12)));
+    if(storyM&&m===SLOT_M) vis=false;
+    b.m.visible=vis;
+    if(vis){ b.m.position.copy(P0); b.m.rotation.y=-PHI(mod(m,32)); b.m.scale.setScalar(scl);
+      const sp=m===SLOT_M, fin=isFinal(m,n), jus=isJust(m,n);
+      b.m.material=sp?(fin?M.aFin:M.aGlass):(fin?M.fin:(jus?M.just:M.glass));
+      b.e.material=sp?E.amber:(fin?E.fin:E.glass);
+      b.m.castShadow=fin; b.hd.castShadow=fin;
+      if(sp){ finPos.copy(P0).add(V(0,1.1,0)); if(fin&&sFin<0&&!explore&&s>96) sFin=s; }
+    }
+    // hash link to the parent block
+    const pv=(E0-Math.floor((m-1)/32))<RINGS; helix(m-1,n,ph,P1);
+    b.lk.visible=vis&&pv&&P1.y>.95&&!(storyM&&m===SLOT_M);
+    if(b.lk.visible){ const dist=P0.distanceTo(P1); b.lk.position.lerpVectors(P0,P1,.5); b.lk.lookAt(P1); b.lk.scale.set(.1,.1,Math.max(.01,dist-BSZ*.9)); }
+    for(let k=0;k<LAYERS;k++){
+      if(vis&&!isFinal(m,n)&&scl>.3){ dummy.position.set(P0.x,P0.y+(-.3+k*.11)*scl,P0.z); dummy.rotation.set(0,-PHI(mod(m,32)),0); dummy.scale.setScalar(scl); layers.setColorAt(li,(m===SLOT_M&&k===3)?C('#ff7428'):layerCol); }
+      else { dummy.position.set(0,-60,0); dummy.scale.setScalar(.001); }
+      dummy.updateMatrix(); layers.setMatrixAt(li++,dummy.matrix);
+    }
+    const chipsOn=vis&&(m<n||(slow?ph>.46:true));
+    for(let k=0;k<CHIPS;k++){
+      if(chipsOn){ const ox=(k%2-.5)*.22, oz=(Math.floor(k/2)-.5)*.22; dummy.position.set(P0.x+ox,P0.y+BSZ/2+.13,P0.z+oz); dummy.rotation.set(0,0,0); dummy.scale.setScalar(scl); }
+      else { dummy.position.set(0,-60,0); dummy.scale.setScalar(.001); }
+      dummy.updateMatrix(); chips.setMatrixAt(ci++,dummy.matrix);
+    }
+  }
+  layers.instanceMatrix.needsUpdate=true; if(layers.instanceColor) layers.instanceColor.needsUpdate=true; chips.instanceMatrix.needsUpdate=true;
+  chips.material.color.copy(accent.clone().lerp(C('#ffffff'),.2));
+  // checkpoint gauges, one per ring
+  GAUGES.forEach((G,r)=>{ const c=(E0-r)*32; helix(c,n,ph,P0); const a=PHI(0)-WEDGE*.5;
+    G.g.position.set(D.x+(RHX+1.0)*Math.cos(a),P0.y-.6,D.z+(RHX+1.25)*Math.sin(a)); G.g.visible=P0.y-.6>.6;
+    const f=clamp((n+ph-c)/32); G.fillM.scale.y=Math.max(.001,f*1.3); G.fillM.position.y=f*1.3/2;
+    G.fillM.material=(n>=c+54)?M.fin:matAccent; });
+  // dial hand and the slot's sector
+  const sect=mod(n,32);
+  handG.rotation.y=-(PHI(sect)-WEDGE/2+WEDGE*ph); wedgeG.rotation.y=-PHI(sect);
+  wedgeMat.color.copy(accent); wedgeMat.opacity=.08+(slow?.14*win(ph,.33,.6,.05):0);
+  // proposer, committee votes, aggregation
+  PILL.forEach(p=>p.mat.emissiveIntensity=0);
+  const pi=proposerOf(n), pp=PILL[pi].top, pOn=slow?win(ph,0,.18,.03):0;
+  PILL[pi].mat.emissiveIntensity=pOn*1.3; propGlow.position.copy(pp); propGlow.material.opacity=(storyM?0:pOn*.7);
+  const hb=blockPos(n,V());
+  const pa=propLine.geometry.attributes.position; pa.setXYZ(0,RELAY.x,1.2,RELAY.z); pa.setXYZ(1,hb.x,hb.y,hb.z); pa.needsUpdate=true;
+  propLine.material.opacity=(slow&&!storyM&&!(n===SLOT_M&&!explore&&s<89))?win(ph,0,.12,.03)*.45:0;
+  const com=committee(n);
+  flyChips.forEach((c,k)=>{ const u=ease(seg(ph,.33+k*.02,.46)); if(!slow||u<=0||u>=1||(storyM)){ c.position.y=-9; return; } const p=PILL[com[k]].top; arc(p,hb.clone().add(V(0,BSZ/2+.14,0)),u,2.5,c.position); c.material.color.copy(accent); });
+  if(slow) com.forEach(ci2=>{ PILL[ci2].mat.emissiveIntensity=Math.max(PILL[ci2].mat.emissiveIntensity,win(ph,.3,.5,.04)*.9); });
+  aggGlow.position.copy(hb).add(V(0,.8,0)); aggGlow.material.opacity=slow?win(ph,.66,.74,.03)*.8:0;
+  // each node's mempool, and the mint transaction's copies spreading peer to peer
+  let q=0;
+  PILL.forEach((p,i)=>{ for(let k=0;k<PEND;k++){ const on=frac(hash(i*3+k)/997+world/(29+k*13))<.55;
+      if(on){ dummy.position.set(p.x+(k-.5)*.2,p.top.y+.08,p.z); dummy.scale.setScalar(1); } else { dummy.position.set(0,-60,0); dummy.scale.setScalar(.001); }
+      dummy.rotation.set(0,0,0); dummy.updateMatrix(); pend.setMatrixAt(q++,dummy.matrix); } });
+  pend.instanceMatrix.needsUpdate=true; pend.material.color.copy(accent.clone().lerp(C('#ffffff'),.3));
+  const evict=explore?1:ease(seg(s,88.3,88.9));
+  PILL.forEach((p,i)=>{ const t=tG(i); let pos=null;
+    if(!explore&&s>=G0-.2&&evict<1){ if(s>=t) pos=V(p.x,p.top.y+.3,p.z); else if(GPAR[i]>=0){ const tp=tG(GPAR[i]); if(s>tp){ const u=ease(seg(s,tp,t)); pos=arc(PILL[GPAR[i]].top.clone().add(V(0,.3,0)),V(p.x,p.top.y+.3,p.z),u,.8,V()); } } }
+    if(pos){ dummy.position.copy(pos); dummy.scale.setScalar(1-evict); } else { dummy.position.set(0,-60,0); dummy.scale.setScalar(.001); }
+    dummy.rotation.set(0,0,0); dummy.updateMatrix(); ocop.setMatrixAt(i,dummy.matrix); });
+  ocop.instanceMatrix.needsUpdate=true;
+  const base=C('#59636c').lerp(C('#2a3444'),nk);
+  const gossip=!explore&&s>G0-.2&&s<78;
+  PEDGES.forEach(([i,j],k)=>{ let g=0; if(gossip&&(GPAR[j]===i||GPAR[i]===j)){ const par=GPAR[j]===i?i:j, ch=par===i?j:i; g=win(s,tG(par),tG(ch)+.4,.2); } const c=base.clone().lerp(hot,g); netCol.set([c.r,c.g,c.b,c.r,c.g,c.b],k*6); });
+  netGeo.attributes.color.needsUpdate=true;
+  if(gossip) PILL.forEach((p,i)=>{ p.mat.emissiveIntensity=Math.max(p.mat.emissiveIntensity,win(s,tG(i),tG(i)+.6,.15)*1.1); });
+  // contract storage and checks
+  conRows.forEach((r,i)=>{ let c=C('#c4ccd2').lerp(C('#3b4654'),nk); if(i===CON_ROW&&(explore||s>=89.3)) c=C('#ff7428'); r.material.color.copy(c); });
+  lamps.forEach((l,k)=>{ l.material.emissiveIntensity=(!explore&&s>88.7+k*.3&&s<92)?1.2:0; });
+
+  /* ---- market data flowing to the SIP and on to the broker's screen ---- */
+  const qOn=open&&rate<40; let di=0;
+  [...QC,NB].forEach((c,ci2)=>{ for(let k=0;k<3;k++){ const d=dashes[di++]; if(!qOn){ d.position.y=-9; continue; } c.getPoint(frac(world*.35+k/3+ci2*.13),d.position); } });
+  /* ---- the order book and the tape ---- */
+  STACKS.forEach((st,i)=>st.forEach((o,k)=>{ if(!o.mesh) return;
+    let on=ordPresent(i,k,s); if(o.flick>=0&&open) on=on&&frac(world/(6+o.flick*8)+o.flick)<.74;
+    o.mesh.visible=on; if(!on) return;
+    const h=o.size*H_PER*ordLeft(i,k,s); o.mesh.scale.y=Math.max(.001,h*.94);
+    let y=stackY(i,k,s)+h/2; if(o.arrive&&!explore&&s<o.arrive+.5) y+=(o.arrive+.5-s)*2.2;
+    o.mesh.position.set(TICKX(i),y,N.z); }));
+  const TX0=N.x+4.4, TSC=.075; let pi2=0; const tl=[];
+  for(let k=PRINTS.length-1;k>=0&&pi2<TP;k--){ const pr=PRINTS[k]; if(pr.t>world) continue; const x=TX0-(world-pr.t)*TSC; if(x<N.x-4.5) break;
+    const y=.75+(pr.p-84.16)*100*.16; tapePos.set([x,y,N.z-2.58],pi2*3); tl.push(V(x,y,N.z-2.58)); pi2++; }
+  for(let k=pi2;k<TP;k++) tapePos.set([0,-60,0],k*3);
+  tapeGeo.attributes.position.needsUpdate=true; tapeLine.geometry.setFromPoints(tl.length>1?tl:[V(0,-60,0),V(0,-60,0)]);
+
+  /* ---- the clearinghouse ---- */
+  ring.rotation.z+=dt*.05*Math.min(rate,40);
+  const PS=positions(explore?99:s), pos=PS.out, gs=PS.gross;
+  const close=explore?1:ease(seg(s,44.6,46.6)), settle=explore?0:ease(seg(s,59.4,61.4));
+  BROK.forEach((b,i)=>{ const p=pos[i], nt=p.buy-p.sell;
+    let h=Math.max(.001,Math.abs(nt)*K_NET*(1-settle)); b.net.material=nt>=0?matBuy:matSell; let base=0;
+    if(i===OURS&&!explore&&s>=34.2&&s<59.5&&nt>0){ const hb=Math.max(.12,100*K_NET); base=hb; h=Math.max(.001,h-hb); }
+    b.net.scale.y=h; b.net.position.y=nt>=0?b.plateY+base+h/2:b.plateY-.06-h/2; b.net.visible=h>.01;
+    const g=(p.buy+p.sell)*K_GROSS; b.ghost.scale.set(.85,Math.max(.001,g),.85); b.ghost.position.y=b.plateY+g/2; b.ghost.material.opacity=.5*(1-close)*(1-settle); b.ghost.visible=b.ghost.material.opacity>.01; });
+  const cH=Math.max(.001,lerp(gs*K_CENTER,SUMPOS*K_CENTER,close)*(1-settle));
+  colOwedTo.scale.y=cH; colOwedTo.position.y=RC.y-.06+cH/2; colOwedBy.scale.y=cH; colOwedBy.position.y=RC.y-.06+cH/2;
+  let bi=0, si=0, pr=0; const quiet=explore||s<25||s>44.5;
+  TRADES.forEach(t=>{ if(t.pre||t.ours||quiet) return;
+    if(s>t.tEx&&s<t.tRing&&pr<pairsB.length){ const p=arc(V(TICKX(4),.9,N.z-1),RCF,ease(seg(s,t.tEx,t.tRing)),6,V()); pairsB[pr].position.copy(p).add(V(-.17,0,0)); pairsS[pr].position.copy(p).add(V(.17,0,0)); pr++; }
+    if(s>=t.tRing&&s<t.tLeg){ const u=ease(seg(s,t.tRing,t.tLeg));
+      if(bi<legs.length){ arc(RCF,V(BROK[t.b].x,BROK[t.b].plateY+.2,BROK[t.b].z),u,2,legs[bi].position); bi++; }
+      if(si<legsS.length){ arc(RCF,V(BROK[t.s].x,BROK[t.s].plateY-.2,BROK[t.s].z),u,2,legsS[si].position); si++; } } });
+  for(;pr<pairsB.length;pr++){ pairsB[pr].position.y=-9; pairsS[pr].position.y=-9; }
+  for(;bi<legs.length;bi++) legs[bi].position.y=-9; for(;si<legsS.length;si++) legsS[si].position.y=-9;
+  const ob=[]; let oi=0; const obOn=!explore&&s>45.5&&s<61.4;
+  if(obOn) BROK.forEach((b,i)=>{ const nt=pos[i].buy-pos[i].sell; const top=V(b.x,b.plateY,b.z); ob.push(b.edge,top);
+    for(let k=0;k<3&&oi<oblig.length;k++){ const u=frac(s*.35+k/3+i*.07); oblig[oi].position.lerpVectors(nt>=0?b.edge:top,nt>=0?top:b.edge,u); oblig[oi].material=nt>=0?matBuy:matSell; oi++; } });
+  for(;oi<oblig.length;oi++) oblig[oi].position.y=-9;
+  setLines(obLines,ob,obOn?.35*(1-settle):0);
+
+  /* ---- DTC ledger face ---- */
+  STRIPS.forEach((m,i)=>{ let c=C('#c4ccd2').lerp(C('#3b4654'),nk);
+    const batch=(!explore&&s>55&&s<60)?win(s,55+(hash(i)%40)/10,56+(hash(i)%40)/10,.3):0; c.lerp(hot,batch);
+    if(i===OUR_ROW&&(explore||s>=65.3)) c=C('#ff7428'); m.material.color.copy(c); });
+}
+
+/* ================= story-only mechanics ================= */
+function updateStory(s){
+  incoming.visible=false;
+  flash.position.set(TICKX(5)-.3,.8,N.z+.2); flash.material.opacity=win(s,25.6,26.4,.15);
+  // the router probes each exchange's quote, then commits to the best offer
+  ROUTES.forEach((r,i)=>{ r.m.opacity=i<2?.5*win(s,14.8,17.9,.5):(s>16.2?.9:.5)*win(s,14.8,21.4,.5); });
+  probes.forEach((p,i)=>{ const u=seg(s,15+i*.15,16.2+i*.15); if(u<=0||u>=1){ p.position.y=-9; return; } ROUTES[i].c.getPoint(u<.5?u*2:2-u*2,p.position); });
+  const plinthC=V(N.x,.65,N.z+2.2);
+  if(s>26.2&&s<27.3){ takerCoin.position.copy(arc(HIT.clone().add(V(0,.3,.3)),plinthC,ease(seg(s,26.2,27.1)),1.2,V())); takerCoin.scale.setScalar(1-seg(s,27,27.3)*.99); } else takerCoin.position.y=-9;
+  if(s>27.1&&s<29.4){ rebateCoin.position.copy(arc(plinthC,V(BROK[SELLER].x,1.4,BROK[SELLER].z),ease(seg(s,27.1,29.2)),5,V())); rebateCoin.scale.setScalar(1-seg(s,29.1,29.4)*.99); } else rebateCoin.position.y=-9;
+  const L=[];
+  if(s>30.9&&s<35.4){ const a=V(BROK[OURS].x,BROK[OURS].plateY,BROK[OURS].z), b=V(BROK[SELLER].x,BROK[SELLER].plateY,BROK[SELLER].z);
+    const k=seg(s,30.9,31.5), cut=ease(seg(s,31.6,32.4));
+    if(cut<=0) L.push(a,a.clone().lerp(b,k)); else { L.push(a,a.clone().lerp(b,.5-.5*cut),b.clone().lerp(a,.5-.5*cut),b); L.push(BROK[OURS].edge,BROK[OURS].edge.clone().lerp(a,cut),BROK[SELLER].edge,BROK[SELLER].edge.clone().lerp(b,cut)); } }
+  setLines(lines,L,.75);
+  clrMat.opacity=.5+.4*win(s,59,62,.6);
+  faceBars.forEach((b,k)=>{ const u=ease(seg(s,59.8+k*.35,61.6+k*.35)); b.visible=s>59.6&&s<64.8; const y=lerp(rowY(NSCC_ROW),rowY(OTHER_ROWS[k]),u);
+    b.position.set(P.dtc.x-1.2+k*.25,y,P.dtc.z+3.08); b.scale.set(1.4*(1-seg(s,63.8,64.8)),.16,.12); });
+  const ck=ease(seg(s,62.2,63.4)); if(ck>0){ claim.position.set(BROK[OURS].x,1.16,BROK[OURS].z).add(TANG.clone().multiplyScalar(1.05)); claim.rotation.y=BROK[OURS].rot; claim.scale.set(.9*ck,.12,.8*ck); } else claim.position.y=-9;
+  folderGlow.material.opacity=Math.max(win(s,61.2,64.6,.6)*.45,win(s,110.6,112.6,.4)*.5);
+
+  /* ---- block selection ---- */
+  BUILD.forEach((B,k)=>{
+    B.tx.forEach((t,r)=>{ const shelf=V(B.pos.x-2.1,.5+.2+(7-r)*.34+.17,B.pos.z);
+      const tIn=76.2+r*.18+k*.1, tPack=79+(r)*.32;
+      let p=null, sc=1;
+      if(s>tIn-1.2&&s<tIn){ const src=t.priv?V(B.pos.x-4,1.2,B.pos.z+1.5):V(B.pos.x-1+(r%3),1.5,B.pos.z-4.2); p=arc(src,shelf,ease(seg(s,tIn-1.2,tIn)),1.5,V()); }
+      else if(s>=tIn&&(r>=NINC||s<tPack)){ p=shelf; if(r>=NINC&&s>81) sc=1-.5*seg(s,81,82); }
+      else if(r<NINC&&s>=tPack&&s<tPack+.5){ const lay=V(B.pos.x,.5+.8-.55+(NINC-1-r)*.2,B.pos.z); p=shelf.clone().lerp(lay,ease(seg(s,tPack,tPack+.5))); }
+      if(r>=NINC&&s>87.4) p=null;
+      if(p&&s>74&&s<88){ t.m.position.copy(p); t.m.scale.setScalar(.3*sc); } else t.m.position.y=-9; });
+    B.lay.forEach((m,i)=>{ const r=NINC-1-i; const on=s>=79+r*.32+.5&&s<88.2; m.visible=on; const tx=B.tx[r]; m.material=tx.ours?matAmber:(tx.priv?matBuy:matAccent); });
+    let coinN=0; if(s>81){ let acc=0; FEES[k].slice(0,NINC).forEach((f,r)=>{ if(s>81+r*.22) acc+=f; }); coinN=acc; }
+    const bidN=B.total-2;
+    B.cn.forEach((c,i)=>{ c.visible=i<Math.min(coinN,bidN)&&s<(k===WIN?88.6:88.2); });
+    B.mg.forEach((c,i)=>{ c.visible=i<coinN-bidN&&s<88.2&&!explore; });
+    // seal, then travel to the relay
+    const seal=ease(seg(s,82.8,83.3)); B.shell.material.opacity=.92*seal*(k===WIN?1-ease(seg(s,87.1,87.4)):1);
+    let cp=V(B.pos.x,.5+.8,B.pos.z), cc=V(B.pos.x+1.75,.5,B.pos.z);
+    if(s>83.3){ const u=ease(seg(s,83.3,84.4)); const slot=RSLOT[k].clone(); slot.y=.7+.72;
+      cp=arc(cp,slot,u,2.5,V()); cc=arc(cc,V(slot.x+.95,.7,slot.z),u,2.5,V());
+      if(k===WIN&&s>84.6){ const up=ease(seg(s,84.6,85.3)); cp.y+=up*.35; cc.y+=up*.35; cc.x=lerp(cc.x,slot.x+.95,1); } }
+    let gone=false;
+    if(k!==WIN&&s>86.6){ const f=seg(s,86.6,87.4); B.cand.scale.setScalar(Math.max(.001,1-f)); B.coins.scale.setScalar(Math.max(.001,1-f)); gone=f>=1; }
+    else { B.cand.scale.setScalar(1); B.coins.scale.setScalar(1); }
+    if(k===WIN&&s>87.3){ const u=ease(seg(s,87.4,88.2)); const land=blockPos(SLOT_M,V()); cp=arc(cp,land,u,4,V()); B.cand.scale.setScalar(lerp(1,BSZ/1.46,u)); const pu=ease(seg(s,87.3,88.3)); cc=arc(cc,PILL[proposerOf(SLOT_M)].top.clone().add(V(0,.1,0)),pu,3,V()); B.coins.scale.setScalar(Math.max(.001,lerp(1,.6,pu)*(1-seg(s,88.3,88.6)))); }
+    if(explore||s<74||s>=88.2||gone){ B.cand.position.set(B.pos.x,.5+.8,B.pos.z); B.cand.scale.setScalar(explore||s<74||s>=88.2?1:.001); B.coins.position.set(B.pos.x+1.75,.5,B.pos.z); B.coins.scale.setScalar(1); B.shell.material.opacity=0; if(explore||s<74||s>=88.6){ B.lay.forEach(m=>m.visible=false); B.cn.forEach(c=>c.visible=false); } }
+    else { B.cand.position.copy(cp); B.coins.position.copy(cc); }
+  });
+  // proposer lottery, the blind header, the signature
+  const lot=seg(s,83.8,85.4);
+  if(lot>0&&s<87.6){ let idx=proposerOf(SLOT_M); if(lot<1){ idx=hash(Math.floor(s*9))%PILL.length; } spot.position.copy(PILL[idx].top).add(V(0,.4,0)); spot.material.opacity=.85; if(lot>=1) PILL[idx].mat.emissiveIntensity=1.3; } else spot.material.opacity=0;
+  const pp=PILL[proposerOf(SLOT_M)].top.clone().add(V(0,.3,0));
+  if(s>86&&s<86.7){ header.position.copy(arc(V(RELAY.x,1.9,RELAY.z),pp,ease(seg(s,86,86.7)),3,V())); header.rotation.y=s; } else header.position.y=-9;
+  const sg=[]; if(s>86.6&&s<87.3){ const u=ease(seg(s,86.6,87.1)); sg.push(pp,pp.clone().lerp(V(RELAY.x,1.9,RELAY.z),u)); }
+  setLines(sigLine,sg,.9); sigGlow.position.copy(pp); sigGlow.material.opacity=win(s,86.6,87.2,.15)*.9;
+  // the base fee is burned, the protocol pays validators in new ETH
+  const landP=blockPos(SLOT_M,V());
+  baseCoins.forEach((c,i)=>{ const u=ease(seg(s,91.1+i*.12,92.1+i*.12)); if(u<=0||u>=1){ c.position.y=-9; return; } c.position.copy(landP.clone().lerp(WELL.clone().add(V((i-1.5)*.25,.1,0)),u)); c.position.y=lerp(landP.y,WELL.y+.1,u*u); c.scale.setScalar(COINK*(1-seg(u,.85,1)*.99)); });
+  burnGlow.material.opacity=win(s,91.6,92.8,.2)*.7;
+  const recips=[...committee(SLOT_M),proposerOf(SLOT_M)];
+  newCoins.forEach((c,i)=>{ const u=ease(seg(s,92.7+i*.1,93.9+i*.1)); if(u<=0||u>=1){ c.position.y=-9; return; } arc(V(D.x+1.3,.8,D.z+1.3),PILL[recips[i]].top.clone().add(V(0,.1,0)),u,3,c.position); c.scale.setScalar(COINK); });
+  // execution: the block calls the contract
+  const ex=[]; if(s>88.3&&s<89.6){ const a=blockPos(SLOT_M,V()), b=V(CON.x,4.2,CON.z); ex.push(a,a.clone().lerp(b,ease(seg(s,88.3,88.8)))); }
+  setLines(execLine,ex,.95);
+  // pulses: DTC reads the chain, then the chain of records
+  let pv=false; const hp=seg(s,107.2,110);
+  if(hp>0&&hp<1){ beamCurve.getPoint(1-ease(hp),pulse.position); pv=true; }
+  const r1=seg(s,111,112.4), r2=seg(s,112.6,114.6), r3=seg(s,114.8,115.8), r4=seg(s,116,117.2), r5=seg(s,117.4,119.4), r6=seg(s,119.6,120.7);
+  if(r1>0&&r1<1){ folderCurve.getPoint(ease(r1),pulse.position); pv=true; }
+  else if(r2>0&&r2<1){ beamCurve.getPoint(ease(r2),pulse.position); pv=true; }
+  else if(r3>0&&r3<1){ entryCurve.getPoint(ease(r3),pulse.position); pv=true; }
+  else if(r4>0&&r4<1){ balCurve.getPoint(ease(r4),pulse.position); pv=true; }
+  else if(r5>0&&r5<1){ walletCurve.getPoint(1-ease(r5),pulse.position); pv=true; }
+  else if(r6>0&&r6<1){ invCurve.getPoint(1-ease(r6),pulse.position); pv=true; }
+  const cp2=seg(s,89.3,90.2); if(cp2>0&&cp2<1){ balCurve.getPoint(ease(cp2),pulse.position); pv=true; }
+  pulse.visible=pv;
+  beamMat.opacity=.5+.4*Math.max(win(s,66,69.4,1),win(s,106.8,110.4,1),win(s,112.4,114.8,.8));
+  walletMat.opacity=.5*seg(s,90,91.4)+.4*win(s,117.2,119.6,.8);
+  balMat.opacity=.55*seg(s,89.3,90.2);
+}
+
+/* ================= labels ================= */
+function updateLabels(){
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  LABELS.forEach(L=>{ const o=L.vis(S);
+    if(o<=.01){ if(L.last!==0){ L.el.style.opacity=0; L.last=0; } return; }
+    if(typeof L.text==='function'){ const t=L.text(); if(L.el.textContent!==t) L.el.textContent=t; }
+    const p=(typeof L.pos==='function'?L.pos():L.pos).clone().project(camera);
+    if(p.z>1||Math.abs(p.x)>1.15||Math.abs(p.y)>1.15){ L.el.style.opacity=0; L.last=0; return; }
+    L.el.style.transform=`translate(${(p.x*.5+.5)*w}px,${(-p.y*.5+.5)*h}px) translate(-50%,${L.side?'0%':'-100%'})`;
+    L.el.style.opacity=o; L.last=o; });
+}
+
+/* ================= UI ================= */
+const $=id=>document.getElementById(id);
+const playBtn=$('play'), modeBtn=$('mode'), track=$('track'), fill=$('fill'), knob=$('knob');
+function fmtClock(w){ const d=Math.floor(w/86400), t=((w%86400)+86400)%86400; const hh=Math.floor(t/3600), mm=Math.floor(t%3600/60), ss=Math.floor(t%60); return DAY[mod(d,7)]+' '+(((hh+11)%12)+1)+':'+String(mm).padStart(2,'0')+':'+String(ss).padStart(2,'0')+(hh>=12?' pm':' am'); }
+function fmtRate(r){ if(r<1.5) return 'real time'; if(r<100) return Math.round(r)+'x speed'; if(r<3600) return Math.round(r/60)+' min per second'; return (r/3600).toFixed(r<36000?1:0)+' hours per second'; }
+function setUI(rate){
+  $('clock').textContent=fmtClock(world); $('rate').textContent=explore?'real time':fmtRate(rate);
+  fill.style.width=(S/DUR*100)+'%'; knob.style.left=(S/DUR*100)+'%'; track.setAttribute('aria-valuenow',Math.round(S));
+  playBtn.textContent=explore?'Play':(playing?'Pause':(S>=DUR?'Replay':'Play'));
+  modeBtn.textContent=explore?'Resume story':'Explore';
+  $('title').style.opacity=explore?0:1-seg(S,5.4,6.8);
+  $('hud').style.opacity=explore?1:seg(S,6,7.5);
+  $('hint').style.opacity=explore?0:win(S,127,142,1);
+}
+const START=4.2;
+function seek(s){ S=clamp(s,START,DUR); world=worldAt(S); vslot=world/12; seeked=true; snapCam=true; sFin=-1; }
+function enterExplore(){ if(explore) return; explore=true; playing=false; controls.target.copy(curT); controls.enabled=true; controls.update(); }
+function resumeStory(){ if(!explore) return; explore=false; controls.enabled=false; retFrom.p.copy(camera.position); retFrom.t.copy(controls.target); returning=1; world=worldAt(S); vslot=world/12; seeked=true; playing=true; }
+playBtn.addEventListener('click',()=>{ if(explore){ resumeStory(); return; } if(S>=DUR) seek(START); playing=!playing; });
+modeBtn.addEventListener('click',()=>{ explore?resumeStory():enterExplore(); });
+canvas.addEventListener('pointerdown',()=>enterExplore(),{capture:true});
+canvas.addEventListener('wheel',()=>enterExplore(),{capture:true,passive:true});
+function trackSeek(e){ const r=track.getBoundingClientRect(); if(explore){ explore=false; controls.enabled=false; playing=true; } returning=0; seek((e.clientX-r.left)/r.width*DUR); }
+let dragging=false;
+track.addEventListener('pointerdown',e=>{ dragging=true; track.setPointerCapture(e.pointerId); trackSeek(e); });
+track.addEventListener('pointermove',e=>{ if(dragging) trackSeek(e); });
+track.addEventListener('pointerup',()=>{ dragging=false; });
+track.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){ seek(S+5); e.preventDefault(); } if(e.key==='ArrowLeft'){ seek(S-5); e.preventDefault(); } });
+document.addEventListener('keydown',e=>{ if(e.target===track) return; if(e.key===' '){ e.preventDefault(); playBtn.click(); } if(e.key==='Escape'&&explore) resumeStory(); });
+function resize(){ const w=window.innerWidth,h=window.innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.fov=w<h?54:36; camera.updateProjectionMatrix(); }
+window.addEventListener('resize',resize); resize();
+
+/* ================= loop ================= */
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.1,(now-last)/1000); last=now;
+  let rate=1;
+  if(!explore){
+    if(playing){ S=Math.min(DUR,S+dt); if(S>=DUR) playing=false; }
+    const w1=worldAt(S); rate=Math.max(1,(worldAt(Math.min(DUR,S+.05))-w1)/.05); world=w1;
+    if(seeked) vslot=world/12;
+    camAt(S,camP,camT);
+    if(snapCam){ curP.copy(camP); curT.copy(camT); snapCam=false; }
+    else { const a=1-Math.exp(-dt*3.2); curP.lerp(camP,a); curT.lerp(camT,a); }
+    if(returning>0){ returning=Math.max(0,returning-dt/1.4); const u=smooth(1-returning); camera.position.lerpVectors(retFrom.p,curP,u); tmp.lerpVectors(retFrom.t,curT,u); camera.lookAt(tmp); }
+    else { camera.position.copy(curP); camera.lookAt(curT); }
+  } else { world+=dt; controls.update(); curP.copy(camera.position); curT.copy(controls.target); }
+  updateWorld(S,rate,dt);
+  if(!explore) updateStory(S);
+  else { pulse.visible=false; setLines(lines,[],0); setLines(execLine,[],0); setLines(sigLine,[],0); flash.material.opacity=0; incoming.visible=false; faceBars.forEach(b=>b.visible=false); spot.material.opacity=0; header.position.y=-9; folderGlow.material.opacity=0;
+    BUILD.forEach(B=>{ B.tx.forEach(t=>t.m.position.y=-9); B.lay.forEach(m=>m.visible=false); B.cn.forEach(c=>c.visible=false); B.mg.forEach(c=>c.visible=false); B.shell.material.opacity=0; B.cand.position.set(B.pos.x,1.3,B.pos.z); B.cand.scale.setScalar(1); B.coins.position.set(B.pos.x+1.75,.5,B.pos.z); }); ROUTES.forEach(r=>r.m.opacity=0); probes.forEach(p=>p.position.y=-9); takerCoin.position.y=rebateCoin.position.y=-9; baseCoins.forEach(c=>c.position.y=-9); newCoins.forEach(c=>c.position.y=-9);
+    if(S>=63.4){ claim.position.set(BROK[OURS].x,1.16,BROK[OURS].z).add(TANG.clone().multiplyScalar(1.05)); claim.scale.set(.9,.12,.8); } }
+  placeShare(S);
+  renderer.render(scene,camera);
+  updateLabels(); setUI(rate);
+  requestAnimationFrame(frame);
+}
+seek(START); playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+requestAnimationFrame(frame);
+window.__dbg={seek,pause:()=>{playing=false;}};
+})();
+</script>
+</body>
+</html>
