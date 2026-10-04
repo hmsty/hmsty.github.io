@@ -75,11 +75,6 @@ READING = {
         ("Modern Philosophy: An Anthology of Primary Sources", "Ariew & Watkins, eds."),
     ],
     "fiction": [
-        ("The Annotated Lolita", "Vladimir Nabokov"),
-        ("Pale Fire", "Vladimir Nabokov"),
-        ("Pnin", "Vladimir Nabokov"),
-        ("Despair", "Vladimir Nabokov"),
-        ("Invitation to a Beheading", "Vladimir Nabokov"),
         ("The Luzhin Defense", "Vladimir Nabokov"),
         ("The Sun Also Rises", "Ernest Hemingway"),
         ("For Whom the Bell Tolls", "Ernest Hemingway"),
