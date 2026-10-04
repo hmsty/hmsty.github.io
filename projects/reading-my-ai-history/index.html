@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/pfp.jpg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>reading my ai history as data</title>
+<meta name="description" content="A year of my conversations with Claude, analyzed as a dataset: what I studied, how I learn, and what the assistant did, with every label hand-checked.">
+<meta property="og:title" content="Reading My AI History as Data">
+<meta property="og:description" content="A year of my conversations with Claude, analyzed as a dataset, with every label hand-checked.">
+<meta name="theme-color" content="#262422">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#262422;--ink-2:#2f2c29;--ink-3:#3b3834;--paper:#EDE6D6;--body:#e2dacb;--muted:#a9a295;
+--moss:#5C6B47;--rust:#9C4A2E;--brass:#96721F;--brass-lt:#b9a068;
+--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--serif:"Source Serif 4",Georgia,serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:dark}
+body{margin:0;background:var(--ink);color:var(--paper);font:14px/1.7 var(--mono);-webkit-font-smoothing:antialiased}
+::selection{background:var(--rust);color:var(--paper)}
+a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--moss)}
+.w{max-width:940px;margin:0 auto;padding:72px 20px 56px}
+h1{font-size:22px;font-weight:700;margin:0 0 4px}
+.t{color:var(--muted);margin:0}
+.lede{font:17px/1.65 var(--serif);color:var(--body);max-width:640px;margin:18px 0 0}
+h2{font-size:14px;font-weight:400;color:var(--muted);margin:64px 0 4px}
+h2::before{content:"// ";color:var(--brass)}
+.sub{font:15px/1.6 var(--serif);color:var(--body);max-width:640px;margin:0 0 18px}
+.card{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:6px;padding:18px 18px 16px;margin:0 0 14px}
+.card h3{font-size:13px;font-weight:700;margin:0 0 2px}
+.card .c{font-size:12px;color:var(--muted);margin:0 0 12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:28px 0 0}
+.tile{background:var(--ink-2);border:1px solid var(--ink-3);border-radius:6px;padding:14px 14px 12px}
+.tile b{display:block;font:600 26px/1.1 var(--serif);color:var(--paper)}
+.tile span{font-size:11.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted);margin:12px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.hatch{background:repeating-linear-gradient(135deg,#55504a 0 4px,#45413c 4px 8px)!important}
+svg{display:block;width:100%;height:auto}
+svg text{font-family:var(--mono)}
+.tm{position:relative;height:380px}
+.tm div{position:absolute;border:1px solid var(--ink-2);border-radius:3px;padding:5px 7px;font-size:11px;line-height:1.25;color:#1e1c1a;overflow:hidden}
+.tm div b{display:block;font-weight:700}
+.split{display:flex;height:10px;border-radius:2px;overflow:hidden;margin:0 0 6px}
+.splitlab{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin:0 0 14px}
+.stack{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:center;margin:0 0 8px;font-size:12px}
+.stack .s{display:flex;height:22px;border-radius:2px;overflow:hidden}
+.stack .s div{height:100%;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:#1e1c1a;font-weight:700}
+.stack .s div.hatch{color:var(--paper)}
+ol.list{list-style:none;margin:0;padding:0;font-size:12.5px}
+ol.list li{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid var(--ink-3)}
+ol.list li:last-child{border:0}
+ol.list .nm{display:flex;align-items:center;gap:8px}
+ol.list .nm i{width:8px;height:8px;border-radius:50%;flex:none}
+ol.list .v{color:var(--muted);white-space:nowrap}
+.bar-row{display:grid;grid-template-columns:170px 1fr 52px;align-items:center;gap:10px;margin:0 0 9px;font-size:12px}
+.track{position:relative;height:14px;background:var(--ink);border-radius:2px}
+.track .fill{position:absolute;left:0;top:3px;height:8px;background:var(--moss);border-radius:1px}
+.track .ci{position:absolute;top:6px;height:2px;background:var(--brass-lt)}
+.track .ci::before,.track .ci::after{content:"";position:absolute;top:-4px;width:1px;height:10px;background:var(--brass-lt)}
+.track .ci::before{left:0}.track .ci::after{right:0}
+.bar-row .v{text-align:right;color:var(--muted)}
+.big{font:600 34px/1.05 var(--serif);color:var(--paper);margin:2px 0 6px}
+.grid{display:grid;grid-template-columns:repeat(50,1fr);gap:3px}
+.grid div{aspect-ratio:1/2.4;border-radius:1px}
+.months{position:relative;height:16px;font-size:10.5px;color:var(--muted);margin-top:5px}
+.months span{position:absolute;top:0}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--ink-3)}
+th{color:var(--muted);font-weight:400}
+td.n,th.n{text-align:right;white-space:nowrap}
+.cut{color:var(--muted)}
+ul.m{list-style:none;padding:0;margin:0;font-size:12.5px;color:var(--body)}
+ul.m li{padding:6px 0 6px 18px;position:relative;border-bottom:1px solid var(--ink-3)}
+ul.m li::before{content:"";position:absolute;left:0;top:15px;width:7px;height:1px;background:var(--brass)}
+ul.m b{color:var(--paper)}
+.foot{margin:56px 0 0;color:var(--muted);font-size:12px}
+@media (max-width:720px){.tiles{grid-template-columns:repeat(2,1fr)}.cols{grid-template-columns:1fr}.tm{height:460px}.bar-row{grid-template-columns:120px 1fr 44px}.stack{grid-template-columns:76px 1fr}}
+</style>
+</head>
+<body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
+
+<div class="w">
+<h1>Reading My AI History as Data</h1>
+<p class="t">a year of my conversations with Claude, analyzed as a dataset</p>
+<p class="lede">I exported every conversation, loaded it into a database, labeled how I ask and what I study, then hand-checked the labels before trusting a number. Work and personal conversations are pooled as <em>withheld</em>. Nothing here shows a conversation, a title or a date.</p>
+<div class="tiles" id="tiles"></div>
+
+<h2>what I studied</h2>
+<p class="sub">My messages by topic. Box size is how much I wrote.</p>
+<div class="card">
+  <div class="split" id="split"></div><div class="splitlab" id="splitlab"></div>
+  <div class="tm" id="treemap"></div>
+  <div class="legend" id="tmlegend"></div>
+</div>
+<div class="card">
+  <h3>where attention went, by quarter</h3>
+  <p class="c">Share of my messages in each band.</p>
+  <div id="quarters"></div>
+</div>
+
+<h2>the concepts</h2>
+<p class="sub">About 110 named ideas tracked through the full text. Dot size is how many conversations I raised each one in; lines join ideas that come up together.</p>
+<div class="card"><svg id="graph" viewBox="0 0 900 560" role="img" aria-label="Network of finance, crypto, AI and math concepts, clustered by how often they appear together."></svg><div class="legend" id="glegend"></div></div>
+<div class="cols">
+  <div class="card"><h3>Claude said it first</h3><p class="c">Terms Claude used before I did, then I picked up. Days until I used it, and in how many chats.</p><ol class="list" id="cfirst"></ol></div>
+  <div class="card"><h3>I said it first</h3><p class="c">Terms I brought before Claude used them, then kept returning to.</p><ol class="list" id="mfirst"></ol></div>
+</div>
+
+<h2>how I learn</h2>
+<p class="sub">Share of my messages showing each habit, from 120 random messages I labeled by hand. Whiskers are 95% intervals.</p>
+<div class="card"><div id="rates"></div></div>
+<div class="cols">
+  <div class="card"><h3>I read the whole reply</h3><p class="c">Median wait before my next message, against the time to read the reply at 250 words a minute.</p><svg id="reading" viewBox="0 0 420 210"></svg><div class="legend"><span><i style="background:#7d8f5f"></i>my wait</span><span><i style="background:#5a5550"></i>reading time</span></div></div>
+  <div class="card"><h3>my questions shifted</h3><p class="c">Rule-flagged share of my messages by quarter. Rules undercount, so read the direction.</p><svg id="style" viewBox="0 0 420 210"></svg><div class="legend" id="slegend"></div></div>
+</div>
+<div class="cols">
+  <div class="card"><div class="big" id="ends"></div><p class="c" style="margin:0">conversations end on Claude's reply. I rarely sign off; I stop when I have what I need.</p></div>
+  <div class="card"><div class="big">8.8% vs 8.4%</div><p class="c" style="margin:0">chance a chat ends after a reply with a table vs without. Tables, bullets and headers made no measurable difference to whether I kept going.</p></div>
+</div>
+
+<h2>Claude at work</h2>
+<p class="sub">Claude wrote about 14 words for every one of mine. Here's what it was doing.</p>
+<div class="cols">
+  <div class="card"><h3>tool calls by quarter</h3><p class="c">Searches, code runs, file edits and extended thinking.</p><svg id="tools" viewBox="0 0 420 230"></svg><div class="legend" id="tlegend"></div></div>
+  <div class="card"><h3>what it built</h3><p class="c">Files created across all conversations, by type.</p><div id="files"></div></div>
+</div>
+
+<h2>activity</h2>
+<p class="sub">Messages I sent per week, five levels from none to most. October 2025 to September 2026.</p>
+<div class="card"><div class="grid" id="grid"></div><div class="months" id="months"></div><div class="legend"><span>less</span><span id="scale" style="gap:3px"></span><span>more</span></div></div>
+
+<h2>method</h2>
+<div class="cols">
+  <div class="card">
+    <h3>pipeline</h3>
+    <ul class="m">
+      <li><b>Load.</b> JSON export into SQLite: one row per conversation, message and tool call.</li>
+      <li><b>Label.</b> Written rules for topics (by title) and habits (by phrasing), each with a plain definition.</li>
+      <li><b>Check.</b> Read 20 flagged messages per rule for precision, and 120 random messages for what the rules miss.</li>
+      <li><b>Cut.</b> Rules under 75% precision were dropped. Headline rates come from the hand labels.</li>
+      <li><b>Protect.</b> Any conversation with a work or personal signal goes to <em>withheld</em>. Two audits of public topics: 3 to 5 leaks in 58, then 1 in 100 after a stricter rule.</li>
+      <li><b>Publish aggregates only.</b> Raw data and labels never leave my machine.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>how the rules held up</h3>
+    <table>
+      <tr><th>habit</th><th class="n">precision</th><th class="n">catches</th></tr>
+      <tr><td>states own view first</td><td class="n">17/20</td><td class="n">10 of 17</td></tr>
+      <tr><td>asks for sources</td><td class="n">17/20</td><td class="n">1 of 3</td></tr>
+      <tr><td>asks what a term means</td><td class="n">16/20</td><td class="n">5 of 9</td></tr>
+      <tr><td>restates to check</td><td class="n">15/20</td><td class="n">8 of 24</td></tr>
+      <tr><td class="cut">asks why or how</td><td class="n cut">11/20</td><td class="n cut">cut</td></tr>
+      <tr><td class="cut">pushes back</td><td class="n cut">5/20</td><td class="n cut">hand only</td></tr>
+    </table>
+    <p class="c" style="margin:12px 0 0">Limits: one person, one labeler, and only what I chose to ask an AI. Rule rates undercount, and the hand-labeled sample is 120 messages.</p>
+  </div>
+</div>
+<p class="foot">Python, pandas and SQLite on my own machine. This page embeds about 14 KB of aggregates and nothing else.</p>
+</div>
+
+<script>
+// Aggregates only. No conversation text, titles, dates or per-conversation rows.
+var D = {"treemap":[["AI and tools","AI economics",63],["AI and tools","how AI works",62],["AI and tools","using AI well",196],["building things","software & data tools",93],["building things","writing",238],["learning","curiosity",61],["learning","history & science",34],["learning","math & econ theory",74],["learning","probability & stats",74],["markets and finance","DeFi & protocols",274],["markets and finance","equity research",121],["markets and finance","growth & debt",83],["markets and finance","money, Fed & rates",198],["markets and finance","options",95],["markets and finance","portfolio theory",194],["markets and finance","prediction markets & perps",93],["markets and finance","private markets & IPOs",88],["markets and finance","stablecoins",84],["other","chess",40],["other","cooking",39],["other","podcasts",15],["other","poker",98],["other","sports",37],["withheld","withheld",3912]],"bands_by_quarter":{"AI and tools":[4,3,3,9],"building things":[0,0,8,5],"learning":[8,1,4,4],"markets and finance":[42,33,18,10],"other":[2,0,1,8],"withheld":[44,62,67,63]},"tiles":{"chats":772,"msgs":13230,"mine":6658,"days":268,"my_words":220080,"ratio":13.6,"tool_calls":7455,"files":170,"web_searches":2112,"end_on_reply":[759,770]},"concepts":[{"n":"Settlement finality","d":"Payments & settlement","c":8,"x":0.623,"y":0.429},{"n":"RTGS / Fedwire","d":"Payments & settlement","c":24,"x":0.615,"y":0.306},{"n":"CHIPS","d":"Payments & settlement","c":11,"x":0.576,"y":0.196},{"n":"CLS","d":"Payments & settlement","c":4,"x":0.521,"y":0.272},{"n":"Netting","d":"Payments & settlement","c":36,"x":0.593,"y":0.307},{"n":"DVP / atomic settlement","d":"Payments & settlement","c":11,"x":0.575,"y":0.382},{"n":"T+1 / settlement cycles","d":"Payments & settlement","c":3,"x":0.599,"y":0.273},{"n":"Central counterparty (CCP)","d":"Payments & settlement","c":18,"x":0.612,"y":0.361},{"n":"Guarantee / default fund","d":"Payments & settlement","c":10,"x":0.64,"y":0.276},{"n":"Tokenized deposits","d":"Payments & settlement","c":29,"x":0.644,"y":0.351},{"n":"CBDC","d":"Payments & settlement","c":8,"x":0.586,"y":0.447},{"n":"Regulated liability network","d":"Payments & settlement","c":5,"x":0.669,"y":0.332},{"n":"ACH","d":"Payments & settlement","c":10,"x":0.648,"y":0.388},{"n":"ISO 20022","d":"Payments & settlement","c":1,"x":0.488,"y":0.0},{"n":"Correspondent banking","d":"Payments & settlement","c":8,"x":0.566,"y":0.368},{"n":"Card networks / interchange","d":"Payments & settlement","c":15,"x":0.639,"y":0.311},{"n":"Custody models","d":"Payments & settlement","c":34,"x":0.622,"y":0.393},{"n":"Repo market","d":"Payments & settlement","c":11,"x":0.436,"y":0.433},{"n":"DTCC / NSCC","d":"Payments & settlement","c":23,"x":0.586,"y":0.425},{"n":"Liquidity requirements (LCR)","d":"Payments & settlement","c":8,"x":0.63,"y":0.253},{"n":"Stablecoins","d":"Blockchain & digital assets","c":56,"x":0.657,"y":0.461},{"n":"GENIUS Act","d":"Blockchain & digital assets","c":9,"x":0.713,"y":0.49},{"n":"CLARITY Act","d":"Blockchain & digital assets","c":5,"x":0.664,"y":0.905},{"n":"MiCA","d":"Blockchain & digital assets","c":4,"x":0.775,"y":0.621},{"n":"Automated market makers","d":"Blockchain & digital assets","c":12,"x":0.57,"y":0.609},{"n":"Impermanent loss","d":"Blockchain & digital assets","c":1,"x":0.627,"y":0.687},{"n":"MEV","d":"Blockchain & digital assets","c":3,"x":0.65,"y":0.623},{"n":"Staking","d":"Blockchain & digital assets","c":15,"x":0.652,"y":0.559},{"n":"Oracles","d":"Blockchain & digital assets","c":13,"x":0.624,"y":0.617},{"n":"Rollups / L2","d":"Blockchain & digital assets","c":10,"x":0.653,"y":0.536},{"n":"Mempool","d":"Blockchain & digital assets","c":9,"x":0.7,"y":0.616},{"n":"Hash functions","d":"Blockchain & digital assets","c":8,"x":0.704,"y":0.591},{"n":"Consensus (PoS / PoW)","d":"Blockchain & digital assets","c":11,"x":0.673,"y":0.568},{"n":"Smart contracts","d":"Blockchain & digital assets","c":17,"x":0.631,"y":0.508},{"n":"DeFi","d":"Blockchain & digital assets","c":11,"x":0.625,"y":0.539},{"n":"Cross-chain bridges","d":"Blockchain & digital assets","c":11,"x":0.675,"y":0.496},{"n":"Perpetual futures","d":"Blockchain & digital assets","c":20,"x":0.414,"y":0.58},{"n":"Liquidation cascades","d":"Blockchain & digital assets","c":11,"x":0.469,"y":0.645},{"n":"Polymarket / Kalshi","d":"Blockchain & digital assets","c":14,"x":0.729,"y":0.9},{"n":"Prediction market design","d":"Blockchain & digital assets","c":7,"x":0.714,"y":0.865},{"n":"Hyperledger / permissioned DLT","d":"Blockchain & digital assets","c":17,"x":0.641,"y":0.483},{"n":"Bitcoin valuation (MVRV)","d":"Blockchain & digital assets","c":2,"x":0.779,"y":0.853},{"n":"Wallets and key custody","d":"Blockchain & digital assets","c":14,"x":0.689,"y":0.535},{"n":"Tokenized securities","d":"Blockchain & digital assets","c":15,"x":0.622,"y":0.5},{"n":"Circle vs Tether","d":"Blockchain & digital assets","c":37,"x":0.659,"y":0.481},{"n":"Black-Scholes","d":"Markets & investing","c":1,"x":0.216,"y":0.374},{"n":"The Greeks","d":"Markets & investing","c":16,"x":0.3,"y":0.477},{"n":"Implied volatility","d":"Markets & investing","c":4,"x":0.21,"y":0.403},{"n":"Kelly criterion","d":"Markets & investing","c":6,"x":0.212,"y":0.17},{"n":"Alpha and beta","d":"Markets & investing","c":8,"x":0.191,"y":0.577},{"n":"Factor models","d":"Markets & investing","c":8,"x":0.184,"y":0.498},{"n":"Sharpe / risk-adjusted","d":"Markets & investing","c":12,"x":0.364,"y":0.468},{"n":"Volatility drag","d":"Markets & investing","c":7,"x":0.209,"y":0.201},{"n":"Leveraged ETFs","d":"Markets & investing","c":3,"x":0.162,"y":0.178},{"n":"Rebalancing","d":"Markets & investing","c":10,"x":0.145,"y":0.217},{"n":"Diversification / correlation","d":"Markets & investing","c":19,"x":0.29,"y":0.501},{"n":"Drawdowns","d":"Markets & investing","c":4,"x":0.239,"y":0.155},{"n":"ETF mechanics","d":"Markets & investing","c":8,"x":0.18,"y":0.435},{"n":"Market makers / order books","d":"Markets & investing","c":13,"x":0.4,"y":0.537},{"n":"Payment for order flow","d":"Markets & investing","c":2,"x":0.045,"y":0.25},{"n":"Short squeezes","d":"Markets & investing","c":4,"x":0.076,"y":0.194},{"n":"IPO mechanics","d":"Markets & investing","c":25,"x":0.024,"y":0.314},{"n":"Private markets / venture","d":"Markets & investing","c":26,"x":0.034,"y":0.35},{"n":"Carry trades / parity","d":"Markets & investing","c":1,"x":0.008,"y":0.473},{"n":"Hedge fund strategies","d":"Markets & investing","c":11,"x":0.291,"y":0.435},{"n":"Lump sum vs DCA","d":"Markets & investing","c":2,"x":0.095,"y":0.291},{"n":"Mean reversion / momentum","d":"Markets & investing","c":2,"x":0.11,"y":0.435},{"n":"Money supply (M2)","d":"Macro & economics","c":11,"x":0.098,"y":0.687},{"n":"Reverse repo / IORB","d":"Macro & economics","c":6,"x":0.307,"y":0.581},{"n":"Quantitative easing","d":"Macro & economics","c":3,"x":0.175,"y":0.65},{"n":"Yield curve","d":"Macro & economics","c":13,"x":0.265,"y":0.651},{"n":"Real vs nominal rates","d":"Macro & economics","c":3,"x":0.148,"y":0.871},{"n":"Velocity of money","d":"Macro & economics","c":3,"x":0.359,"y":0.124},{"n":"Fiscal dominance","d":"Macro & economics","c":3,"x":0.007,"y":0.682},{"n":"Inflation","d":"Macro & economics","c":20,"x":0.169,"y":0.726},{"n":"Purchasing power parity","d":"Macro & economics","c":2,"x":0.058,"y":0.784},{"n":"Gini / inequality","d":"Macro & economics","c":4,"x":0.1,"y":0.832},{"n":"Yen / BOJ","d":"Macro & economics","c":3,"x":0.0,"y":0.553},{"n":"Economic growth","d":"Macro & economics","c":20,"x":0.033,"y":0.75},{"n":"WACC","d":"Corporate finance","c":5,"x":0.315,"y":0.669},{"n":"DCF / terminal value","d":"Corporate finance","c":5,"x":0.312,"y":0.747},{"n":"Cost of equity / debt","d":"Corporate finance","c":7,"x":0.304,"y":0.708},{"n":"Operating leverage","d":"Corporate finance","c":5,"x":0.496,"y":0.955},{"n":"Free cash flow","d":"Corporate finance","c":4,"x":0.275,"y":0.711},{"n":"EBITDA / margins","d":"Corporate finance","c":7,"x":0.425,"y":0.937},{"n":"Capital structure","d":"Corporate finance","c":5,"x":0.332,"y":0.795},{"n":"Accruals / accounting","d":"Corporate finance","c":5,"x":0.461,"y":1.0},{"n":"Unit economics","d":"Corporate finance","c":3,"x":0.396,"y":0.995},{"n":"Share buybacks","d":"Corporate finance","c":6,"x":0.348,"y":0.711},{"n":"Valuation multiples","d":"Corporate finance","c":6,"x":0.292,"y":0.765},{"n":"NAV vs market price","d":"Corporate finance","c":10,"x":0.347,"y":0.963},{"n":"Transformers / attention","d":"AI & technology","c":1,"x":1.0,"y":0.488},{"n":"Scaling laws","d":"AI & technology","c":4,"x":0.965,"y":0.543},{"n":"Inference economics","d":"AI & technology","c":2,"x":0.992,"y":0.451},{"n":"GPUs and Nvidia","d":"AI & technology","c":4,"x":0.951,"y":0.649},{"n":"Neoclouds vs hyperscalers","d":"AI & technology","c":4,"x":0.973,"y":0.616},{"n":"Neural networks","d":"AI & technology","c":13,"x":0.963,"y":0.437},{"n":"Embeddings / dimension reduction","d":"AI & technology","c":5,"x":0.961,"y":0.382},{"n":"Agents and MCP","d":"AI & technology","c":12,"x":0.924,"y":0.709},{"n":"LLM training / RLHF","d":"AI & technology","c":5,"x":0.965,"y":0.493},{"n":"Context windows / tokens","d":"AI & technology","c":15,"x":0.717,"y":0.238},{"n":"AGI / world models","d":"AI & technology","c":2,"x":0.94,"y":0.307},{"n":"Data moats / network effects","d":"AI & technology","c":11,"x":0.788,"y":0.456},{"n":"Regression / OLS","d":"Quant, math & statistics","c":13,"x":0.262,"y":0.584},{"n":"Causal inference","d":"Quant, math & statistics","c":13,"x":0.451,"y":0.07},{"n":"Fat tails / power laws","d":"Quant, math & statistics","c":7,"x":0.427,"y":0.189},{"n":"Expected value","d":"Quant, math & statistics","c":18,"x":0.35,"y":0.52},{"n":"Variance / standard deviation","d":"Quant, math & statistics","c":13,"x":0.307,"y":0.194},{"n":"Normal distribution / CLT","d":"Quant, math & statistics","c":8,"x":0.374,"y":0.297},{"n":"Derivatives (calculus) / convexity","d":"Quant, math & statistics","c":21,"x":0.351,"y":0.349},{"n":"Statistical significance","d":"Quant, math & statistics","c":22,"x":0.496,"y":0.455},{"n":"Game theory / GTO","d":"Quant, math & statistics","c":8,"x":0.72,"y":0.043}],"edges":[[1,4],[20,44],[79,81],[38,39],[4,8],[1,8],[79,80],[93,99],[80,81],[92,99],[33,34],[4,7],[27,34],[27,32],[32,33],[0,14],[0,5],[61,62],[30,31],[48,53],[4,6],[4,16],[27,33],[48,52],[63,77],[30,42],[45,47],[27,29],[1,7],[5,14],[32,42],[33,40],[34,43],[20,21],[0,33],[52,53],[1,16],[20,33],[5,40],[17,68],[81,83],[0,1],[0,40],[9,16],[20,34],[8,16],[1,6],[8,19],[31,32],[34,44],[51,55],[7,16],[20,43],[27,30],[4,9],[7,18],[70,89],[27,42],[29,33],[43,44],[16,44],[4,19],[16,20],[31,42],[8,100],[28,34],[29,34],[40,43],[4,5],[29,35],[33,43],[50,66],[24,34],[1,14],[20,35],[27,31],[52,107],[16,35],[36,37],[33,44],[12,14],[1,9],[18,43],[21,23],[80,83],[1,5],[21,44],[0,4],[46,47],[1,19],[16,43],[107,108],[6,16],[8,9],[10,40],[7,15],[33,42],[48,56],[105,108],[50,55],[0,7],[9,20],[91,96],[68,69],[91,99],[94,95],[5,18],[53,54],[5,33],[37,58],[27,40],[27,43],[0,12],[79,83],[33,35],[18,40],[34,35],[44,110],[48,107],[18,34],[35,44],[1,15],[3,14],[32,40],[36,46],[6,8],[29,32],[16,34],[32,34],[88,89],[16,19],[16,33],[20,27],[93,96],[16,110],[70,106],[1,2],[20,40],[58,64],[4,15],[16,21],[50,103],[83,85],[0,32],[55,110],[27,44],[24,25],[46,109],[81,85],[51,110],[67,69],[24,26],[4,14],[5,10],[6,19],[40,44],[96,97],[40,42],[12,33],[24,58],[27,35],[28,33],[81,89],[9,21],[83,88],[7,9],[26,27],[6,7],[9,19],[45,46],[75,78],[5,7],[7,8],[1,12],[14,40],[26,32],[30,32],[0,16],[15,16],[3,5],[5,11],[52,56],[55,70],[11,40],[10,18],[34,40],[35,40],[35,43],[10,29],[55,103],[49,103],[70,80],[5,17],[9,44],[24,27],[26,34],[0,18],[14,33],[85,88],[0,42],[20,29],[52,54],[80,89],[6,15],[55,57],[83,89],[34,42],[16,18],[29,44],[56,107],[106,108],[1,100],[88,106],[81,103],[20,102],[49,50],[83,103],[10,33],[5,16],[28,43],[26,33],[70,74],[10,20],[6,9],[16,40],[30,40],[0,27],[20,110],[2,4],[7,12],[15,20],[21,43],[25,34],[0,29],[35,42],[68,81],[70,81],[7,43],[9,14],[36,51],[26,29],[7,10],[18,33],[46,79],[7,35],[12,42],[19,100],[72,104],[10,34],[31,40],[44,102],[24,33],[31,33],[14,17],[29,40],[29,43],[96,99],[0,34],[46,58],[49,83]],"claude_first":[["Stablecoins","Blockchain & digital assets",32,56],["Circle vs Tether","Blockchain & digital assets",39,37],["Custody models","Payments & settlement",61,34],["Tokenized deposits","Payments & settlement",30,29],["DTCC / NSCC","Payments & settlement",56,23],["Central counterparty (CCP)","Payments & settlement",36,18],["Smart contracts","Blockchain & digital assets",47,17],["The Greeks","Markets & investing",47,16],["Card networks / interchange","Payments & settlement",28,15],["Tokenized securities","Blockchain & digital assets",50,15]],"me_first":[["Netting","Payments & settlement",36],["Private markets / venture","Markets & investing",26],["RTGS / Fedwire","Payments & settlement",24],["Perpetual futures","Blockchain & digital assets",20],["Expected value","Quant, math & statistics",18],["Hyperledger / permissioned DLT","Blockchain & digital assets",17],["Staking","Blockchain & digital assets",15],["CHIPS","Payments & settlement",11],["Consensus (PoS / PoW)","Blockchain & digital assets",11],["Rebalancing","Markets & investing",10]],"hand_rates":[["restates to check",20.0,13.8,28.0],["states own view first",14.2,9.0,21.5],["pushes back",10.0,5.8,16.7],["asks what a term means",7.5,4.0,13.6],["asks for sources",2.5,0.9,7.1]],"style_by_quarter":{"define":[15.3,12.5,8.5,6.1],"restate":[16.3,5.8,3.2,3.0],"own_model":[10.0,10.2,8.2,9.7]},"reading":[["<500",37,11],["500-1.5k",76,49],["1.5-3k",125,88],["3-6k",218,178],["6k+",353,364]],"formats":[["Tables",0.088,0.084],["Bullet lists",0.088,0.082],["Headers",0.081,0.085],["Code blocks",0.087,0.082],["Equations",0.069,0.09],["Heavy bold",0.078,0.093]],"tools_by_quarter":{"Code and files":[0,205,2000,1738],"Connectors":[0,1,8,55],"Memory and history":[0,0,97,149],"Other":[0,19,50,96],"Thinking":[3,0,811,2974],"Visuals and artifacts":[36,39,163,158],"Web research":[197,309,842,1293]},"file_types":[["html",75],["md",42],["py",26],["jsx",14],["js",11],["csv",1],["txt",1]],"weeks":[0,0,1,1,2,2,1,1,1,2,2,3,3,1,2,1,3,1,1,1,2,1,2,2,1,3,2,4,3,4,4,4,4,4,3,3,4,3,3,2,2,3,4,4,4,3,2,3,4,4]};
+var BAND = {"markets and finance":"#7d8f5f","AI and tools":"#b9a068","building things":"#b8694a","learning":"#8fa3a8","other":"#a9a295","withheld":"hatch"};
+var BAND_ORDER = ["markets and finance","AI and tools","building things","learning","other","withheld"];
+var DOM = {"Payments & settlement":"#7b97b8","Blockchain & digital assets":"#b8694a","Markets & investing":"#7d8f5f","Macro & economics":"#b9a068",
+  "Corporate finance":"#a86a6a","AI & technology":"#b386a8","Quant, math & statistics":"#8fb3a8"};
+var DOM_SHORT = {"Payments & settlement":"payments","Blockchain & digital assets":"crypto","Markets & investing":"markets","Macro & economics":"macro",
+  "Corporate finance":"corporate finance","AI & technology":"AI","Quant, math & statistics":"quant & stats"};
+var QL = ["Oct-Dec 2025","Jan-Mar 2026","Apr-Jun 2026","Jul-Sep 2026"], QS = ["Q4 25","Q1 26","Q2 26","Q3 26"];
+function $(id){return document.getElementById(id);}
+function fmt(n){return n>=1e5?Math.round(n/1e3)+"k":n.toLocaleString("en-US");}
+function sw(c){return c==="hatch"?' class="hatch"':' style="background:'+c+'"';}
+
+// tiles
+var T = D.tiles;
+$("tiles").innerHTML = [[fmt(T.chats),"conversations"],[fmt(T.msgs),"messages, "+fmt(T.mine)+" mine"],[T.days,"days with at least one chat"],[fmt(T.my_words),"words I wrote"],
+  [T.ratio+"x","Claude words per word of mine"],[fmt(T.web_searches),"web searches it ran"],[fmt(T.tool_calls),"tool calls in total"],[T.files,"files it built for me"]]
+  .map(function(t){return '<div class="tile"><b>'+t[0]+'</b><span>'+t[1]+'</span></div>';}).join("");
+$("ends").textContent = T.end_on_reply[0]+" of "+T.end_on_reply[1];
+
+// public vs withheld split, then a squarified treemap of the public part
+var pub = D.treemap.filter(function(x){return x[0]!=="withheld";}), wh = D.treemap.filter(function(x){return x[0]==="withheld";})[0][2];
+var pubN = pub.reduce(function(a,x){return a+x[2];},0), pct = Math.round(pubN/(pubN+wh)*100);
+$("split").innerHTML = '<div style="width:'+pct+'%;background:#7d8f5f"></div><div class="hatch" style="width:'+(100-pct)+'%"></div>';
+$("splitlab").innerHTML = '<span>public topics, '+pct+'% of my messages (mapped below)</span><span>withheld, '+(100-pct)+'%</span>';
+function squarify(items, x, y, w, h, out){
+  if(!items.length) return; var total = items.reduce(function(a,i){return a+i.v;},0);
+  if(items.length===1){out.push([items[0],x,y,w,h]);return;}
+  var short = Math.min(w,h), long = Math.max(w,h), row = [], best = Infinity, i = 0, sum = 0;
+  for(; i<items.length; i++){
+    var s = sum+items[i].v, r = row.concat(items[i]), side = s/total*long;
+    var worst = Math.max.apply(null, r.map(function(it){var len = it.v/s*short; return Math.max(side/len, len/side);}));
+    if(worst>best) break; best = worst; row = r; sum = s;
+  }
+  var side = sum/total*long, off = 0;
+  row.forEach(function(it){var len = it.v/sum*short;
+    if(w>=h) out.push([it,x,y+off,side,len]); else out.push([it,x+off,y,len,side]); off += len;});
+  if(w>=h) squarify(items.slice(i), x+side, y, w-side, h, out); else squarify(items.slice(i), x, y+side, w, h-side, out);
+}
+function drawTree(){
+  var el = $("treemap"), W = el.clientWidth, H = el.clientHeight, out = [];
+  var groups = BAND_ORDER.slice(0,5).map(function(b){var its = pub.filter(function(x){return x[0]===b;}).map(function(x){return {v:x[2],l:x[1],b:b};}).sort(function(a,c){return c.v-a.v;});
+    return {v:its.reduce(function(a,i){return a+i.v;},0), b:b, its:its};}).filter(function(g){return g.v>0;});
+  var gr = []; squarify(groups, 0, 0, W, H, gr); var cells = [];
+  gr.forEach(function(g){squarify(g[0].its, g[1], g[2], g[3], g[4], cells);});
+  el.innerHTML = cells.map(function(c){var it=c[0];
+    return '<div style="left:'+c[1]+'px;top:'+c[2]+'px;width:'+c[3]+'px;height:'+c[4]+'px;background:'+BAND[it.b]+'">'+(c[3]>58&&c[4]>26?'<b>'+it.l+'</b>':'')+'</div>';}).join("");
+}
+drawTree(); window.addEventListener("resize", drawTree);
+$("tmlegend").innerHTML = BAND_ORDER.slice(0,5).map(function(b){return '<span><i'+sw(BAND[b])+'></i>'+b+'</span>';}).join("");
+
+// quarters
+$("quarters").innerHTML = QL.map(function(q,i){
+  var tot = BAND_ORDER.reduce(function(a,b){return a+((D.bands_by_quarter[b]||[])[i]||0);},0);
+  var segs = BAND_ORDER.map(function(b){var v = (D.bands_by_quarter[b]||[])[i]||0; if(!v) return ""; var w = v/tot*100;
+    return '<div'+(BAND[b]==="hatch"?' class="hatch" style="width:'+w+'%"':' style="width:'+w+'%;background:'+BAND[b]+'"')+'>'+(v>=8?v+"%":"")+'</div>';}).join("");
+  return '<div class="stack"><span>'+q+'</span><div class="s">'+segs+'</div></div>';}).join("") +
+  '<div class="legend">'+BAND_ORDER.map(function(b){return '<span><i'+sw(BAND[b])+'></i>'+b+'</span>';}).join("")+'</div>';
+
+// concept graph (positions precomputed offline)
+(function(){
+  var N = D.concepts, P = 30, Wd = 900-2*P, Hd = 560-2*P, s = "";
+  function X(n){return P+n.x*Wd;} function Y(n){return P+n.y*Hd;}
+  D.edges.forEach(function(e){var a=N[e[0]], b=N[e[1]]; s += '<line x1="'+X(a)+'" y1="'+Y(a)+'" x2="'+X(b)+'" y2="'+Y(b)+'" stroke="#4a4642" stroke-width="0.8"/>';});
+  N.forEach(function(n){var r = 3+Math.sqrt(n.c)*1.5;
+    s += '<circle cx="'+X(n)+'" cy="'+Y(n)+'" r="'+r+'" fill="'+DOM[n.d]+'" stroke="#2f2c29" stroke-width="1"><title>'+n.n+'</title></circle>';});
+  // label the biggest ideas first; skip any label that would overlap one already placed
+  var placed = [];
+  N.slice().sort(function(a,b){return b.c-a.c;}).forEach(function(n){ if(placed.length>=30 || n.c<6) return;
+    var r = 3+Math.sqrt(n.c)*1.5, w = n.n.length*6.3+6, x = Math.min(Math.max(X(n), P+w/2), 900-P-w/2), y = Y(n)-r-5;
+    var box = [x-w/2, y-11, x+w/2, y+2];
+    if(placed.some(function(b){return !(box[2]<b[0]||box[0]>b[2]||box[3]<b[1]||box[1]>b[3]);})) return;
+    placed.push(box);
+    s += '<text x="'+x+'" y="'+y+'" font-size="10.5" fill="#EDE6D6" text-anchor="middle" paint-order="stroke" stroke="#2f2c29" stroke-width="3">'+n.n+'</text>';});
+  $("graph").innerHTML = s;
+  $("glegend").innerHTML = Object.keys(DOM).map(function(d){return '<span><i style="background:'+DOM[d]+';border-radius:50%"></i>'+DOM_SHORT[d]+'</span>';}).join("");
+})();
+$("cfirst").innerHTML = D.claude_first.map(function(c){return '<li><span class="nm"><i style="background:'+DOM[c[1]]+'"></i>'+c[0]+'</span><span class="v">'+c[2]+' days · '+c[3]+' chats</span></li>';}).join("");
+$("mfirst").innerHTML = D.me_first.map(function(c){return '<li><span class="nm"><i style="background:'+DOM[c[1]]+'"></i>'+c[0]+'</span><span class="v">'+c[2]+' chats</span></li>';}).join("");
+
+// hand-labeled rates
+$("rates").innerHTML = D.hand_rates.map(function(r){var m = 30;
+  return '<div class="bar-row"><span>'+r[0]+'</span><div class="track"><div class="fill" style="width:'+(r[1]/m*100)+'%"></div><div class="ci" style="left:'+(r[2]/m*100)+'%;width:'+((r[3]-r[2])/m*100)+'%"></div></div><span class="v">'+(r[1]<10?r[1].toFixed(1):Math.round(r[1]))+'%</span></div>';}).join("");
+
+// small charts
+function axes(W,H,L,B,T,ymax,ticks,unit){var s="";
+  ticks.forEach(function(g){var y = H-B-(g/ymax)*(H-B-T); s += '<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="#3b3834"/><text x="'+(L-6)+'" y="'+(y+3)+'" fill="#a9a295" font-size="10" text-anchor="end">'+(g>=1000?(g/1000)+"k":g)+unit+'</text>';});
+  return s;}
+(function(){ // reading
+  var W=420,H=210,L=40,B=26,T=10,ym=400,s=axes(W,H,L,B,T,ym,[0,100,200,300,400],"s"), n=D.reading.length, gw=(W-L-10)/n, labels=["<500","500-1.5k","1.5-3k","3-6k","6k+"];
+  D.reading.forEach(function(r,i){var x=L+8+i*gw, bw=(gw-18)/2;
+    [[r[1],"#7d8f5f"],[r[2],"#5a5550"]].forEach(function(v,j){var h=Math.min(v[0],ym)/ym*(H-B-T); s+='<rect x="'+(x+j*bw)+'" y="'+(H-B-h)+'" width="'+(bw-2)+'" height="'+h+'" fill="'+v[1]+'" rx="1"/>';});
+    s+='<text x="'+(x+bw)+'" y="'+(H-9)+'" fill="#a9a295" font-size="10" text-anchor="middle">'+labels[i]+'</text>';});
+  $("reading").innerHTML = s+'<text x="'+(L+4)+'" y="'+(T+10)+'" fill="#6f6a63" font-size="9.5">reply length in characters, left to right</text>';
+})();
+function lines(id, series, ymax, ticks, unit, legendId){
+  var W=420,H=210,L=40,B=26,T=10,s=axes(W,H,L,B,T,ymax,ticks,unit), xs=QS.map(function(q,i){return L+16+i*(W-L-40)/3;});
+  QS.forEach(function(q,i){s+='<text x="'+xs[i]+'" y="'+(H-9)+'" fill="#a9a295" font-size="10" text-anchor="middle">'+q+'</text>';});
+  series.forEach(function(sr){var pts = sr[2].map(function(v,i){return xs[i]+","+(H-B-(v/ymax)*(H-B-T));});
+    s+='<polyline fill="none" stroke="'+sr[1]+'" stroke-width="2" points="'+pts.join(" ")+'"/>';
+    pts.forEach(function(p){var c=p.split(","); s+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="2.8" fill="'+sr[1]+'"/>';});});
+  $(id).innerHTML = s; $(legendId).innerHTML = series.map(function(sr){return '<span><i style="background:'+sr[1]+'"></i>'+sr[0]+'</span>';}).join("");
+}
+lines("style", [["asks what a term means","#b9a068",D.style_by_quarter.define],["restates to check","#8fa3a8",D.style_by_quarter.restate],["states own view first","#7d8f5f",D.style_by_quarter.own_model]], 20, [0,10,20], "%", "slegend");
+(function(){ // tools stacked
+  var K = [["Web research","#8fa3a8"],["Code and files","#b8694a"],["Thinking","#7d8f5f"],["Visuals and artifacts","#b9a068"],["Memory and history","#b386a8"],["Connectors","#7b97b8"],["Other","#6f6a63"]];
+  var W=420,H=230,L=46,B=26,T=10, tot=QS.map(function(q,i){return K.reduce(function(a,k){return a+(D.tools_by_quarter[k[0]]||[])[i];},0);});
+  var ym = Math.ceil(Math.max.apply(null,tot)/1000)*1000, s = axes(W,H,L,B,T,ym,[0,ym/2,ym],""), bw=(W-L-20)/4;
+  QS.forEach(function(q,i){var y=H-B, x=L+10+i*bw;
+    K.forEach(function(k){var v=(D.tools_by_quarter[k[0]]||[])[i], h=v/ym*(H-B-T); y-=h; s+='<rect x="'+x+'" y="'+y+'" width="'+(bw-16)+'" height="'+h+'" fill="'+k[1]+'"/>';});
+    s+='<text x="'+(x+(bw-16)/2)+'" y="'+(H-9)+'" fill="#a9a295" font-size="10" text-anchor="middle">'+q+'</text>';});
+  $("tools").innerHTML = s;
+  $("tlegend").innerHTML = K.map(function(k){return '<span><i style="background:'+k[1]+'"></i>'+k[0].toLowerCase()+'</span>';}).join("");
+})();
+$("files").innerHTML = D.file_types.map(function(f){var m = D.file_types[0][1];
+  return '<div class="bar-row" style="grid-template-columns:60px 1fr 36px"><span>.'+f[0]+'</span><div class="track"><div class="fill" style="width:'+(f[1]/m*100)+'%;background:#b8694a"></div></div><span class="v">'+f[1]+'</span></div>';}).join("");
+
+// weekly activity
+var LV = ["#312e2b","#3f4a33","#55653f","#6f8352","#93a870"], MO = [[0,"Oct"],[4,"Nov"],[8,"Dec"],[12,"Jan"],[17,"Feb"],[21,"Mar"],[25,"Apr"],[30,"May"],[34,"Jun"],[38,"Jul"],[43,"Aug"],[47,"Sep"]];
+$("grid").innerHTML = D.weeks.map(function(l){return '<div style="background:'+LV[l]+'"></div>';}).join("");
+$("months").innerHTML = MO.map(function(m){return '<span style="left:'+(m[0]/D.weeks.length*100)+'%">'+m[1]+'</span>';}).join("");
+$("scale").innerHTML = LV.map(function(c){return '<i style="background:'+c+'"></i>';}).join("");
+</script>
+</body>
+</html>
