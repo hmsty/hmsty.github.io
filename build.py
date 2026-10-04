@@ -14,6 +14,8 @@ import urllib.request
 from datetime import datetime
 from pathlib import Path
 
+from reading import READING
+
 # ---- settings ---------------------------------------------------------------
 SUBSTACK = "https://willjensen.substack.com"
 SITE_TITLE = "Will Jensen"
@@ -25,22 +27,6 @@ LINKS = [
 ]
 SITE_URL = "https://hmsty.github.io"
 GOATCOUNTER = ""  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
-READING = {  # section -> [(title, author)], shown in this order on the home page
-    "nonfiction": [
-        ("The Beginning of Infinity", "David Deutsch"),
-        ("Behave", "Robert M. Sapolsky"),
-        ("Thinking, Fast and Slow", "Daniel Kahneman"),
-        ("Knowledge and Decisions", "Thomas Sowell"),
-        ("Basic Economics", "Thomas Sowell"),
-        ("Read Write Own", "Chris Dixon"),
-    ],
-    "fiction": [
-        ("The Sun Also Rises", "Ernest Hemingway"),
-        ("For Whom the Bell Tolls", "Ernest Hemingway"),
-        ("Brave New World", "Aldous Huxley"),
-        ("Based on a True Story", "Norm Macdonald"),
-    ],
-}
 # -----------------------------------------------------------------------------
 
 ROOT = Path(__file__).parent
@@ -158,8 +144,12 @@ ul.posts{list-style:none;padding:0;margin:0 0 40px}
 ul.posts li{display:flex;gap:20px;margin:0 0 6px}
 ul.posts span{color:var(--muted);flex:none}
 .shelves{margin:0 0 40px}
-h3.k{font-size:12px;font-weight:400;color:var(--muted);margin:14px 0 4px;letter-spacing:.04em}
-h3.k:first-child{margin-top:0}
+h2.s .n{color:var(--muted);opacity:.7;margin-left:8px}
+.jump{margin:0 0 8px;line-height:2.2}
+.jump a{margin-right:16px;white-space:nowrap}
+.shelves section{scroll-margin-top:24px}
+h3.sec{font-size:14px;font-weight:700;color:var(--paper);margin:40px 0 6px}
+h4.k{font-size:12px;font-weight:400;color:var(--muted);margin:16px 0 4px;letter-spacing:.04em}
 ul.books{list-style:none;padding:0;margin:0}
 ul.books li{margin:0 0 6px}
 ul.books span{color:var(--muted)}
@@ -271,11 +261,22 @@ def build():
         (d / "index.html").write_text(page(f'{p["title"]} · {SITE_TITLE}', body, p.get("subtitle") or "",
                                            p.get("cover_image") or "", f"p/{p['slug']}/"))
 
-    books = "".join(
-        f'<h3 class="k">{kind}</h3><ul class="books">'
-        + "".join(f'<li>{html.escape(t)} <span>· {html.escape(a)}</span></li>' for t, a in shelf)
-        + "</ul>"
-        for kind, shelf in READING.items())
+    def slug(name):
+        return re.sub(r"[^a-z0-9]+", "-", name).strip("-")
+
+    def shelf(items):
+        return '<ul class="books">' + "".join(
+            f'<li>{html.escape(t)}' + (f' <span>· {html.escape(a)}</span>' if a else "") + "</li>"
+            for t, a in items) + "</ul>"
+
+    total = sum(len(i) for sec in READING.values() for i in sec.values())
+    jump = " ".join(f'<a href="#{slug(sec)}">{sec}</a>' for sec in READING)
+    books = f'<nav class="jump">{jump}</nav>' + "".join(
+        f'<section id="{slug(sec)}"><h3 class="sec">{sec}</h3>'
+        + "".join((f'<h4 class="k">{sub}</h4>' if sub else "") + shelf(items)
+                  for sub, items in subs.items())
+        + "</section>"
+        for sec, subs in READING.items())
     links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
     links += '<a href="/reading/">reading</a>'
     home = (header(True)
@@ -285,8 +286,8 @@ def build():
 
     (OUT / "reading").mkdir()
     (OUT / "reading" / "index.html").write_text(page(f"Reading · {SITE_TITLE}",
-        header(False) + f'<h2 class="s">reading</h2><div class="shelves">{books}</div>'
-        + '<p class="t"><a href="/">← home</a></p>', "Books I'd recommend.", path="reading/"))
+        header(False) + f'<h2 class="s">reading <span class="n">{total} books</span></h2><div class="shelves">{books}</div>'
+        + '<p class="t"><a href="/">← home</a></p>', "Books I've read.", path="reading/"))
 
     (OUT / "404.html").write_text(page("Not found", header(False)
         + '<p class="t">nothing here. <a href="/">go home</a>.</p>'))
