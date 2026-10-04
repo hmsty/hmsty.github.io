@@ -7,6 +7,13 @@ writing, projects, a suggested-reading page, and links elsewhere.
 
 Run `git pull` first. The site is edited from more than one computer.
 
+Commit as `hmsty <277348908+hmsty@users.noreply.github.com>`. Set it for this repo with
+`git config user.name hmsty` and `git config user.email 277348908+hmsty@users.noreply.github.com`.
+The history is public, so a real email or computer name in a commit is published.
+The history was rewritten on 2026-10-03 to remove personal info. If a pull reports
+diverged histories, don't merge or rebase: run `git fetch` and `git reset --hard origin/main`
+so the old commits don't come back.
+
 ## How it works
 
 - `build.py` generates everything into `site/`, which is not committed.
