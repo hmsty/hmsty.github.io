@@ -27,7 +27,7 @@ LINKS = [
 ]
 SITE_URL = "https://hmsty.github.io"
 PROJECTS = [  # (title, path under projects/, one-line description), newest first
-    ("One Tokenized Share, From Order to Finality", "two-ledgers", "Wall Street and Ethereum settlement, side by side, in 3D"),
+    ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "order to finality on Wall Street and Ethereum, in 3D"),
     ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
     ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
 ]
@@ -148,7 +148,10 @@ h2.s::before{content:"// ";color:var(--brass)}
 ul.posts{list-style:none;padding:0;margin:0 0 40px}
 ul.posts li{display:flex;gap:20px;margin:0 0 6px}
 ul.posts span{color:var(--muted);flex:none}
-ul.proj li{gap:14px}ul.proj span{flex:1}
+ul.posts a{align-self:flex-start;border:0;text-decoration:underline;text-decoration-color:var(--moss);text-decoration-thickness:1px;text-underline-offset:6px}
+ul.posts a:hover{text-decoration-color:var(--brass)}
+ul.proj li{display:block;margin:0 0 14px}
+ul.proj span{display:block;font-size:13px;line-height:1.6}
 .shelves{margin:0 0 40px}
 h2.s .n{color:var(--muted);opacity:.7;margin-left:8px}
 .jump{margin:0 0 8px;line-height:2.2}
