@@ -275,7 +275,7 @@ def build():
         f'<section id="{slug(sec)}"><h3 class="sec">{sec}</h3>'
         + shelf(items) + "</section>"
         for sec, items in READING.items())
-    links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
+    links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
