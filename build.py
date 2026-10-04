@@ -272,11 +272,16 @@ def build():
         + "</ul>"
         for kind, shelf in READING.items())
     links = "".join(f'<a href="{u}" rel="me">{n}</a>' for n, u in LINKS)
+    links += '<a href="/reading/">reading</a>'
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
-            + f'<h2 class="s">reading</h2><div class="shelves">{books}</div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
     (OUT / "index.html").write_text(page(SITE_TITLE, home))
+
+    (OUT / "reading").mkdir()
+    (OUT / "reading" / "index.html").write_text(page(f"Reading · {SITE_TITLE}",
+        header(False) + f'<h2 class="s">reading</h2><div class="shelves">{books}</div>'
+        + '<p class="t"><a href="/">← home</a></p>', "Books I'd recommend.", path="reading/"))
 
     (OUT / "404.html").write_text(page("Not found", header(False)
         + '<p class="t">nothing here. <a href="/">go home</a>.</p>'))
