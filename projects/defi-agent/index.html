@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head><link rel="icon" href="/pfp.jpg">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>a web3 dev environment for stablecoins</title>
+<meta name="description" content="Move USDC between lending protocols by asking Claude Code. Every transaction is signed on my Mac after I approve it.">
+<meta property="og:title" content="A Web3 Dev Environment for Stablecoins">
+<meta property="og:description" content="Move USDC between lending protocols by asking Claude Code. Every transaction is signed on my Mac after I approve it.">
+<meta name="theme-color" content="#262422">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#262422;--ink-2:#312e2b;--paper:#EDE6D6;--body:#e2dacb;--muted:#a9a295;
+--moss:#5C6B47;--rust:#9C4A2E;--brass:#96721F;--brass-lt:#b9a068;
+--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;--serif:"Source Serif 4",Georgia,serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:dark}
+body{margin:0;background:var(--ink);color:var(--paper);font:14px/1.75 var(--mono);-webkit-font-smoothing:antialiased}
+::selection{background:var(--rust);color:var(--paper)}
+a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--moss);transition:color .15s,border-color .15s}
+a:hover{color:var(--brass-lt);border-color:var(--brass)}
+a:focus-visible{outline:2px solid var(--brass-lt);outline-offset:3px;border-radius:2px}
+.w{max-width:660px;margin:0 auto;padding:72px 20px 56px}
+h1{font-size:20px;font-weight:700;margin:0 0 4px}
+.t{color:var(--muted);margin:0}
+h2{font-size:14px;font-weight:400;color:var(--muted);margin:44px 0 10px}
+h2::before{content:"// ";color:var(--brass)}
+.p{font:17px/1.7 var(--serif);color:var(--body)}
+.p p{margin:0 0 1em}
+.p strong{color:var(--paper);font-weight:600}
+figure{margin:36px auto 0;max-width:1000px;padding:0 20px}
+figure img{display:block;width:100%;height:auto;border-radius:6px;border:1px solid var(--ink-2)}
+figcaption{max-width:620px;margin:10px auto 0;font-size:12px;color:var(--muted);text-align:center}
+ul.f{list-style:none;padding:0;margin:0;font:16px/1.65 var(--serif);color:var(--body)}
+ul.f li{margin:0 0 10px;padding-left:18px;position:relative}
+ul.f li::before{content:"";position:absolute;left:0;top:.72em;width:7px;height:1px;background:var(--brass)}
+ul.f b{color:var(--paper);font-weight:600}
+ol.s{margin:0;padding-left:22px;font:16px/1.65 var(--serif);color:var(--body)}
+ol.s li{margin:0 0 8px} ol.s li::marker{color:var(--brass);font-family:var(--mono);font-size:13px}
+pre.term{margin:18px 0 0;padding:16px 18px;background:var(--ink-2);border-left:2px solid var(--moss);border-radius:2px;font:12.5px/1.65 var(--mono);color:var(--body);overflow-x:auto;white-space:pre}
+code{font:13px var(--mono);color:var(--paper);background:rgba(237,230,214,.07);padding:1px 5px;border-radius:3px}
+.back{position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10}
+figure.fg{max-width:780px;margin:22px auto 30px;padding:0 20px}
+figure.fg.n{max-width:500px}
+figure.fg figcaption{text-align:left;margin:10px 0 0;max-width:none}
+.fw{position:relative}
+.fw img{border-radius:6px}
+.mk{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--brass-lt);color:#1e1c1a;font:700 12px/22px var(--mono);text-align:center;transform:translate(-50%,-50%);box-shadow:0 0 0 2px rgba(38,36,34,.92)}
+ol.lg{list-style:none;counter-reset:n;margin:12px 0 0;padding:0;font:14.5px/1.5 var(--serif);color:var(--body)}
+ol.lg li{counter-increment:n;position:relative;padding-left:30px;margin:0 0 7px}
+ol.lg li::before{content:counter(n);position:absolute;left:0;top:2px;width:18px;height:18px;border-radius:50%;background:var(--brass-lt);color:#1e1c1a;font:700 11px/18px var(--mono);text-align:center}
+</style>
+</head>
+<body><a class="back" href="/">← home</a>
+
+<div class="w">
+<h1>A Web3 Dev Environment for Stablecoins</h1>
+<p class="t">move USDC between lending protocols by asking Claude Code, signed on my Mac</p>
+<div class="p" style="margin-top:28px">
+<p>A confession: My first BTC exposure came in the form of a wrapper on rolled-over futures (BITO). I later moved over to IBIT to avoid the embedded financing costs inherent to a futures-based financial product. Neither are, really, owning bitcoin. This project began as my way of closing that instance of mental dissonance.</p>
+<p>So I set up the real thing: a few dollars of USDC in a wallet I control, held on my own machine, and a way to put it to work. I ask Claude Code to check lending rates and risk and to move the money. Each transaction is signed on my Mac after I approve it with Touch ID, and there is no server.</p>
+</div>
+
+<h2>how a move works</h2>
+<ol class="s">
+<li>Claude Code checks live rates and risk, then queues a proposal.</li>
+<li>The proposal is decoded from the raw transaction and checked against limits on chains, protocols, assets and size.</li>
+<li>I read it in my terminal and approve with Touch ID. Only then does the signing code run.</li>
+</ol>
+<pre class="term">$ npm run approve -- 90e0b2
+Proposal 90e0b2
+Wallet: main 0x…
+
+  1. approve(2 USDC) to spender 0x… (Aave v3 pool, Base)
+  2. aave-v3: deposit 2 USDC for 0x…
+
+Simulated asset changes: ETH 0, USDC -2, aBasUSDC 1.999998
+Estimated gas: 243792
+
+Waiting for Touch ID (or your Mac password)...
+  ok   0x…
+  ok   0x…</pre>
+<p class="p" style="margin:14px 0 0;font-size:15px">An approval in the terminal. Addresses and hashes are elided. The private key stays on this machine, and the server Claude Code talks to has no code path to it.</p>
+
+<h2>what it does</h2>
+<ul class="f">
+<li><b>Moves money.</b> Deposits and withdrawals on Aave, Compound, Morpho and Fluid, and USDC between Base, Arbitrum and Optimism through Circle's CCTP.</li>
+<li><b>Reads the market.</b> Rates, utilization and risk checks from the contracts, plus the USDC price from two sources.</li>
+<li><b>Explains the chain.</b> Any contract or transaction in plain English.</li>
+<li><b>Keeps a record.</b> An hourly history in a local database that I can query with SQL.</li>
+</ul>
+
+<h2>what I learned</h2>
+<ul class="f">
+<li><b>Exposure and ownership are different things.</b> A fund or a futures product gives price exposure. Holding the asset myself adds custody and keys and removes the safety net: nobody can freeze or reverse a transaction, or recover a lost key. So most of the work went into making mistakes hard to make.</li>
+<li><b>Where the money sits decides who carries the risk.</b> At an exchange the balance is a ledger entry the company keeps. In a lending protocol it is a claim on a pool that borrowers draw from, so the risk moves to contract code, collateral and price feeds.</li>
+</ul>
+<figure class="fg n">
+<div class="fw"><img src="/projects/defi-agent/img/report.jpg" width="960" height="744" loading="lazy" alt="A contract report for the Aave v3 pool on Base, with three numbered markers: an upgradeable proxy warning, a list of privileged functions, and a note that it could not determine who controls upgrades."><span class="mk" style="left:2.86%;top:61.37%">1</span><span class="mk" style="left:2.86%;top:74.81%">2</span><span class="mk" style="left:2.86%;top:87.48%">3</span></div>
+<figcaption>The report on the Aave v3 pool, which holds other people's deposits. Screenshots here come from a demo copy with a placeholder wallet and public data.</figcaption>
+<ol class="lg"><li>The code behind this address can be replaced by whoever controls the upgrade.</li><li>Two functions only privileged roles can call.</li><li>When it can't tell who holds that control, it says so.</li></ol>
+</figure>
+
+<ul class="f">
+<li><b>Yield is what borrowers pay, so it follows demand.</b> Aave's USDC market on Base ran near 90% utilization, and the highest rates came with something attached, such as a small market or reward tokens.</li>
+</ul>
+<figure class="fg ">
+<div class="fw"><img src="/projects/defi-agent/img/rates.jpg" width="1520" height="427" loading="lazy" alt="A table of lending venues sorted by supply APY. Fluid USDC is first at about 8.5 percent with notes that it is a small vault and may include reward tokens. Compound III on Base is second with a note that it is a small market."><span class="mk" style="left:22.37%;top:28.49%">1</span><span class="mk" style="left:93.13%;top:33.76%">2</span><span class="mk" style="left:71.19%;top:56.35%">3</span></div>
+<figcaption>The markets table, sorted by supply APY.</figcaption>
+<ol class="lg"><li>The highest rate on the list.</li><li>It sits in a $12.5M vault, and the figure may include reward tokens.</li><li>The next one up is a $9.7M market.</li></ol>
+</figure>
+
+<ul class="f">
+<li><b>Gas sets what is practical at small sizes.</b> The day I checked, a deposit-sized transaction cost about 4 cents on Ethereum mainnet and under half a cent on Base. Layer 2s get cheap by batching transactions to Ethereum, and the trade is that leaving through the official bridge takes about a week.</li>
+</ul>
+<figure class="fg ">
+<div class="fw"><img src="/projects/defi-agent/img/strip.jpg" width="1520" height="232" loading="lazy" alt="The header strip of the dashboard showing Base gas, the USDC price from Chainlink, the best APY and Aave's utilization on Base, with three numbered markers."><span class="mk" style="left:11.53%;top:16.95%">1</span><span class="mk" style="left:32.78%;top:16.95%">2</span><span class="mk" style="left:88.19%;top:16.95%">3</span></div>
+<figcaption>Three of the figures the dashboard keeps in view.</figcaption>
+<ol class="lg"><li>Base gas. A two-transaction deposit cost about half a cent.</li><li>The USDC price, read on-chain from Chainlink.</li><li>Aave's USDC market on Base is about 90% lent out.</li></ol>
+</figure>
+
+<ul class="f">
+<li><b>Research is safe to hand to an AI. The last step isn't.</b> The data is public, so an assistant can read and propose freely. The step that moves money can't be undone, so it stays with me.</li>
+</ul>
+</div>
+</body>
+</html>
