@@ -163,8 +163,9 @@ ul.posts a{align-self:flex-start;border:0;text-decoration:underline;text-decorat
 ul.posts a:hover{text-decoration-color:var(--brass)}
 ul.proj li{display:block;margin:0 0 14px}
 ul.proj span{display:block;font-size:13px;line-height:1.6}
-h3.g{font:400 12px/1.4 var(--mono);color:var(--muted);margin:0 0 10px}
-ul.proj{margin-bottom:26px}ul.proj.last{margin-bottom:40px}
+.pg{display:grid;grid-template-columns:104px minmax(0,1fr);gap:0 20px;margin:0 0 26px}.pg.last{margin-bottom:40px}
+.pg ul.proj{margin:0}
+h3.g{font:400 12px/1.4 var(--mono);color:var(--muted);margin:3px 0 0}
 .shelves{margin:0 0 40px}
 h2.s .n{color:var(--muted);opacity:.7;margin-left:8px}
 .jump{margin:0 0 8px;line-height:2.2}
@@ -218,7 +219,7 @@ a.footnote-anchor:target{background:var(--rust);color:var(--paper);border-radius
 .contact summary::-webkit-details-marker{display:none}.contact[open] summary{color:var(--paper)}
 .card{margin-top:10px;width:200px;height:200px;box-sizing:border-box;padding:18px;background:var(--ink-2);border:1px solid var(--moss);border-radius:4px;display:flex;flex-direction:column;gap:8px}
 .card p{margin:0 0 6px;color:var(--muted)}.card a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--brass);width:max-content}
-@media (max-width:520px){ul.posts li{flex-direction:column;gap:0;margin-bottom:12px}
+@media (max-width:520px){.pg{display:block}h3.g{margin:0 0 10px}ul.posts li{flex-direction:column;gap:0;margin-bottom:12px}
 article h1.title{font-size:28px}.body{font-size:18px}}
 """
 
@@ -308,9 +309,9 @@ def build():
         + shelf(items) + "</section>"
         for sec, items in READING.items())
     projects = "".join(
-        f'<h3 class="g">{html.escape(g)}</h3><ul class="posts proj{" last" if k == len(PROJECT_GROUPS) - 1 else ""}">'
+        f'<div class="pg{" last" if k == len(PROJECT_GROUPS) - 1 else ""}"><h3 class="g">{html.escape(g)}</h3><ul class="posts proj">'
         + "".join(f'<li><a href="/projects/{p}/">{html.escape(t)}</a><span>{html.escape(d)}</span></li>' for t, p, d in group)
-        + "</ul>"
+        + "</ul></div>"
         for k, (g, group) in enumerate(PROJECT_GROUPS))
     links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
     mail = f'<a href="mailto:{CONTACT_EMAIL}">email</a>' if CONTACT_EMAIL else ""
