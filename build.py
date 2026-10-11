@@ -29,11 +29,11 @@ SITE_URL = "https://hmsty.github.io"
 PROJECT_GROUPS = [  # (group label, [(title, path under projects/, one-line description), ...]), newest first within a group
     ("blockchain", [
         ("A Web3 Dev Environment", "defi-agent", "a local environment for reading, analyzing, monitoring and transacting on blockchains from Claude Code"),
-        ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "order to finality on Wall Street and Ethereum, in 3D"),
-        ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
+        ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "a 3D animation of one stock trade settling on Wall Street and on Ethereum"),
+        ("What a Blockchain Is", "what-a-blockchain-is", "a 3D animation that follows one payment through a blockchain until it's final"),
     ]),
     ("ai", [
-        ("Reading My AI History as Data", "reading-my-ai-history", "a year of my AI conversations, analyzed as a dataset"),
+        ("Reading My AI History as Data", "reading-my-ai-history", "a data report on 772 of my conversations with Claude"),
     ]),
     ("games", [
         ("GTO Practice Tool", "gto-practice-tool", "a free poker trainer that grades every decision against a solver"),
