@@ -26,14 +26,21 @@ LINKS = [
     ("linkedin", "https://www.linkedin.com/in/jensen-william/"),
 ]
 SITE_URL = "https://hmsty.github.io"
-PROJECTS = [  # (title, path under projects/, one-line description), newest first
-    ("A Web3 Dev Environment", "defi-agent", "a local environment for reading, analyzing, monitoring and transacting on blockchains from Claude Code"),
-    ("Reading My AI History as Data", "reading-my-ai-history", "a year of my AI conversations, analyzed as a dataset"),
-    ("GTO Practice Tool", "gto-practice-tool", "a free poker trainer that grades every decision against a solver"),
-    ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "order to finality on Wall Street and Ethereum, in 3D"),
-    ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
-    ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
+PROJECT_GROUPS = [  # (group label, [(title, path under projects/, one-line description), ...]), newest first within a group
+    ("blockchain", [
+        ("A Web3 Dev Environment", "defi-agent", "a local environment for reading, analyzing, monitoring and transacting on blockchains from Claude Code"),
+        ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "order to finality on Wall Street and Ethereum, in 3D"),
+        ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
+    ]),
+    ("ai", [
+        ("Reading My AI History as Data", "reading-my-ai-history", "a year of my AI conversations, analyzed as a dataset"),
+    ]),
+    ("games", [
+        ("GTO Practice Tool", "gto-practice-tool", "a free poker trainer that grades every decision against a solver"),
+        ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
+    ]),
 ]
+PROJECTS = [p for _, group in PROJECT_GROUPS for p in group]  # flat list, used for the sitemap
 CONTACT_EMAIL = ""  # optional: a forwarding alias, never a real inbox
 GOATCOUNTER = "hmsty"  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 # -----------------------------------------------------------------------------
@@ -156,6 +163,8 @@ ul.posts a{align-self:flex-start;border:0;text-decoration:underline;text-decorat
 ul.posts a:hover{text-decoration-color:var(--brass)}
 ul.proj li{display:block;margin:0 0 14px}
 ul.proj span{display:block;font-size:13px;line-height:1.6}
+h3.g{font:400 12px/1.4 var(--mono);color:var(--muted);margin:0 0 10px}
+ul.proj{margin-bottom:26px}ul.proj.last{margin-bottom:40px}
 .shelves{margin:0 0 40px}
 h2.s .n{color:var(--muted);opacity:.7;margin-left:8px}
 .jump{margin:0 0 8px;line-height:2.2}
@@ -299,8 +308,10 @@ def build():
         + shelf(items) + "</section>"
         for sec, items in READING.items())
     projects = "".join(
-        f'<li><a href="/projects/{p}/">{html.escape(t)}</a><span>{html.escape(d)}</span></li>'
-        for t, p, d in PROJECTS)
+        f'<h3 class="g">{html.escape(g)}</h3><ul class="posts proj{" last" if k == len(PROJECT_GROUPS) - 1 else ""}">'
+        + "".join(f'<li><a href="/projects/{p}/">{html.escape(t)}</a><span>{html.escape(d)}</span></li>' for t, p, d in group)
+        + "</ul>"
+        for k, (g, group) in enumerate(PROJECT_GROUPS))
     links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
     mail = f'<a href="mailto:{CONTACT_EMAIL}">email</a>' if CONTACT_EMAIL else ""
     contact = ('<details class="contact"><summary>contact</summary><div class="card"><p>say hi</p>'
@@ -308,7 +319,7 @@ def build():
                          for n, u in LINKS if n in ("x", "linkedin")) + mail + '</div></details>')
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
-            + f'<h2 class="s">projects</h2><ul class="posts proj">{projects}</ul>'
+            + f'<h2 class="s">projects</h2>{projects}'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
             + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>{contact}')
     (OUT / "index.html").write_text(page(SITE_TITLE, home), encoding="utf-8")
