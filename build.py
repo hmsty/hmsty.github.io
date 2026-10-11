@@ -215,10 +215,6 @@ a.footnote-number{border:0;color:var(--brass-lt);min-width:2em;padding:0 4px;mar
 a.footnote-anchor:target{background:var(--rust);color:var(--paper);border-radius:3px}
 .end{margin-top:48px;padding-top:20px;border-top:1px solid var(--ink-2);color:var(--muted);font-size:13px}
 .back{margin:0 0 18px;font-size:13px}.back a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--moss)}
-.contact{margin-top:14px}.contact summary{cursor:pointer;color:var(--muted);list-style:none;width:max-content;border-bottom:1px solid var(--moss)}
-.contact summary::-webkit-details-marker{display:none}.contact[open] summary{color:var(--paper)}
-.card{margin-top:10px;width:200px;height:200px;box-sizing:border-box;padding:18px;background:var(--ink-2);border:1px solid var(--moss);border-radius:4px;display:flex;flex-direction:column;gap:8px}
-.card p{margin:0 0 6px;color:var(--muted)}.card a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--brass);width:max-content}
 @media (max-width:520px){.pg{display:block}h3.g{margin:0 0 10px}ul.posts li{flex-direction:column;gap:0;margin-bottom:12px}
 article h1.title{font-size:28px}.body{font-size:18px}}
 """
@@ -314,15 +310,13 @@ def build():
         + "</ul></div>"
         for k, (g, group) in enumerate(PROJECT_GROUPS))
     links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
-    mail = f'<a href="mailto:{CONTACT_EMAIL}">email</a>' if CONTACT_EMAIL else ""
-    contact = ('<details class="contact"><summary>contact</summary><div class="card"><p>say hi</p>'
-               + "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>'
-                         for n, u in LINKS if n in ("x", "linkedin")) + mail + '</div></details>')
+    if CONTACT_EMAIL:  # optional: an email alias joins the other places to find me
+        links += f'<a href="mailto:{CONTACT_EMAIL}">email</a>'
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
             + f'<h2 class="s">projects</h2>{projects}'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
-            + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>{contact}')
+            + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
     (OUT / "index.html").write_text(page(SITE_TITLE, home), encoding="utf-8")
 
     (OUT / "reading").mkdir()
