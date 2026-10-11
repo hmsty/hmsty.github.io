@@ -27,7 +27,7 @@ LINKS = [
 ]
 SITE_URL = "https://hmsty.github.io"
 PROJECTS = [  # (title, path under projects/, one-line description), newest first
-    ("A Web3 Dev Environment", "defi-agent", "a local environment for reading, analyzing and transacting on blockchains from Claude Code"),
+    ("A Web3 Dev Environment", "defi-agent", "a local environment for reading, analyzing, monitoring and transacting on blockchains from Claude Code"),
     ("Reading My AI History as Data", "reading-my-ai-history", "a year of my AI conversations, analyzed as a dataset"),
     ("GTO Practice Tool", "gto-practice-tool", "a free poker trainer that grades every decision against a solver"),
     ("The Lifecycle of a Tokenized Stock Trade", "two-ledgers", "order to finality on Wall Street and Ethereum, in 3D"),

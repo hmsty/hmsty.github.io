@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>a web3 dev environment</title>
-<meta name="description" content="A local environment for reading, analyzing and transacting on blockchains through Claude Code, starting with USDC lending on Ethereum layer 2s.">
+<meta name="description" content="A local environment for reading, analyzing, monitoring and transacting on blockchains through Claude Code, with every transaction signed on my Mac.">
 <meta property="og:title" content="A Web3 Dev Environment">
-<meta property="og:description" content="A local environment for reading, analyzing and transacting on blockchains through Claude Code, starting with USDC lending on Ethereum layer 2s.">
+<meta property="og:description" content="A local environment for reading, analyzing, monitoring and transacting on blockchains through Claude Code, with every transaction signed on my Mac.">
 <meta name="theme-color" content="#262422">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
@@ -56,15 +56,15 @@ ol.lg li::before{content:counter(n);position:absolute;left:0;top:2px;width:18px;
 
 <div class="w">
 <h1>A Web3 Dev Environment</h1>
-<p class="t">a local environment for reading, analyzing and transacting on blockchains through Claude Code, starting with USDC lending on Ethereum layer 2s</p>
+<p class="t">a local environment for reading, analyzing, monitoring and transacting on blockchains through Claude Code</p>
 <div class="p" style="margin-top:28px">
 <p>A confession: My first BTC exposure came in the form of a wrapper on rolled-over futures (BITO). I later moved over to IBIT to avoid the embedded financing costs inherent to a futures-based financial product. Neither are, really, owning bitcoin. This project began as my way of closing that instance of mental dissonance.</p>
-<p>So I set up the real thing: a few dollars of USDC in a wallet I control, held on my own machine, and a way to put it to work. I ask Claude Code to check lending rates and risk and to move the money. Each transaction is signed on my Mac after I approve it with Touch ID, and there is no server.</p>
+<p>So I set up the real thing: a few dollars of USDC in a wallet I control, held on my own machine, and a way to use it. I ask Claude Code for things in plain English, from what a contract does to moving the money. Each transaction is signed on my Mac after I approve it with Touch ID, and there is no server.</p>
 </div>
 
-<h2>how a move works</h2>
+<h2>how a transaction works</h2>
 <ol class="s">
-<li>Claude Code checks live rates and risk, then queues a proposal.</li>
+<li>Claude Code looks up what it needs, such as rates, risk and balances, then queues a proposal.</li>
 <li>The proposal is decoded from the raw transaction and checked against limits on chains, protocols, assets and size.</li>
 <li>I read it in my terminal and approve with Touch ID. Only then does the signing code run.</li>
 </ol>
@@ -85,10 +85,12 @@ Waiting for Touch ID (or your Mac password)...
 
 <h2>what it does</h2>
 <ul class="f">
-<li><b>Moves money.</b> Deposits and withdrawals on Aave, Compound, Morpho and Fluid, and USDC between Base, Arbitrum and Optimism through Circle's CCTP.</li>
-<li><b>Reads the market.</b> Rates, utilization and risk checks from the contracts, plus the USDC price from two sources.</li>
-<li><b>Explains the chain.</b> Any contract or transaction in plain English.</li>
-<li><b>Keeps a record.</b> An hourly history in a local database that I can query with SQL.</li>
+<li><b>Reads the chain.</b> Balances, rates, utilization and prices straight from the contracts on Base, Arbitrum and Optimism, plus market data from DefiLlama and Hyperliquid, which is read-only.</li>
+<li><b>Explains it.</b> Any contract (who controls it, whether it can be upgraded, what is privileged) or any transaction (what it did, which tokens moved, what it cost), in plain English.</li>
+<li><b>Watches for changes.</b> Upgrades, ownership changes and pauses on the contracts it depends on, stablecoin price moves, and new exploits.</li>
+<li><b>Moves money.</b> Deposits and withdrawals on Aave, Compound, Morpho and Fluid, USDC between chains through Circle's CCTP, and approvals and revocations.</li>
+<li><b>Checks its own work.</b> Open token approvals, transaction receipts, and wallet transfers as they land.</li>
+<li><b>Keeps a record.</b> An hourly history in a local database that I can query with SQL, with earnings estimated from receipts and exported as CSV.</li>
 </ul>
 
 <h2>what I learned</h2>
