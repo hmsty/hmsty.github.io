@@ -18,8 +18,8 @@ from reading import READING
 
 # ---- settings ---------------------------------------------------------------
 SUBSTACK = "https://willjensen.substack.com"
-SITE_TITLE = "Will Jensen"
-SITE_TAGLINE = "mostly markets stuff"
+SITE_TITLE = "Will"
+SITE_TAGLINE = "mostly markets"
 LINKS = [
     ("x", "https://x.com/willjen45816414"),
     ("substack", SUBSTACK),
@@ -33,6 +33,7 @@ PROJECTS = [  # (title, path under projects/, one-line description), newest firs
     ("What a Blockchain Is", "what-a-blockchain-is", "an animated explainer, from first principles"),
     ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
 ]
+CONTACT_EMAIL = ""  # optional: a forwarding alias, never a real inbox
 GOATCOUNTER = "hmsty"  # e.g. "hmsty" for hmsty.goatcounter.com; empty = no analytics
 # -----------------------------------------------------------------------------
 
@@ -202,6 +203,11 @@ a.footnote-number{border:0;color:var(--brass-lt);min-width:2em;padding:0 4px;mar
 .footnote:target{background:var(--ink-2);border-radius:4px;outline:6px solid var(--ink-2)}
 a.footnote-anchor:target{background:var(--rust);color:var(--paper);border-radius:3px}
 .end{margin-top:48px;padding-top:20px;border-top:1px solid var(--ink-2);color:var(--muted);font-size:13px}
+.back{margin:0 0 18px;font-size:13px}.back a{color:var(--muted);text-decoration:none;border-bottom:1px solid var(--moss)}
+.contact{margin-top:14px}.contact summary{cursor:pointer;color:var(--muted);list-style:none;width:max-content;border-bottom:1px solid var(--moss)}
+.contact summary::-webkit-details-marker{display:none}.contact[open] summary{color:var(--paper)}
+.card{margin-top:10px;width:200px;height:200px;box-sizing:border-box;padding:18px;background:var(--ink-2);border:1px solid var(--moss);border-radius:4px;display:flex;flex-direction:column;gap:8px}
+.card p{margin:0 0 6px;color:var(--muted)}.card a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--brass);width:max-content}
 @media (max-width:520px){ul.posts li{flex-direction:column;gap:0;margin-bottom:12px}
 article h1.title{font-size:28px}.body{font-size:18px}}
 """
@@ -237,7 +243,8 @@ def page(title, body, desc="", image="", path="", index=True):
 
 def header(home):
     tag = "h1" if home else "div"
-    return (f'<header class="hd"><a href="/"><img src="/pfp.jpg" alt="" width="44" height="44"></a>'
+    back = '' if home else '<p class="back"><a href="/">← home</a></p>'
+    return (back + f'<header class="hd"><a href="/"><img src="/pfp.jpg" alt="" width="44" height="44"></a>'
             f'<div><{tag} class="name"><a href="/">{SITE_TITLE.lower()}</a></{tag}>'
             f'<p class="t">{html.escape(SITE_TAGLINE)}</p></div></header>')
 
@@ -271,7 +278,7 @@ def build():
             + f'<div class="body">{clean_body(p["body_html"] or "")}</div>'
             + f'<div class="end">also on <a href="{p["canonical_url"]}">substack</a>, '
             f'where you can <a href="{SUBSTACK}/subscribe">subscribe</a> by email. '
-            f'<a href="/">← all writing</a></div></article>')
+            f'<a href="/">← home</a></div></article>')
         d = OUT / "p" / p["slug"]
         d.mkdir(parents=True)
         (d / "index.html").write_text(page(f'{p["title"]} · {SITE_TITLE}', body, p.get("subtitle") or "",
@@ -294,11 +301,15 @@ def build():
         f'<li><a href="/projects/{p}/">{html.escape(t)}</a><span>{html.escape(d)}</span></li>'
         for t, p, d in PROJECTS)
     links = "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>' for n, u in LINKS)
+    mail = f'<a href="mailto:{CONTACT_EMAIL}">email</a>' if CONTACT_EMAIL else ""
+    contact = ('<details class="contact"><summary>contact</summary><div class="card"><p>say hi</p>'
+               + "".join(f'<a href="{u}" rel="me noopener" target="_blank">{n}</a>'
+                         for n, u in LINKS if n in ("x", "linkedin")) + mail + '</div></details>')
     home = (header(True)
             + f'<h2 class="s">writing</h2><ul class="posts">{"".join(items)}</ul>'
             + f'<h2 class="s">projects</h2><ul class="posts proj">{projects}</ul>'
             + '<h2 class="s">reading</h2><p class="l"><a href="/reading/">suggested reading</a></p><div class="gap"></div>'
-            + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>')
+            + f'<h2 class="s">elsewhere</h2><p class="l">{links}</p>{contact}')
     (OUT / "index.html").write_text(page(SITE_TITLE, home), encoding="utf-8")
 
     (OUT / "reading").mkdir()
