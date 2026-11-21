@@ -35,6 +35,9 @@ PROJECT_GROUPS = [  # (group label, [(title, path under projects/, one-line desc
     ("ai", [
         ("Reading My AI History as Data", "reading-my-ai-history", "a data report on 772 of my conversations with Claude"),
     ]),
+    ("data", [
+        ("Weather Averages for Any Place", "weather", "monthly, daily and yearly climate normals for any city, from 35 years of data"),
+    ]),
     ("games", [
         ("GTO Practice Tool", "gto-practice-tool", "a free poker trainer that grades every decision against a solver"),
         ("Chess Wrapped", "chess-wrapped", "a data report on 4,400 of my chess games"),
