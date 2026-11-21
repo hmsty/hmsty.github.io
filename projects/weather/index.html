@@ -44,7 +44,7 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
 .dash-select,.wx input[type=text]{font:inherit;padding:6px 9px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg)}
 .wx input[type=text]{min-width:260px}.wx button{font:inherit;padding:6px 12px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg);cursor:pointer}
 #results{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:4px 0 10px}#results button{text-align:left}
-#map{height:340px;border-radius:8px;border:1px solid var(--color-border-line);margin:6px 0 10px;background:#262422}#map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}.leaflet-container{font-family:var(--font-anthropic-sans)}.leaflet-control-attribution{font-size:10px}.wx .hint{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption);margin:0 0 4px}#status{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}</style></head><body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
+#map{height:340px;border-radius:8px;border:1px solid var(--color-border-line);margin:6px 0 10px;background:#262422}#map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}.leaflet-container{font-family:var(--font-anthropic-sans)}.leaflet-control-attribution{font-size:10px}.wx .hint{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption);margin:0 0 4px}input[type=number]{font:inherit;padding:4px 6px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg)}#status{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}</style></head><body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
 <div class='wx'><div class='ctl' style='margin:0 0 4px'><input type='text' id='q' placeholder='Search any city or place' aria-label='Search any city or place'><button id='go' type='button'>Search</button><span id='status'></span></div><div id='results'></div><p class='hint'>Click anywhere on the map to load that spot. Scroll or pinch to zoom.</p><div id='map'></div>
 <h1 id='top'><span class='pname'></span> weather averages</h1>
 <p class='lead'>Average highs run from <b data-draw='l-lo' data-source='portland'></b> in <b data-draw='l-lom' data-source='portland'></b> to <b data-draw='l-hi' data-source='portland'></b> in <b data-draw='l-him' data-source='portland'></b>. The city gets <b data-draw='l-rain' data-source='portland'></b> inches of precipitation a year, <b data-draw='l-share' data-source='portland'></b> of it from October through March, and <b data-draw='l-snow' data-source='portland'></b> inches of snow.</p>
@@ -119,13 +119,13 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
 <div class='scroll'><table><thead><tr><th>City</th><th>Average high</th><th>Average low</th><th>Precipitation</th><th>Rainy days</th><th>Snowfall</th></tr></thead><tbody data-draw='c-table' data-source='cities'></tbody></table></div>
 <p class='note'>Annual highs and lows are the average of the 12 monthly values. Every city uses the same dataset and method for 1991 to 2020.</p>
 
-<details id='about'>
+<h2 id='find'>Find places that match your parameters</h2><p class='note'>Tick the parameters you care about, enter target values and set how much each matters. Places are ranked by how close they come across everything you ticked. Each gap is measured in units of how much that parameter varies across the <span class='npl'></span> places in the dataset, so a gap of 1 means one typical spread away. Averages are for 2016 to 2020.</p><div class='ctl'><button type='button' id='fillcur'>Fill targets from the place loaded above</button><button type='button' id='resetp'>Reset</button></div><div class='scroll'><table id='ptable'></table></div><div class='wxmap' id='map2'></div><div class='scroll'><table id='presults'></table></div><p class='note'>Cell color shows how far each place sits from your target: orange is higher, blue is lower. Gap is the importance-weighted average distance across the ticked parameters, so 0 would be an exact match. Click a place name to load its full charts above.</p><h2 id='similar'>Places with a similar weather profile</h2><p class='note'>Pick a place and see the places whose weather looks most like it. Set a weight to Off to ignore a parameter, or raise it to make it count more. Each cell is shaded by how far it sits from the picked place on that parameter, in units of how much the parameter varies across places: orange is higher, blue is lower. The small chart shows average highs (orange) and lows (blue) by month, January to December.</p><div class='ctl' id='simctl'></div><div class='scroll'><table id='simtable'></table></div><div class='wxmap' id='map3'></div><p class='note'>The loaded place from the map is compared using the same 2016 to 2020 window as the others. A 5-year window makes rainfall and snowfall noisier than a 30-year normal, so small gaps in those are not meaningful. Seasonal swing is the hottest month's average temperature minus the coldest month's. The hottest and coldest months are found separately for each place, so the parameters work in both hemispheres.</p><details id='about'>
 <summary>Data source, definitions and comparison with Google</summary>
 <p><b>Source.</b> Daily values come from the <a href='https://open-meteo.com/en/docs/historical-weather-api'>Open-Meteo Historical Weather API</a>, which serves the ECMWF ERA5 reanalysis, a weather model constrained by observations, on a regular grid rather than from a weather station. The point used is <span class='coords'></span>. The period is 1991 to 2020 for the normals, plus the current year through <span class='ytdend'></span> for the year-to-date views.</p>
 <p><b>Normal.</b> Formally, the average of a measurement over a fixed 30-year period, here 1991 to 2020, the period national weather services use. Loosely, people use it to mean typical, but a single day can sit far from the normal, which the percentile bands show.</p>
 <p><b>Percentile band.</b> Formally, the 10th percentile is the value that 10 percent of days fall at or below, and the 90th is the value that 90 percent fall at or below, so the band holds the middle 80 percent of days. Loosely, it is the usual range.</p>
 <p><b>Rainy day.</b> Here, a day with at least 0.1 inch (2.54 mm) of precipitation. Looser usage counts any day with a trace of drizzle, which gives far more rainy days. The 0.1 inch rule is the one that matches Google's Portland day counts in this data.</p>
-<p><b>Snowfall.</b> Modeled new snow depth per day, converted from centimeters to inches. It is a model estimate, less reliable than a gauge measurement.</p>
+<p><b>Standard deviation.</b> Formally, the typical distance of values from their average, here across the places in the dataset. Loosely, it is how much a parameter varies from place to place, and it is used here so that degrees, inches and percentages can be compared on one scale.</p><p><b>Profile data.</b> The place-matching sections use average conditions for 2016 to 2020 from the same Open-Meteo ERA5 data, for each listed place and for any place you load.</p><p><b>Snowfall.</b> Modeled new snow depth per day, converted from centimeters to inches. It is a model estimate, less reliable than a gauge measurement.</p>
 <div id='gwrap'><h3 id='cmp-h'>Check against Google's Portland figures</h3>
 <p data-draw='cmp-sum' data-source='portland'></p>
 <div class='scroll'><table><thead><tr><th>Month</th><th>Google high</th><th>Here high</th><th>Google low</th><th>Here low</th><th>Google precip</th><th>Here precip</th><th>Google rainy days</th><th>Here rainy days</th></tr></thead><tbody data-draw='cmp-body' data-source='portland'></tbody></table></div>
@@ -292,6 +292,7 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
     document.title=key+' weather averages';
     Object.keys(draws).forEach(run);
     if(window.__wxMarker)window.__wxMarker(lat,lon,key);
+    document.dispatchEvent(new CustomEvent('wxplace',{detail:{key:key,lat:lat,lon:lon,profile:data.profile||null}}));
   }
   var status=document.getElementById('status'), results=document.getElementById('results');
   function lag(){return new Date(Date.now()-6*864e5).toISOString().slice(0,10);}
@@ -302,7 +303,7 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
       var r=await fetch(WXAGG.buildUrl(lat,lon,lag())); var j=await r.json(); if(my!==window.__wxSeq)return;
       if(!j.daily){throw new Error(j.reason||'No data returned');}
       var e=j.elevation!=null?j.elevation:elev;
-      setPlace(key,WXAGG.agg(j,lat,lon,e),lat,lon,e); status.textContent='Loaded. Grid cell elevation '+Math.round(e)+' m.';
+      var dd=WXAGG.agg(j,lat,lon,e); try{dd.profile=window.__wxProfile?window.__wxProfile(j):null;}catch(_){dd.profile=null;} setPlace(key,dd,lat,lon,e); status.textContent='Loaded. Grid cell elevation '+Math.round(e)+' m.';
     }catch(err){if(my!==window.__wxSeq)return;status.textContent='Could not load: '+err.message+'. Open-Meteo allows limited requests per hour; wait and retry.';}
   }
   async function search(){
@@ -791,5 +792,261 @@ dash.draw('c-table', function (el) {
       window.__wxLoad(key,lat,lon,null);
     });
   });
+})();
+</script><script>window.__WXPROFILES={"Portland, OR":{"e":31,"hi":[45.8,47.6,52.8,60.2,68.3,73.5,81.3,83.8,74.2,61.3,52.5,45],"lo":[35.4,34.5,37.4,42.5,48.9,52.5,57.3,58.7,54,45.4,40.4,34.6],"p":[7.22,6.31,6.04,4.48,2.5,2.24,0.46,0.43,2.88,6.1,6.7,6.33],"w":[16.6,14,15,13.2,6.8,5.8,1.8,1.8,6.6,10.8,13.4,13.6],"s":[1.58,3.4,1.29,0.01,0,0,0,0,0,0,0.01,1.87],"su":[4.1,5.1,7.4,8.7,10,12,12.9,12.2,9.8,7.1,5.4,4.3],"h":[84,84,80,77,72,67,60,59,70,79,85,85],"n":"Portland, OR","la":45.52,"lo2":-122.68},"Seattle, WA":{"e":72,"hi":[46.3,46.1,51.5,57.6,65.3,68.9,74.9,76.2,68.8,57.9,51.4,45.3],"lo":[36.5,35.7,37.9,43.4,49.4,53.4,57.4,58.5,54.9,46.9,42.4,36.9],"p":[7.11,5.57,4.63,3.75,2.13,2.11,0.78,0.81,2.96,5.37,6.5,6.56],"w":[16.4,13.6,12.6,10.2,6.8,6.4,2.6,2.4,7,11.2,14.4,13.6],"s":[1.14,4.55,0.48,0.04,0,0,0,0,0,0,0.05,1.75],"su":[4.2,5.4,7.6,9.1,10.4,11.4,12.3,11.6,9.4,6.5,4.6,3.9],"h":[82,82,80,77,73,71,67,68,76,82,83,83],"n":"Seattle, WA","la":47.61,"lo2":-122.33},"San Francisco, CA":{"e":14,"hi":[56.2,58.7,59.2,61.3,62.6,67.1,66.6,67.1,70.6,68.8,62.1,56.6],"lo":[46.3,46.5,48.7,51,52.9,55.2,56.1,57.5,57.8,54.9,50.3,45.7],"p":[5.87,4.11,4.01,1.68,0.89,0.03,0.01,0.02,0.08,0.81,2.01,2.92],"w":[10.8,6.4,9.2,4.8,2.2,0,0,0,0.2,2.2,4.8,5.4],"s":[0,0,0,0,0,0,0,0,0,0,0,0],"su":[6.7,8.9,9.1,10.9,12.6,13.6,13.5,12.4,11.7,10,8.4,7.3],"h":[84,76,79,78,79,76,80,82,77,71,78,78],"n":"San Francisco, CA","la":37.77,"lo2":-122.42},"Los Angeles, CA":{"e":87,"hi":[65.6,68.8,69.7,76.4,76.2,83.3,88.9,89.9,87.8,83.8,76,68],"lo":[46.3,47.1,48.9,53.3,55.5,60,64.1,65,63.1,59.3,52.9,46.8],"p":[3.79,2.04,2.83,1.01,0.46,0.07,0.06,0.04,0.1,0.45,0.97,2.12],"w":[5,4.2,5.6,1.8,1.2,0,0.2,0.2,0.2,1,2,3.4],"s":[0,0,0,0,0,0,0,0,0,0,0,0],"su":[8.1,9,10.1,11.2,11.7,12.3,13.3,12.3,11.2,10.3,9.4,8.4],"h":[68,59,68,61,66,64,62,63,61,53,52,55],"n":"Los Angeles, CA","la":34.05,"lo2":-118.24},"San Diego, CA":{"e":32,"hi":[63.4,64.4,64.7,68.2,68.1,72.3,76.6,77.9,77.4,75.8,70.6,64.8],"lo":[48.1,48.1,51.3,55,57.5,60.8,65.1,66.3,64.2,59.8,53.8,48.1],"p":[2.95,2.24,1.69,1.34,0.75,0.08,0.01,0.14,0.21,0.37,1.27,2.78],"w":[5.4,3.4,5.8,2.6,2.2,0.2,0,0.2,0.6,0.6,2.8,4],"s":[0,0,0,0,0,0,0,0,0,0,0,0],"su":[8.4,9.3,10.2,11,11.2,11.8,12.5,11.7,10.9,10.2,9.3,8.5],"h":[75,71,77,75,75,76,77,78,76,70,68,68],"n":"San Diego, CA","la":32.72,"lo2":-117.16},"Sacramento, CA":{"e":10,"hi":[56.3,61.5,63.8,72.4,81.4,92.6,96.4,95,90.1,80.3,65.9,56.7],"lo":[40.7,40.9,44.3,49.1,54.3,60.2,61.7,62.1,59.4,52.5,44.3,38.9],"p":[6.25,4.53,5.04,1.98,1.09,0.08,0,0,0.17,1.16,2.22,3.43],"w":[10.8,6.4,9.6,5,3,0.2,0,0,0.4,2.4,5.2,6.4],"s":[0,0.01,0.01,0,0,0,0,0,0,0,0.02,0],"su":[5.8,8.5,8.9,10.7,12.7,13.8,13.9,13.1,11.8,10.1,8,6.8],"h":[85,72,75,65,55,45,46,50,49,49,69,79],"n":"Sacramento, CA","la":38.58,"lo2":-121.49},"Phoenix, AZ":{"e":335,"hi":[65.6,69.7,78.1,86.8,93,104.9,105.8,104.3,98.9,89.2,77.5,66.1],"lo":[42.8,44.5,51.8,59.5,67.1,77.9,84.1,82.7,75.8,63.4,53.1,43.4],"p":[1.15,1.6,0.96,0.22,0.14,0.18,0.94,0.87,0.86,1.21,0.89,1.28],"w":[2.8,2.8,1.8,0.4,0.4,0.4,2.4,2.6,2.2,1.6,1.6,3.4],"s":[0,0,0,0,0,0,0,0,0,0,0,0],"su":[8.6,9.6,10.8,12.4,12.9,13.3,12.1,12.3,11.5,10.5,9.3,8.2],"h":[56,48,36,23,20,16,30,33,31,31,37,50],"n":"Phoenix, AZ","la":33.45,"lo2":-112.07},"Tucson, AZ":{"e":732,"hi":[64.7,68.7,76.6,84.3,90.4,101.4,99.3,98.3,93.9,87.1,76.4,65.5],"lo":[41.1,43.4,50,56.2,62.9,73.6,78.4,76.7,70.8,60.7,51.5,42.6],"p":[1.48,1.61,0.54,0.14,0.12,0.49,1.91,1.19,2.1,0.67,0.98,1.29],"w":[4,3.8,1,0.6,0.2,0.8,4,3.2,3.8,1.8,2,3.4],"s":[0.28,0.58,0,0,0,0,0,0,0,0,0.01,0.17],"su":[9,9.6,10.7,12.4,12.9,13.1,11.7,12,11.5,10.7,9.4,8.7],"h":[53,43,34,22,21,19,38,41,40,33,38,49],"n":"Tucson, AZ","la":32.22,"lo2":-110.97},"Las Vegas, NV":{"e":615,"hi":[57.8,63,71,80.6,87,101.1,105.1,103.7,94.8,81.6,68.5,56.7],"lo":[39.3,41.6,49.3,57.6,63.2,75.1,81.1,79.6,70.7,58,47.9,38.5],"p":[1.12,0.7,0.63,0.33,0.31,0.02,0.34,0.18,0.15,0.16,0.45,0.7],"w":[3.8,1.4,1.4,1.2,1,0,0.8,0.6,0.2,0.4,1,1.4],"s":[0.03,0.32,0,0,0,0,0,0,0,0,0,0.02],"su":[8.6,9.5,10.6,12,12.9,13.9,13.2,12.8,11.7,10.7,9.4,8.1],"h":[50,38,32,24,23,13,20,21,21,23,31,41],"n":"Las Vegas, NV","la":36.17,"lo2":-115.14},"Denver, CO":{"e":1597,"hi":[42.4,43.8,54,60.6,68.4,83.6,88.8,85.7,80.7,63.8,53.5,43.1],"lo":[15.9,16.2,24.2,31.8,41.4,54.2,60.8,58.2,51.5,34.8,26.5,18.9],"p":[0.93,0.84,2.05,1.89,3.43,1.2,1.36,1.43,0.76,1.22,0.73,0.49],"w":[3,2.8,4.6,5,9.4,3.4,3.8,3.8,2.2,3.6,2.6,1.6],"s":[6.05,5.73,8.84,8.38,1.74,0,0,0,0.9,4.37,3.72,2.86],"su":[8.1,9,10.2,10.6,11.4,13,12.8,12.2,10.9,9.3,8.4,7.9],"h":[60,60,57,56,60,46,46,47,44,51,55,55],"n":"Denver, CO","la":39.74,"lo2":-104.99},"Salt Lake City, UT":{"e":1302,"hi":[37.2,42.2,52.6,60.3,69.5,83.1,92.9,90.8,78.6,62,51.6,37.3],"lo":[21.4,24.6,31.8,36.9,45.3,56.3,65.9,64.2,54.3,39.9,31.8,21.6],"p":[2.79,2.11,3.2,3.3,1.72,0.8,0.25,0.11,1.8,1.3,1.49,1.87],"w":[9.6,6,8.8,8.2,5.6,1.8,0.8,0,3.4,3.8,5,5.6],"s":[12.67,8.02,6.31,1.19,0.1,0,0,0,0,0.71,3.47,7.44],"su":[6.7,7.9,9.4,10.9,12.5,14.1,13.7,12.8,11.3,9.8,8,6.9],"h":[70,61,58,55,50,36,28,29,39,48,59,69],"n":"Salt Lake City, UT","la":40.76,"lo2":-111.89},"Boise, ID":{"e":830,"hi":[39.2,44.8,54.4,62.7,71.8,80.7,92.2,91.1,78.8,62.2,51.1,37.9],"lo":[24.2,28.1,34.4,40,48,55.3,63.8,63.4,53.8,41,33.1,23],"p":[2.18,1.69,1.64,1.54,1.58,1.18,0.08,0.04,0.52,0.91,1.28,1.51],"w":[7.4,6.4,5.4,5,4.2,2.4,0.4,0,1.6,3,4.8,6.2],"s":[5.42,4.61,1.14,0.07,0,0,0,0,0,0.02,1.57,5.56],"su":[6.4,7.2,9,10.9,12.2,13.2,14,13.1,11,9.1,7.4,6],"h":[73,65,60,54,50,41,28,29,40,52,62,72],"n":"Boise, ID","la":43.62,"lo2":-116.2},"Albuquerque, NM":{"e":1511,"hi":[45.6,54.2,64.8,71.6,79.9,91.8,92.9,89.9,83.5,70.8,58.6,48.1],"lo":[26.3,30.9,38.4,44.7,52.8,63.9,69.2,66.3,59.3,47.1,36.5,28],"p":[0.9,0.78,0.56,0.84,0.72,0.31,0.7,0.59,1.14,1.26,0.85,0.67],"w":[2.6,2.8,2.2,1.8,1.4,0.8,2.4,1.2,2.4,2.2,2.4,2],"s":[1.7,2.07,0.26,0.6,0,0,0,0,0.07,1.27,1.31,1.84],"su":[8.7,9.7,10.8,11.6,13,13.5,13.1,12.1,11.3,10.2,9.2,8.8],"h":[57,47,35,31,26,25,35,40,40,41,47,50],"n":"Albuquerque, NM","la":35.08,"lo2":-106.65},"Billings, MT":{"e":951,"hi":[34.9,34.4,47.9,56.8,67.7,79.2,87.8,85.9,73.6,56.8,47.7,35.5],"lo":[16.8,14.2,25.3,33.7,44.4,54.6,61.4,59.9,50,35.2,28.2,19.2],"p":[0.81,1.31,1.38,2.64,2.55,2.11,0.73,0.81,2,1.72,1.06,0.95],"w":[2,4,4.4,7.2,6.2,4.4,2,2,4.8,5,3.4,4],"s":[4.86,7.62,4.22,5.4,0.17,0,0,0,0.16,4.17,3.8,6.26],"su":[7,7.7,9.2,9.5,11.1,13.1,14,12.5,9.7,8.1,6.8,6.2],"h":[63,62,60,58,57,49,42,39,52,57,59,58],"n":"Billings, MT","la":45.78,"lo2":-108.5},"Dallas, TX":{"e":130,"hi":[56.3,62,69.8,74.8,82.9,89.8,94.4,92.6,87.1,77.3,67.2,58.2],"lo":[38,43.3,51.1,54.9,64.8,72.8,77.6,76.7,71.1,58.8,49,40.6],"p":[2.63,4.59,4.7,5.76,6.14,4.83,1.99,5.31,6.04,6.3,2.75,2.96],"w":[5.4,7.6,9.4,8.6,8.2,7.6,5.8,9.2,7.8,7.4,6.2,4.4],"s":[0.19,0.04,0,0,0,0,0,0,0,0.01,0,0.02],"su":[7.2,6.9,8.1,9.5,10.2,11.5,12.3,11.2,9.7,8.8,7.7,6.6],"h":[66,69,67,67,70,69,62,64,69,66,68,67],"n":"Dallas, TX","la":32.78,"lo2":-96.8}};</script><script>(function () {
+  'use strict';
+  var PR = window.__WXPROFILES || {};
+  var NAMES = Object.keys(PR).sort();
+  var MONTHS = 12;
+  function sum(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s; }
+  function avg(a) { return a.length ? sum(a) / a.length : 0; }
+  function tm(p, i) { return (p.hi[i] + p.lo[i]) / 2; }
+  function hotIdx(p) { var b = 0; for (var i = 1; i < MONTHS; i++) if (tm(p, i) > tm(p, b)) b = i; return b; }
+  function coldIdx(p) { var b = 0; for (var i = 1; i < MONTHS; i++) if (tm(p, i) < tm(p, b)) b = i; return b; }
+  function feats(p) {
+    var h = hotIdx(p), c = coldIdx(p);
+    return { hotHi: p.hi[h], hotLo: p.lo[h], coldHi: p.hi[c], coldLo: p.lo[c], swing: tm(p, h) - tm(p, c),
+      precip: sum(p.p), wet: sum(p.w), snow: sum(p.s), sun: avg(p.su), hum: p.h[h] };
+  }
+  var F = [
+    { id: 'hotHi', label: 'Hottest month, average high', unit: '°F', dec: 0 },
+    { id: 'hotLo', label: 'Hottest month, average low', unit: '°F', dec: 0 },
+    { id: 'coldHi', label: 'Coldest month, average high', unit: '°F', dec: 0 },
+    { id: 'coldLo', label: 'Coldest month, average low', unit: '°F', dec: 0 },
+    { id: 'swing', label: 'Seasonal swing in mean temperature', unit: '°F', dec: 0 },
+    { id: 'precip', label: 'Precipitation per year', unit: 'in', dec: 0 },
+    { id: 'wet', label: 'Rainy days per year (0.1 in or more)', unit: 'days', dec: 0 },
+    { id: 'snow', label: 'Snowfall per year', unit: 'in', dec: 0 },
+    { id: 'sun', label: 'Sunshine, hours per day', unit: 'h', dec: 1 },
+    { id: 'hum', label: 'Humidity in the hottest month', unit: '%', dec: 0 }
+  ];
+  var FE = {}, STAT = {};
+  NAMES.forEach(function (n) { FE[n] = feats(PR[n]); });
+  F.forEach(function (f) {
+    var v = NAMES.map(function (n) { return FE[n][f.id]; });
+    var m = avg(v), sd = Math.sqrt(avg(v.map(function (x) { return (x - m) * (x - m); }))) || 1;
+    STAT[f.id] = { mean: m, sd: sd, min: Math.min.apply(null, v), max: Math.max.apply(null, v) };
+  });
+  function fmt(f, v) { return (f.dec ? v.toFixed(f.dec) : Math.round(v)) + (f.unit === '%' || f.unit === '°F' ? f.unit : ' ' + f.unit); }
+  function el(tag, props, kids) {
+    var e = document.createElement(tag);
+    if (props) Object.keys(props).forEach(function (k) {
+      if (k === 'text') e.textContent = props[k]; else if (k === 'style') e.style.cssText = props[k]; else e[k] = props[k];
+    });
+    (kids || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+  function tint(z) {
+    var a = Math.min(0.55, Math.abs(z) * 0.28);
+    return z >= 0 ? 'rgba(217,130,43,' + a + ')' : 'rgba(47,111,181,' + (a + 0.05) + ')';
+  }
+  function spark(p) {
+    var w = 84, h = 24, all = p.hi.concat(p.lo), lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    function pts(a) { return a.map(function (v, i) { return (2 + i * (w - 4) / 11).toFixed(1) + ',' + (h - 2 - (v - lo) / ((hi - lo) || 1) * (h - 4)).toFixed(1); }).join(' '); }
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" aria-label="Monthly average high and low"><polyline fill="none" stroke="#d9822b" stroke-width="1.5" points="' + pts(p.hi) + '"/><polyline fill="none" stroke="#2f6fb5" stroke-width="1.5" points="' + pts(p.lo) + '"/></svg>';
+  }
+  function dist(a, b, ws) {
+    var s = 0, t = 0;
+    F.forEach(function (f) {
+      var w = ws[f.id]; if (!w) return;
+      var z = (a[f.id] - b[f.id]) / STAT[f.id].sd; s += w * z * z; t += w;
+    });
+    return t ? Math.sqrt(s / t) : 0;
+  }
+  function openPlace(n) {
+    var p = PR[n];
+    if (window.__wxLoad && p) { window.__wxLoad(n, p.la, p.lo2, p.e); var t = document.getElementById('top'); if (t && t.scrollIntoView) t.scrollIntoView({ behavior: 'smooth' }); }
+  }
+  function placeBtn(n) {
+    var b = el('button', { type: 'button', text: n, className: 'plink' });
+    b.addEventListener('click', function () { openPlace(n); });
+    return b;
+  }
+
+  // ---- maps ----
+  function makeMap(id) {
+    var host = document.getElementById(id);
+    if (!host || !window.L) return null;
+    var m = L.map(id, { worldCopyJump: true, minZoom: 1, scrollWheelZoom: false }).setView([30, 0], 1);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap contributors' }).addTo(m);
+    return { map: m, layer: L.layerGroup().addTo(m) };
+  }
+  function pin(n, rank, kind) {
+    var p = PR[n]; if (!p) return null;
+    var icon = L.divIcon({ className: 'wxn ' + kind, html: '<span>' + rank + '</span>', iconSize: [22, 22] });
+    return L.marker([p.la, p.lo2], { icon: icon, title: n }).bindTooltip(n, { direction: 'top', offset: [0, -10] });
+  }
+  function showPins(mp, items, refName) {
+    if (!mp) return;
+    mp.layer.clearLayers(); var ll = [];
+    items.forEach(function (n, i) { var m = pin(n, i + 1, 'hit'); if (m) { m.addTo(mp.layer); ll.push([PR[n].la, PR[n].lo2]); } });
+    if (refName && PR[refName]) {
+      var r = L.marker([PR[refName].la, PR[refName].lo2], { icon: L.divIcon({ className: 'wxn ref', html: '<span>★</span>', iconSize: [22, 22] }), title: refName }).bindTooltip(refName, { direction: 'top', offset: [0, -10] });
+      r.addTo(mp.layer); ll.push([PR[refName].la, PR[refName].lo2]);
+    }
+    if (ll.length) mp.map.fitBounds(L.latLngBounds(ll).pad(0.25), { maxZoom: 6 });
+  }
+
+  // ---- part 1: parameter search ----
+  var DEFAULT = { hotHi: [true, 80, 2], coldLo: [true, 40, 2], precip: [true, 25, 1], snow: [true, 0, 1] };
+  var P1 = {};
+  F.forEach(function (f) {
+    var d = DEFAULT[f.id];
+    P1[f.id] = { on: !!d, target: d ? d[1] : Math.round(STAT[f.id].mean * (f.dec ? 10 : 1)) / (f.dec ? 10 : 1), w: d ? d[2] : 1 };
+  });
+  var mp1 = null, mp2 = null;
+  function buildP1() {
+    var t = document.getElementById('ptable'); if (!t) return;
+    t.replaceChildren();
+    var head = el('thead', null, [el('tr', null, [el('th', { text: 'Use' }), el('th', { text: 'Parameter' }), el('th', { text: 'Target' }), el('th', { text: 'Importance' }), el('th', { text: 'Range across places' })])]);
+    var body = el('tbody');
+    F.forEach(function (f) {
+      var st = P1[f.id], s = STAT[f.id];
+      var cb = el('input', { type: 'checkbox', checked: st.on }); cb.setAttribute('aria-label', 'Use ' + f.label);
+      var num = el('input', { type: 'number', value: st.target, step: f.dec ? 0.1 : 1, style: 'width:80px' }); num.setAttribute('aria-label', f.label + ' target');
+      var sel = el('select', { className: 'dash-select' }, [['1', 'Some'], ['2', 'High'], ['3', 'Very high']].map(function (o) { var op = el('option', { value: o[0], text: o[1] }); if (+o[0] === st.w) op.selected = true; return op; }));
+      sel.setAttribute('aria-label', f.label + ' importance');
+      cb.addEventListener('change', function () { st.on = cb.checked; runP1(); });
+      num.addEventListener('input', function () { var v = parseFloat(num.value); if (!isNaN(v)) { st.target = v; runP1(); } });
+      sel.addEventListener('change', function () { st.w = +sel.value; runP1(); });
+      st.cb = cb; st.num = num;
+      body.appendChild(el('tr', null, [el('td', null, [cb]), el('td', { text: f.label + ' (' + (f.unit === '%' || f.unit === '°F' ? f.unit : f.unit) + ')' }), el('td', null, [num]), el('td', null, [sel]),
+        el('td', { text: fmt(f, s.min) + ' to ' + fmt(f, s.max) })]));
+    });
+    t.appendChild(head); t.appendChild(body);
+  }
+  function runP1() {
+    var tb = document.getElementById('presults'); if (!tb) return;
+    var on = F.filter(function (f) { return P1[f.id].on; });
+    tb.replaceChildren();
+    if (!on.length) { tb.appendChild(el('caption', { text: 'Tick at least one parameter.' })); showPins(mp1, [], null); return; }
+    var tgt = {}, ws = {}; F.forEach(function (f) { tgt[f.id] = P1[f.id].target; ws[f.id] = P1[f.id].on ? P1[f.id].w : 0; });
+    var ranked = NAMES.map(function (n) { return { n: n, d: dist(FE[n], tgt, ws) }; }).sort(function (a, b) { return a.d - b.d; }).slice(0, 10);
+    var hr = el('tr', null, [el('th', { text: '#' }), el('th', { text: 'Place' })].concat(on.map(function (f) { return el('th', { text: f.label.replace('Rainy days per year (0.1 in or more)', 'Rainy days per year') }); })).concat([el('th', { text: 'Gap' })]));
+    tb.appendChild(el('thead', null, [hr]));
+    var body = el('tbody');
+    ranked.forEach(function (r, i) {
+      var tds = [el('td', { text: String(i + 1) }), el('td', null, [placeBtn(r.n)])];
+      on.forEach(function (f) {
+        var v = FE[r.n][f.id], z = (v - tgt[f.id]) / STAT[f.id].sd;
+        var td = el('td', { text: fmt(f, v) }); td.style.background = tint(z); tds.push(td);
+      });
+      tds.push(el('td', { text: r.d.toFixed(2) }));
+      body.appendChild(el('tr', null, tds));
+    });
+    tb.appendChild(body);
+    showPins(mp1, ranked.map(function (r) { return r.n; }), null);
+  }
+
+  // ---- part 2: similar places ----
+  var cur = null; // {name, p, f}
+  var W2 = {}; F.forEach(function (f) { W2[f.id] = 1; });
+  var picked = 'Portland, OR', topN = 10;
+  function getRef() {
+    if (picked === '__cur' && cur) return { name: cur.name, f: cur.f, p: cur.p, inPool: !!PR[cur.name] };
+    var p = PR[picked]; return p ? { name: picked, f: FE[picked], p: p, inPool: true } : null;
+  }
+  function buildP2Controls() {
+    var host = document.getElementById('simctl'); if (!host) return;
+    host.replaceChildren();
+    var sel = el('select', { className: 'dash-select', id: 'simsel' });
+    sel.setAttribute('aria-label', 'Pick a place');
+    if (cur && !PR[cur.name]) sel.appendChild(el('option', { value: '__cur', text: 'Loaded place: ' + cur.name }));
+    NAMES.forEach(function (n) { sel.appendChild(el('option', { value: n, text: n })); });
+    sel.value = (picked === '__cur' && cur && !PR[cur.name]) ? '__cur' : (PR[picked] ? picked : NAMES[0]);
+    picked = sel.value;
+    sel.addEventListener('change', function () { picked = sel.value; runP2(); });
+    var nsel = el('select', { className: 'dash-select' }, [5, 10, 15, 20].map(function (n) { var o = el('option', { value: n, text: 'Show ' + n }); if (n === topN) o.selected = true; return o; }));
+    nsel.setAttribute('aria-label', 'Number of places to show');
+    nsel.addEventListener('change', function () { topN = +nsel.value; runP2(); });
+    host.appendChild(el('label', null, [document.createTextNode('Place '), sel]));
+    host.appendChild(el('label', null, [nsel]));
+  }
+  function runP2() {
+    var tb = document.getElementById('simtable'); if (!tb) return;
+    var ref = getRef(); tb.replaceChildren(); if (!ref) return;
+    var on = F.filter(function (f) { return W2[f.id]; });
+    var ranked = NAMES.filter(function (n) { return n !== ref.name; }).map(function (n) { return { n: n, d: dist(FE[n], ref.f, W2) }; }).sort(function (a, b) { return a.d - b.d; }).slice(0, topN);
+    var hr = el('tr', null, [el('th', { text: '#' }), el('th', { text: 'Place' }), el('th', { text: 'Gap' }), el('th', { text: 'Highs and lows by month' })]);
+    var wr = el('tr', null, [el('th', { text: '' }), el('th', { text: 'Weight' }), el('th', { text: '' }), el('th', { text: '' })]);
+    F.forEach(function (f) {
+      hr.appendChild(el('th', { text: f.label.replace(' (0.1 in or more)', '') + ' (' + f.unit + ')', style: 'white-space:normal;min-width:84px' }));
+      var s = el('select', { className: 'dash-select' }, [['0', 'Off'], ['1', 'Some'], ['2', 'High'], ['3', 'Very high']].map(function (o) { var op = el('option', { value: o[0], text: o[1] }); if (+o[0] === W2[f.id]) op.selected = true; return op; }));
+      s.setAttribute('aria-label', f.label + ' weight');
+      s.addEventListener('change', function () { W2[f.id] = +s.value; runP2(); });
+      wr.appendChild(el('th', null, [s]));
+    });
+    tb.appendChild(el('thead', null, [hr, wr]));
+    var body = el('tbody');
+    function row(n, p, f, rank, d, isRef) {
+      var tds = [el('td', { text: isRef ? '★' : String(rank) }), el('td', null, [isRef && !PR[n] ? el('span', { text: n + ' (loaded)' }) : placeBtn(n)]), el('td', { text: isRef ? '' : d.toFixed(2) })];
+      var sp = el('td'); sp.innerHTML = spark(p); tds.push(sp);
+      F.forEach(function (c) {
+        var v = f[c.id], z = (v - ref.f[c.id]) / STAT[c.id].sd, td = el('td', { text: fmt(c, v).replace(/ (days|in|h)$/, '') });
+        if (!isRef) td.style.background = tint(z);
+        if (!W2[c.id]) td.style.opacity = '0.45';
+        tds.push(td);
+      });
+      var tr = el('tr', null, tds); if (isRef) tr.className = 'wx-me'; return tr;
+    }
+    body.appendChild(row(ref.name, ref.p, ref.f, 0, 0, true));
+    ranked.forEach(function (r, i) { body.appendChild(row(r.n, PR[r.n], FE[r.n], i + 1, r.d, false)); });
+    tb.appendChild(body);
+    showPins(mp2, ranked.map(function (r) { return r.n; }), ref.inPool ? ref.name : null);
+    if (!ref.inPool && mp2 && window.L) {
+      var r = L.marker([cur.la, cur.lo], { icon: L.divIcon({ className: 'wxn ref', html: '<span>★</span>', iconSize: [22, 22] }) }).bindTooltip(ref.name);
+      r.addTo(mp2.layer);
+    }
+  }
+
+  // ---- current place from the explorer ----
+  function profileFromRaw(raw) {
+    var D = raw.daily, T = D.time, m = [], k;
+    for (k = 0; k < 12; k++) m.push({ hi: [], lo: [], hum: [], sun: [], p: 0, w: 0, s: 0 });
+    function mean(a) { var s = 0, n = 0; a.forEach(function (v) { if (v !== null && v !== undefined) { s += v; n++; } }); return n ? s / n : 0; }
+    T.forEach(function (t, i) {
+      var y = +t.slice(0, 4); if (y < 2016 || y > 2020) return;
+      var o = m[+t.slice(5, 7) - 1];
+      if (D.temperature_2m_max[i] != null) o.hi.push(D.temperature_2m_max[i]);
+      if (D.temperature_2m_min[i] != null) o.lo.push(D.temperature_2m_min[i]);
+      o.hum.push(D.relative_humidity_2m_mean[i]); o.sun.push(D.sunshine_duration[i] != null ? D.sunshine_duration[i] / 3600 : null);
+      var p = D.precipitation_sum[i]; if (p != null) { o.p += p; if (p >= 0.1) o.w++; }
+      var s = D.snowfall_sum[i]; if (s != null) o.s += s;
+    });
+    function r1(v) { return Math.round(v * 10) / 10; } function r2(v) { return Math.round(v * 100) / 100; }
+    return { hi: m.map(function (o) { return r1(mean(o.hi)); }), lo: m.map(function (o) { return r1(mean(o.lo)); }), p: m.map(function (o) { return r2(o.p / 5); }),
+      w: m.map(function (o) { return r1(o.w / 5); }), s: m.map(function (o) { return r2(o.s / 5); }), su: m.map(function (o) { return r1(mean(o.sun)); }), h: m.map(function (o) { return Math.round(mean(o.hum)); }) };
+  }
+  window.__wxProfile = profileFromRaw;
+  document.addEventListener('wxplace', function (e) {
+    var d = e.detail, p = d.profile || PR[d.key] || null;
+    cur = p ? { name: d.key, p: p, f: feats(p), la: d.lat, lo: d.lon } : null;
+    var wasCur = picked === '__cur';
+    if (cur && !PR[d.key]) { picked = '__cur'; } else if (wasCur) { picked = PR[d.key] ? d.key : NAMES[0]; } else if (PR[d.key]) { picked = d.key; }
+    buildP2Controls(); runP2();
+  });
+  document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'fillcur' && cur) {
+      F.forEach(function (f) { var v = cur.f[f.id]; v = f.dec ? Math.round(v * 10) / 10 : Math.round(v); P1[f.id].target = v; if (P1[f.id].num) P1[f.id].num.value = v; });
+      runP1();
+    }
+    if (e.target && e.target.id === 'resetp') { buildStateDefaults(); buildP1(); runP1(); }
+  });
+  function buildStateDefaults() {
+    F.forEach(function (f) { var d = DEFAULT[f.id]; P1[f.id].on = !!d; P1[f.id].target = d ? d[1] : Math.round(STAT[f.id].mean * (f.dec ? 10 : 1)) / (f.dec ? 10 : 1); P1[f.id].w = d ? d[2] : 1; });
+  }
+
+  // ---- start ----
+  var np = document.querySelectorAll('.npl'); Array.prototype.forEach.call(np, function (e) { e.textContent = String(NAMES.length); });
+  if (!NAMES.length) return;
+  var css = document.createElement('style');
+  css.textContent = '.wxmap{height:300px;border-radius:8px;border:1px solid var(--color-border-line);margin:10px 0;background:#262422}.wxmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}' +
+    '.wxn span{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font:600 11px ui-monospace,Menlo,monospace;background:#96721F;color:#EDE6D6;border:2px solid #EDE6D6;box-sizing:border-box}.wxn.ref span{background:#9C4A2E}' +
+    '.plink{border:0!important;background:none!important;padding:0!important;color:var(--color-fg)!important;text-decoration:underline;text-decoration-color:#5C6B47;text-underline-offset:3px;cursor:pointer;font:inherit;text-align:left}' +
+    '.wx caption{caption-side:top;text-align:left;padding:6px 0;color:var(--cds-text-secondary)}';
+  document.head.appendChild(css);
+  mp1 = makeMap('map2'); mp2 = makeMap('map3');
+  buildP1(); runP1();
+  buildP2Controls(); runP2();
 })();
 </script><script>window.__startWX();</script></body></html>
