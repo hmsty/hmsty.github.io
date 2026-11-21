@@ -1,4 +1,4 @@
-<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><link rel="icon" href="/pfp.jpg"><meta name="theme-color" content="#262422"><title>Weather averages explorer</title><style>
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><link rel="icon" href="/pfp.jpg"><meta name="theme-color" content="#262422"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"><title>Weather averages explorer</title><style>
 .wx{max-width:980px;margin:0 auto;font-family:var(--font-anthropic-sans);color:var(--color-fg)}
 .wx h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 6px}
 .wx h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:36px 0 4px}
@@ -44,8 +44,8 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
 .dash-select,.wx input[type=text]{font:inherit;padding:6px 9px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg)}
 .wx input[type=text]{min-width:260px}.wx button{font:inherit;padding:6px 12px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg);cursor:pointer}
 #results{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:4px 0 10px}#results button{text-align:left}
-#status{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}</style></head><body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
-<div class='wx'><div class='ctl' style='margin:0 0 4px'><input type='text' id='q' placeholder='Search any city or place' aria-label='Search any city or place'><button id='go' type='button'>Search</button><span id='status'></span></div><div id='results'></div>
+#map{height:340px;border-radius:8px;border:1px solid var(--color-border-line);margin:6px 0 10px;background:#262422}#map .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.7)}.leaflet-container{font-family:var(--font-anthropic-sans)}.leaflet-control-attribution{font-size:10px}.wx .hint{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption);margin:0 0 4px}#status{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}</style></head><body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
+<div class='wx'><div class='ctl' style='margin:0 0 4px'><input type='text' id='q' placeholder='Search any city or place' aria-label='Search any city or place'><button id='go' type='button'>Search</button><span id='status'></span></div><div id='results'></div><p class='hint'>Click anywhere on the map to load that spot. Scroll or pinch to zoom.</p><div id='map'></div>
 <h1 id='top'><span class='pname'></span> weather averages</h1>
 <p class='lead'>Average highs run from <b data-draw='l-lo' data-source='portland'></b> in <b data-draw='l-lom' data-source='portland'></b> to <b data-draw='l-hi' data-source='portland'></b> in <b data-draw='l-him' data-source='portland'></b>. The city gets <b data-draw='l-rain' data-source='portland'></b> inches of precipitation a year, <b data-draw='l-share' data-source='portland'></b> of it from October through March, and <b data-draw='l-snow' data-source='portland'></b> inches of snow.</p>
 <p class='note'>Daily weather for 1991 to 2020, the standard 30-year climate normal period, at <span class='coords'></span>. Hover or tap any chart for exact values.</p>
@@ -134,7 +134,7 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
 <p class='note'>Data: Open-Meteo, ECMWF ERA5. 1991 to 2020 normals, <span class='yr'></span> through <span class='ytdend'></span>.</p>
 </div>
 
-<script src='https://cdn.jsdelivr.net/npm/d3@7'></script><script>(function () {
+<script src='https://cdn.jsdelivr.net/npm/d3@7'></script><script src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js'></script><script>(function () {
   'use strict';
   var MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], CUM = [0];
   MD.forEach(function (n, i) { CUM.push(CUM[i] + n); });
@@ -291,17 +291,19 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
     document.getElementById('gwrap').style.display=(key==='Portland, OR')?'':'none';
     document.title=key+' weather averages';
     Object.keys(draws).forEach(run);
+    if(window.__wxMarker)window.__wxMarker(lat,lon,key);
   }
   var status=document.getElementById('status'), results=document.getElementById('results');
   function lag(){return new Date(Date.now()-6*864e5).toISOString().slice(0,10);}
   async function load(key,lat,lon,elev){
+    var my=(window.__wxSeq=(window.__wxSeq||0)+1);
     status.textContent='Loading 35 years of daily data for '+key+'. This takes 10 to 40 seconds.'; results.replaceChildren();
     try{
-      var r=await fetch(WXAGG.buildUrl(lat,lon,lag())); var j=await r.json();
+      var r=await fetch(WXAGG.buildUrl(lat,lon,lag())); var j=await r.json(); if(my!==window.__wxSeq)return;
       if(!j.daily){throw new Error(j.reason||'No data returned');}
       var e=j.elevation!=null?j.elevation:elev;
       setPlace(key,WXAGG.agg(j,lat,lon,e),lat,lon,e); status.textContent='Loaded. Grid cell elevation '+Math.round(e)+' m.';
-    }catch(err){status.textContent='Could not load: '+err.message+'. Open-Meteo allows limited requests per hour; wait and retry.';}
+    }catch(err){if(my!==window.__wxSeq)return;status.textContent='Could not load: '+err.message+'. Open-Meteo allows limited requests per hour; wait and retry.';}
   }
   async function search(){
     var s=document.getElementById('q').value.trim(); if(!s)return; status.textContent='Searching...'; results.replaceChildren();
@@ -312,7 +314,7 @@ body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--colo
       j.results.forEach(function(p){var key=p.name+(p.admin1?', '+p.admin1:'')+(p.country_code&&p.country_code!=='US'?', '+p.country_code:'');var b=document.createElement('button');b.type='button';b.textContent=key+(p.country?' ('+p.country+')':'')+(p.population?', pop. '+p.population.toLocaleString():'');b.onclick=function(){load(key,p.latitude,p.longitude,p.elevation);};results.appendChild(b);});
     }catch(err){status.textContent='Search failed: '+err.message;}
   }
-  document.getElementById('go').onclick=search;
+  window.__wxLoad=load; document.getElementById('go').onclick=search;
   document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='Enter')search();});
   window.__startWX=function(){ setPlace('Portland, OR',def,def.meta.lat,def.meta.lon,def.meta.elev_m); status.textContent='Showing Portland. Search above for any other place.'; };
 })();
@@ -766,5 +768,28 @@ dash.draw('c-table', function (el) {
     var c = C[n]; return [n, f1(mean(c.hi)) + '°F', f1(mean(c.lo)) + '°F', f1(d3.sum(c.p)) + ' in', f0(d3.sum(c.wet)) + ' days', f1(d3.sum(c.sn)) + ' in'];
   }).join('td').text(function (v) { return v; });
 });
+})();
+</script><script>
+(function(){
+  var st=document.getElementById('status');
+  if(!window.L){st.textContent='Map library did not load. Search still works.';document.getElementById('map').style.display='none';return;}
+  var map=L.map('map',{worldCopyJump:true,minZoom:2}).setView([45.52,-122.68],5);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+  var mk=L.circleMarker([45.52,-122.68],{radius:8,color:'#EDE6D6',weight:2,fillColor:'#9C4A2E',fillOpacity:1}).addTo(map);
+  window.__wxMarker=function(lat,lon,key){mk.setLatLng([lat,lon]).unbindTooltip().bindTooltip(key,{direction:'top',offset:[0,-8]});map.panTo([lat,lon]);};
+  function nm(lat,lon){
+    return fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=en&lat='+lat+'&lon='+lon).then(function(r){return r.json();}).then(function(j){
+      var a=j&&j.address; if(!a)return null; var place=a.city||a.town||a.village||a.hamlet||a.municipality||a.county||a.state; if(!place)return null;
+      var reg=(a.country_code==='us'||a.country_code==='ca')?(a.state||a.country):a.country; return place+(reg&&reg!==place?', '+reg:'');
+    }).catch(function(){return null;});
+  }
+  map.on('click',function(e){
+    var ll=e.latlng.wrap(), lat=Math.round(ll.lat*100)/100, lon=Math.round(ll.lng*100)/100;
+    mk.setLatLng([lat,lon]); st.textContent='Looking up the place name...';
+    nm(lat,lon).then(function(n){
+      var key=n||(Math.abs(lat).toFixed(2)+(lat>=0?'N':'S')+', '+Math.abs(lon).toFixed(2)+(lon>=0?'E':'W'));
+      window.__wxLoad(key,lat,lon,null);
+    });
+  });
 })();
 </script><script>window.__startWX();</script></body></html>
