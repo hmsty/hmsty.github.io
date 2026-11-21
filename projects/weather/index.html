@@ -1,0 +1,770 @@
+<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><link rel="icon" href="/pfp.jpg"><meta name="theme-color" content="#262422"><title>Weather averages explorer</title><style>
+.wx{max-width:980px;margin:0 auto;font-family:var(--font-anthropic-sans);color:var(--color-fg)}
+.wx h1{font-family:var(--font-anthropic-serif);font-weight:400;font-size:var(--cds-font-size-title);margin:0 0 6px}
+.wx h2{font-size:var(--cds-font-size-heading);font-weight:var(--cds-font-weight-medium);margin:36px 0 4px}
+.wx h3{font-size:var(--cds-font-size-body);font-weight:var(--cds-font-weight-medium);margin:18px 0 6px}
+.wx p{margin:6px 0;line-height:1.5}
+.wx .lead{font-size:var(--cds-font-size-heading);line-height:1.4}
+.wx .note{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}
+.wx .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:var(--cds-gap-sm);margin:14px 0}
+.wx .tile{background:var(--color-panel);border:1px solid var(--color-border-line);border-radius:var(--cds-radius);padding:var(--cds-pad-md)}
+.wx .tile span{display:block;font-size:var(--cds-font-size-caption);color:var(--cds-text-secondary)}
+.wx .tile b{font-family:var(--font-anthropic-serif);font-weight:400;font-size:22px;font-variant-numeric:tabular-nums}
+.wx .tile small{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}
+.wx .wx-chart{position:relative;min-height:200px}
+.wx .wx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;min-height:200px}
+.wx .wx-mini{position:relative}
+.wx .wx-t{fill:var(--cds-text-secondary);font-size:11px}
+.wx .wx-ax text{fill:var(--cds-text-secondary);font-size:11px}
+.wx .wx-leg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--cds-text-secondary);margin:2px 0 6px}
+.wx .wx-leg span{display:inline-flex;align-items:center}
+.wx .wx-leg i{display:inline-block;margin-right:5px}
+.wx .wx-leg i.bx{width:10px;height:10px;border-radius:2px}
+.wx .wx-leg i.ln{width:14px;height:3px;border-radius:2px}
+.wx .wx-leg em{font-style:normal}
+.wx .wx-tip{position:absolute;pointer-events:none;white-space:pre;font-size:12px;line-height:1.4;padding:6px 9px;border-radius:6px;background:var(--cds-surface-popover);border:1px solid var(--cds-border);box-shadow:var(--cds-shadow-popover);color:var(--cds-text-secondary);z-index:5}
+.wx .ctl{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:var(--cds-font-size-caption);margin:8px 0}
+.wx .ctl label{display:inline-flex;align-items:center;gap:6px}
+.wx table{border-collapse:collapse;width:100%;font-size:var(--cds-font-size-caption);font-variant-numeric:tabular-nums}
+.wx th,.wx td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--color-border-line);white-space:nowrap}
+.wx th:first-child,.wx td:first-child{text-align:left}
+.wx th{font-weight:var(--cds-font-weight-medium);color:var(--cds-text-secondary)}
+.wx tr.wx-me td{font-weight:600}
+.wx .scroll{overflow-x:auto}
+.wx .ex{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:14px}
+.wx .ex h4{margin:0 0 4px;font-size:var(--cds-font-size-caption);color:var(--cds-text-secondary);font-weight:var(--cds-font-weight-medium)}
+.wx .ex ol{margin:0;padding-left:18px;font-size:var(--cds-font-size-caption);line-height:1.6;font-variant-numeric:tabular-nums}
+.wx details{margin-top:30px;border-top:1px solid var(--color-border-line);padding-top:10px}
+.wx summary{cursor:pointer;font-weight:var(--cds-font-weight-medium)}
+@media print{.wx h2{break-before:page}}
+
+:root{--color-fg:#EDE6D6;--color-bg:#262422;--color-panel:#2e2c29;--color-border-line:#45423d;--cds-text-secondary:#a9a295;--cds-font-size-title:30px;--cds-font-size-heading:18px;--cds-font-size-body:15px;--cds-font-size-caption:12.5px;--cds-font-weight-medium:500;--cds-gap-sm:8px;--cds-radius:8px;--cds-pad-md:12px;--cds-surface-popover:#2e2c29;--cds-border:#55524b;--cds-shadow-popover:0 4px 14px rgba(0,0,0,.4);--cds-chart-axis:#7d7a70;--cds-chart-grid:#38362f;--cds-chart-reference:#9a968c;--cds-chart-muted:#8a867c;--font-anthropic-sans:'JetBrains Mono',ui-monospace,Menlo,monospace;--font-anthropic-serif:'Source Serif 4',Georgia,serif}
+body{margin:0;padding:56px 16px 60px;background:var(--color-bg);color:var(--color-fg)}
+.wx a{color:inherit}
+.dash-select,.wx input[type=text]{font:inherit;padding:6px 9px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg)}
+.wx input[type=text]{min-width:260px}.wx button{font:inherit;padding:6px 12px;border:1px solid var(--cds-border);border-radius:6px;background:var(--color-panel);color:var(--color-fg);cursor:pointer}
+#results{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin:4px 0 10px}#results button{text-align:left}
+#status{color:var(--cds-text-secondary);font-size:var(--cds-font-size-caption)}</style></head><body><a href="/" style="position:absolute;top:16px;left:20px;font:13px ui-monospace,Menlo,monospace;color:#a9a295;text-decoration:none;border-bottom:1px solid #5C6B47;z-index:10">← will jensen</a>
+<div class='wx'><div class='ctl' style='margin:0 0 4px'><input type='text' id='q' placeholder='Search any city or place' aria-label='Search any city or place'><button id='go' type='button'>Search</button><span id='status'></span></div><div id='results'></div>
+<h1 id='top'><span class='pname'></span> weather averages</h1>
+<p class='lead'>Average highs run from <b data-draw='l-lo' data-source='portland'></b> in <b data-draw='l-lom' data-source='portland'></b> to <b data-draw='l-hi' data-source='portland'></b> in <b data-draw='l-him' data-source='portland'></b>. The city gets <b data-draw='l-rain' data-source='portland'></b> inches of precipitation a year, <b data-draw='l-share' data-source='portland'></b> of it from October through March, and <b data-draw='l-snow' data-source='portland'></b> inches of snow.</p>
+<p class='note'>Daily weather for 1991 to 2020, the standard 30-year climate normal period, at <span class='coords'></span>. Hover or tap any chart for exact values.</p>
+
+<h2 id='overview'>Month by month</h2>
+<p class='note'>Hover or tap a month on any of the three charts to move the readout. A rainy day has 0.1 inch of precipitation or more.</p>
+<div class='tiles'>
+<div class='tile'><span>Month</span><b data-draw='s-month' data-source='portland'></b></div>
+<div class='tile'><span>Average high</span><b data-draw='s-hi' data-source='portland'></b><small> °F</small></div>
+<div class='tile'><span>Average low</span><b data-draw='s-lo' data-source='portland'></b><small> °F</small></div>
+<div class='tile'><span>Precipitation</span><b data-draw='s-rain' data-source='portland'></b><small> in, over </small><b data-draw='s-days' data-source='portland'></b><small> rainy days</small></div>
+<div class='tile'><span>Snowfall</span><b data-draw='s-snow' data-source='portland'></b><small> in</small></div>
+</div>
+<h3 id='ov-temp-h'>Average daily high and low temperature by month</h3>
+<div class='wx-chart' data-draw='ov-temp' data-source='portland'></div>
+<h3 id='ov-rain-h'>Average precipitation by month, with rainy days</h3>
+<div class='wx-chart' data-draw='ov-rain' data-source='portland'></div>
+<h3 id='ov-snow-h'>Average snowfall by month</h3>
+<div class='wx-chart' data-draw='ov-snow' data-source='portland'></div>
+
+<h2 id='daily'>Normal temperature for every day of the year</h2>
+<p>Solid lines are the 1991 to 2020 average high and low for each calendar day, smoothed over 15 days. Shaded bands cover the middle 80 percent of days, from the 10th to the 90th percentile.</p>
+<div class='ctl'>
+<label><input type='checkbox' data-wx='recs' checked> Record highs and lows</label>
+<label><input type='checkbox' data-wx='ytd' checked> <span class='yr'></span> so far</label>
+</div>
+<div class='wx-chart' data-draw='d-band' data-source='portland'></div>
+
+<h2 id='precip'>Precipitation</h2>
+<h3 id='p-range-h'>Monthly precipitation range over 30 years</h3>
+<p class='note'>Each bar spans the driest to the wettest month of the 30 years.</p>
+<div class='wx-chart' data-draw='p-range' data-source='portland'></div>
+<h3 id='p-heat-h'>Monthly precipitation for each year</h3>
+<p class='note'>Darker cells are wetter months.</p>
+<div class='wx-chart' data-draw='p-heat' data-source='portland'></div>
+
+<h2 id='feel'>Temperature bands, sun, wind and humidity</h2>
+<h3 id='bands-h'>Days per month by daily high temperature</h3>
+<div class='wx-chart' data-draw='bands' data-source='portland'></div>
+<h3 id='sm-h'>Sunshine, humidity, wind and temperature spread</h3>
+<div class='wx-grid' data-draw='sm' data-source='portland'></div>
+
+<h2 id='trends'>Year-to-year changes</h2>
+<p>The 30-year trend in annual mean temperature is <b data-draw='trend-val' data-source='portland'></b>. Thirty years of data from a gridded model is a short record, so treat the slope as descriptive, not as a climate estimate.</p>
+<h3 id='an-h'>Annual temperature, precipitation and day counts</h3>
+<div class='wx-grid' data-draw='an' data-source='portland'></div>
+<h3 id='stripes-h'>Monthly temperature compared with that month's 1991 to 2020 average</h3>
+<p class='note'>Red months were warmer than the average for that month, blue months cooler.</p>
+<div class='wx-chart' data-draw='stripes' data-source='portland'></div>
+
+<h2 id='extremes'>Records and extremes</h2>
+<div class='scroll'><table><thead><tr><th>Month</th><th>Record high (year)</th><th>Average high</th><th>Average low</th><th>Record low (year)</th></tr></thead><tbody data-draw='rec-body' data-source='portland'></tbody></table></div>
+<div class='ex'>
+<div><h4>Hottest days</h4><ol data-draw='ex-hot' data-source='portland'></ol></div>
+<div><h4>Coldest days (daily low)</h4><ol data-draw='ex-cold' data-source='portland'></ol></div>
+<div><h4>Wettest days</h4><ol data-draw='ex-wet' data-source='portland'></ol></div>
+<div><h4>Strongest gusts</h4><ol data-draw='ex-gust' data-source='portland'></ol></div>
+<div><h4>Heaviest snowfall days</h4><ol data-draw='ex-snow' data-source='portland'></ol></div>
+</div>
+<p class='note'>Records cover 1991 to 2020 only and come from model grid data, so they will not match official airport station records.</p>
+
+<h2 id='ytd'>This year against the normal</h2>
+<p class='lead'><span data-draw='y-lead' data-source='portland'></span></p>
+<div class='wx-grid' data-draw='ytd' data-source='portland'></div>
+<p class='note' id='ytdnote'></p>
+
+<h2 id='cities'>Compare with other cities</h2>
+<div class='ctl'><label>Metric <select class='dash-select' data-wx-metric aria-label='Metric'><option value='hi'>Average high, °F</option><option value='lo'>Average low, °F</option><option value='p'>Precipitation, inches per month</option><option value='wet'>Rainy days per month</option><option value='sn'>Snowfall, inches per month</option></select></label></div>
+<div class='wx-chart' data-draw='c-lines' data-source='cities'></div>
+<h3 id='c-table-h'>Annual summary by city</h3>
+<div class='scroll'><table><thead><tr><th>City</th><th>Average high</th><th>Average low</th><th>Precipitation</th><th>Rainy days</th><th>Snowfall</th></tr></thead><tbody data-draw='c-table' data-source='cities'></tbody></table></div>
+<p class='note'>Annual highs and lows are the average of the 12 monthly values. Every city uses the same dataset and method for 1991 to 2020.</p>
+
+<details id='about'>
+<summary>Data source, definitions and comparison with Google</summary>
+<p><b>Source.</b> Daily values come from the <a href='https://open-meteo.com/en/docs/historical-weather-api'>Open-Meteo Historical Weather API</a>, which serves the ECMWF ERA5 reanalysis, a weather model constrained by observations, on a regular grid rather than from a weather station. The point used is <span class='coords'></span>. The period is 1991 to 2020 for the normals, plus the current year through <span class='ytdend'></span> for the year-to-date views.</p>
+<p><b>Normal.</b> Formally, the average of a measurement over a fixed 30-year period, here 1991 to 2020, the period national weather services use. Loosely, people use it to mean typical, but a single day can sit far from the normal, which the percentile bands show.</p>
+<p><b>Percentile band.</b> Formally, the 10th percentile is the value that 10 percent of days fall at or below, and the 90th is the value that 90 percent fall at or below, so the band holds the middle 80 percent of days. Loosely, it is the usual range.</p>
+<p><b>Rainy day.</b> Here, a day with at least 0.1 inch (2.54 mm) of precipitation. Looser usage counts any day with a trace of drizzle, which gives far more rainy days. The 0.1 inch rule is the one that matches Google's Portland day counts in this data.</p>
+<p><b>Snowfall.</b> Modeled new snow depth per day, converted from centimeters to inches. It is a model estimate, less reliable than a gauge measurement.</p>
+<div id='gwrap'><h3 id='cmp-h'>Check against Google's Portland figures</h3>
+<p data-draw='cmp-sum' data-source='portland'></p>
+<div class='scroll'><table><thead><tr><th>Month</th><th>Google high</th><th>Here high</th><th>Google low</th><th>Here low</th><th>Google precip</th><th>Here precip</th><th>Google rainy days</th><th>Here rainy days</th></tr></thead><tbody data-draw='cmp-body' data-source='portland'></tbody></table></div>
+<p class='note'>Google values are typed in from a screenshot of Google's Portland weather averages. Temperatures in °F, precipitation in inches. Google's averages come from weather station records, so differences from this gridded data are expected.</p>
+</details>
+<p class='note'>Data: Open-Meteo, ECMWF ERA5. 1991 to 2020 normals, <span class='yr'></span> through <span class='ytdend'></span>.</p>
+</div>
+
+<script src='https://cdn.jsdelivr.net/npm/d3@7'></script><script>(function () {
+  'use strict';
+  var MD = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31], CUM = [0];
+  MD.forEach(function (n, i) { CUM.push(CUM[i] + n); });
+  var VARS = ['temperature_2m_max', 'temperature_2m_min', 'temperature_2m_mean', 'precipitation_sum', 'snowfall_sum',
+    'wind_speed_10m_max', 'wind_gusts_10m_max', 'sunshine_duration', 'daylight_duration', 'relative_humidity_2m_mean', 'cloud_cover_mean'];
+
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function r2(v) { return Math.round(v * 100) / 100; }
+  function ok(v) { return v !== null && v !== undefined && !isNaN(v); }
+  function mean(a) { var s = 0, n = 0; for (var i = 0; i < a.length; i++) if (ok(a[i])) { s += a[i]; n++; } return n ? s / n : 0; }
+  function sum(a) { var s = 0; for (var i = 0; i < a.length; i++) if (ok(a[i])) s += a[i]; return s; }
+  function q(sorted, p) {
+    if (!sorted.length) return 0;
+    var i = (sorted.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i);
+    return sorted[lo] + (sorted[hi] - sorted[lo]) * (i - lo);
+  }
+  function asc(a) { return a.filter(ok).sort(function (x, y) { return x - y; }); }
+  function top(list, n, desc) {
+    list = list.filter(function (r) { return ok(r[0]); });
+    list.sort(function (a, b) { return desc ? b[0] - a[0] : a[0] - b[0]; });
+    return list.slice(0, n);
+  }
+
+  function agg(raw, lat, lon, elev) {
+    var D = raw.daily, T = D.time, last = T.length - 1;
+    while (last > 0 && (!ok(D.temperature_2m_max[last]) || !ok(D.temperature_2m_min[last]))) last--;
+    var Y0 = 1991, Y1 = 2020, NY = Y1 - Y0 + 1;
+    var thisYear = +T[last].slice(0, 4);
+    var base = [], ytdIdx = [];
+    for (var i = 0; i <= last; i++) {
+      var y = +T[i].slice(0, 4);
+      if (y >= Y0 && y <= Y1) base.push(i);
+      else if (y === thisYear && y > Y1) ytdIdx.push(i);
+    }
+    function mOf(i) { return +T[i].slice(5, 7) - 1; }
+    function dOf(i) { return +T[i].slice(8, 10); }
+    function yOf(i) { return +T[i].slice(0, 4); }
+    function doyOf(i) { var m = mOf(i), d = dOf(i); return (m === 1 && d === 29) ? -1 : CUM[m] + d - 1; }
+    function tmean(i) { var v = D.temperature_2m_mean[i]; return ok(v) ? v : (D.temperature_2m_max[i] + D.temperature_2m_min[i]) / 2; }
+    var edges = [32, 40, 50, 60, 70, 80, 90, 100];
+    function bandOf(v) { var b = 0; while (b < edges.length && v >= edges[b]) b++; return b; }
+
+    var M = [];
+    for (var m = 0; m < 12; m++) M.push({ hi: [], lo: [], mean: [], recHi: -1e9, recHiY: 0, recLo: 1e9, recLoY: 0, wind: [], gust: [], sun: [], day: [], hum: [], cloud: [], bands: [0, 0, 0, 0, 0, 0, 0, 0, 0], snowDays: 0, yp: {}, yw: {}, ys: {} });
+    var doyHi = [], doyLo = [], recHiD = [], recLoD = [], k;
+    for (k = 0; k < 365; k++) { doyHi.push([]); doyLo.push([]); recHiD.push(-1e9); recLoD.push(1e9); }
+    var yr = {};
+    for (k = Y0; k <= Y1; k++) yr[k] = { t: [], p: 0, d90: 0, d100: 0, fr: 0, wet: 0, sn: 0, mxh: -1e9, mnl: 1e9, mp: Array(12).fill(0), mt: [[], [], [], [], [], [], [], [], [], [], [], []] };
+
+    base.forEach(function (i) {
+      var m = mOf(i), y = yOf(i), hi = D.temperature_2m_max[i], lo = D.temperature_2m_min[i], pr = D.precipitation_sum[i], sn = D.snowfall_sum[i], tm = tmean(i), o = M[m], yy = yr[y], dy = doyOf(i);
+      if (ok(hi)) {
+        o.hi.push(hi); o.bands[bandOf(hi)]++;
+        if (hi > o.recHi) { o.recHi = hi; o.recHiY = y; }
+        if (hi >= 90) yy.d90++; if (hi >= 100) yy.d100++; if (hi > yy.mxh) yy.mxh = hi;
+        if (dy >= 0) { doyHi[dy].push(hi); if (hi > recHiD[dy]) recHiD[dy] = hi; }
+      }
+      if (ok(lo)) {
+        o.lo.push(lo);
+        if (lo < o.recLo) { o.recLo = lo; o.recLoY = y; }
+        if (lo <= 32) yy.fr++; if (lo < yy.mnl) yy.mnl = lo;
+        if (dy >= 0) { doyLo[dy].push(lo); if (lo < recLoD[dy]) recLoD[dy] = lo; }
+      }
+      o.mean.push(tm); yy.t.push(tm); yy.mt[m].push(tm);
+      if (ok(pr)) { o.yp[y] = (o.yp[y] || 0) + pr; yy.p += pr; yy.mp[m] += pr; if (pr >= 0.1) { o.yw[y] = (o.yw[y] || 0) + 1; yy.wet++; } }
+      if (ok(sn)) { o.ys[y] = (o.ys[y] || 0) + sn; yy.sn += sn; if (sn >= 0.05) o.snowDays++; }
+      o.wind.push(D.wind_speed_10m_max[i]); o.gust.push(D.wind_gusts_10m_max[i]);
+      o.sun.push(ok(D.sunshine_duration[i]) ? D.sunshine_duration[i] / 3600 : null);
+      o.day.push(ok(D.daylight_duration[i]) ? D.daylight_duration[i] / 3600 : null);
+      o.hum.push(D.relative_humidity_2m_mean[i]); o.cloud.push(D.cloud_cover_mean[i]);
+    });
+
+    var mo = { hi: [], lo: [], mean: [], hiP10: [], hiP90: [], loP10: [], loP90: [], recHi: [], recHiY: [], recLo: [], recLoY: [], precip: [], pMin: [], pMed: [], pMax: [], wet: [], snow: [], snowDays: [], wind: [], gust: [], sun: [], day: [], hum: [], cloud: [], bands: [] };
+    M.forEach(function (o) {
+      var hs = asc(o.hi), ls = asc(o.lo);
+      mo.hi.push(r1(mean(o.hi))); mo.lo.push(r1(mean(o.lo))); mo.mean.push(r1(mean(o.mean)));
+      mo.hiP10.push(r1(q(hs, 0.1))); mo.hiP90.push(r1(q(hs, 0.9))); mo.loP10.push(r1(q(ls, 0.1))); mo.loP90.push(r1(q(ls, 0.9)));
+      mo.recHi.push(r1(o.recHi)); mo.recHiY.push(o.recHiY); mo.recLo.push(r1(o.recLo)); mo.recLoY.push(o.recLoY);
+      var ps = []; for (var y = Y0; y <= Y1; y++) ps.push(o.yp[y] || 0); var psA = asc(ps);
+      mo.precip.push(r2(sum(ps) / NY)); mo.pMin.push(r2(psA[0])); mo.pMed.push(r2(q(psA, 0.5))); mo.pMax.push(r2(psA[psA.length - 1]));
+      var ws = []; for (y = Y0; y <= Y1; y++) ws.push(o.yw[y] || 0); mo.wet.push(r1(sum(ws) / NY));
+      var ss = []; for (y = Y0; y <= Y1; y++) ss.push(o.ys[y] || 0); mo.snow.push(r2(sum(ss) / NY));
+      mo.snowDays.push(r2(o.snowDays / NY));
+      mo.wind.push(r1(mean(o.wind))); mo.gust.push(r1(mean(o.gust)));
+      mo.sun.push(r1(mean(o.sun))); mo.day.push(r1(mean(o.day)));
+      mo.hum.push(Math.round(mean(o.hum))); mo.cloud.push(Math.round(mean(o.cloud)));
+      mo.bands.push(o.bands.map(function (c) { return r1(c / NY); }));
+    });
+
+    // daily normals: 15-day circular smoothing of the day-of-year mean, percentiles over a 15-day pool
+    function circ(a) { var out = []; for (var d = 0; d < 365; d++) { var s = 0; for (var j = -7; j <= 7; j++) s += a[(d + j + 365) % 365]; out.push(s / 15); } return out; }
+    var rawHi = doyHi.map(mean), rawLo = doyLo.map(mean);
+    var dl = { hi: circ(rawHi).map(r1), lo: circ(rawLo).map(r1), recHi: recHiD.map(Math.round), recLo: recLoD.map(Math.round), hiP10: [], hiP90: [], loP10: [], loP90: [] };
+    for (var d = 0; d < 365; d++) {
+      var ph = [], pl = [];
+      for (var j = -7; j <= 7; j++) { var dd = (d + j + 365) % 365; ph = ph.concat(doyHi[dd]); pl = pl.concat(doyLo[dd]); }
+      ph = asc(ph); pl = asc(pl);
+      dl.hiP10.push(r1(q(ph, 0.1))); dl.hiP90.push(r1(q(ph, 0.9))); dl.loP10.push(r1(q(pl, 0.1))); dl.loP90.push(r1(q(pl, 0.9)));
+    }
+
+    var yl = { year: [], t: [], p: [], d90: [], d100: [], fr: [], wet: [], sn: [], mxh: [], mnl: [] }, gridT = [], gridP = [];
+    for (k = Y0; k <= Y1; k++) {
+      var a = yr[k];
+      yl.year.push(k); yl.t.push(r1(mean(a.t))); yl.p.push(r2(a.p)); yl.d90.push(a.d90); yl.d100.push(a.d100); yl.fr.push(a.fr);
+      yl.wet.push(a.wet); yl.sn.push(r2(a.sn)); yl.mxh.push(r1(a.mxh)); yl.mnl.push(r1(a.mnl));
+      gridT.push(a.mt.map(function (v) { return r1(mean(v)); })); gridP.push(a.mp.map(r2));
+    }
+
+    function lst(arr) { return base.map(function (i) { return [arr[i], T[i]]; }); }
+    var ex = {
+      hot: top(lst(D.temperature_2m_max), 5, true).map(function (r) { return [r1(r[0]), r[1]]; }),
+      cold: top(lst(D.temperature_2m_min), 5, false).map(function (r) { return [r1(r[0]), r[1]]; }),
+      wet: top(lst(D.precipitation_sum), 5, true).map(function (r) { return [r2(r[0]), r[1]]; }),
+      gust: top(lst(D.wind_gusts_10m_max), 5, true).map(function (r) { return [r1(r[0]), r[1]]; }),
+      snow: top(lst(D.snowfall_sum), 5, true).map(function (r) { return [r2(r[0]), r[1]]; })
+    };
+
+    var ytd = { year: thisYear, end: T[last], hi: [], lo: [], p: [] };
+    ytdIdx.forEach(function (i) {
+      if (doyOf(i) < 0) return;
+      ytd.hi.push(r1(D.temperature_2m_max[i])); ytd.lo.push(r1(D.temperature_2m_min[i])); ytd.p.push(r2(ok(D.precipitation_sum[i]) ? D.precipitation_sum[i] : 0));
+    });
+
+    return { meta: { lat: lat, lon: lon, elev_m: elev, period: '1991-2020', n: base.length }, monthly: mo, daily: dl, yearly: yl, gridT: gridT, gridP: gridP, extremes: ex, ytd: ytd };
+  }
+
+  function buildUrl(lat, lon, endDate) {
+    return 'https://archive-api.open-meteo.com/v1/archive?latitude=' + lat + '&longitude=' + lon +
+      '&start_date=1991-01-01&end_date=' + endDate + '&daily=' + VARS.join(',') +
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto';
+  }
+
+  window.WXAGG = { agg: agg, VARS: VARS, buildUrl: buildUrl };
+})();
+</script><script>
+(function(){
+  var cityBase={"Portland, OR":{"lat":45.52,"lon":-122.68,"elev":31,"hi":[46.7,50,54.1,58.7,65.7,71.2,80.6,81.4,75.2,62.4,51.7,45.7],"lo":[34.8,35.1,37.8,41.3,47.3,51.9,56.9,57.7,53.6,46.1,39.2,34.7],"p":[6.6,5.12,5.74,4.51,2.85,1.79,0.5,0.6,1.78,4.25,6.94,7.61],"wet":[14.6,11.8,14,12.9,8.2,5.2,1.7,1.8,4.4,9.5,14.2,14.9],"sn":[2.06,2.11,0.77,0.08,0,0,0,0,0,0,0.44,2.43]},"Seattle, WA":{"lat":47.61,"lon":-122.33,"elev":72,"hi":[45,47.5,51.3,56.1,62.7,67.5,74.5,74.9,68.8,58.2,49.3,44],"lo":[34.8,34.5,37.1,40.5,46.5,51.5,56.3,56.8,52.2,45.2,39.1,34.8],"p":[6.85,4.65,5.35,4.34,2.98,2.31,0.99,1.33,2.54,5.09,7.63,6.94],"wet":[15.3,11.4,13.6,11.6,8.7,6.6,3,3.4,5.9,11.6,14.7,14.3],"sn":[2.18,1.68,0.62,0.05,0,0,0,0,0,0,0.94,2.54]},"San Francisco, CA":{"lat":37.77,"lon":-122.42,"elev":14,"hi":[56.5,58.3,60.3,62.4,65.5,69.2,70.1,71,72.3,69.4,61.9,56.4],"lo":[43.3,44.9,46.8,48.1,51,53.3,55,56,55.6,53.3,47.9,43.7],"p":[3.8,3.94,2.96,1.41,0.7,0.14,0.02,0.04,0.07,0.85,1.84,3.51],"wet":[7.7,7.6,7.2,3.6,2,0.3,0,0.1,0.2,1.9,4.2,7.2],"sn":[0,0,0,0,0,0,0,0,0,0,0,0]},"Los Angeles, CA":{"lat":34.05,"lon":-118.24,"elev":87,"hi":[66.1,66.6,69.4,73.7,77.1,82.3,88,90.2,87.9,81,73.2,65.7],"lo":[44.4,45.1,47.4,50,54.6,59,64.2,65.3,62.8,56.9,49.7,43.9],"p":[3.19,3.37,2.2,0.79,0.33,0.09,0.08,0.02,0.13,0.64,0.79,2.05],"wet":[4.3,4.8,3.8,1.5,0.8,0.1,0.3,0.1,0.3,1.3,1.6,3.4],"sn":[0,0,0,0,0,0,0,0,0,0,0,0]},"Phoenix, AZ":{"lat":33.45,"lon":-112.07,"elev":335,"hi":[65.7,68.9,76.4,84.4,93.5,103.4,105.2,103.4,98.5,87.5,74.9,64.3],"lo":[40.8,43.5,49,56.1,66,75.6,82.7,81.8,74.2,61.1,49.3,40.6],"p":[1.26,1.49,1.02,0.32,0.16,0.08,0.74,1.11,0.98,0.83,0.66,1.14],"wet":[2.7,3,2.4,0.9,0.4,0.2,1.5,2.1,1.8,1.5,1.6,2.6],"sn":[0,0,0,0,0,0,0,0,0,0,0,0]},"Denver, CO":{"lat":39.74,"lon":-104.99,"elev":1597,"hi":[41.2,43.3,52.1,58.7,68.3,80,85.7,83.6,76.4,63.2,50,40.5],"lo":[15.2,16.2,23.4,31,41.7,52,58.8,57.3,49.3,36.5,23.5,14.9],"p":[0.85,0.87,1.86,2.7,3.13,1.98,1.58,1.55,1.38,1.55,1.16,0.81],"wet":[3,3.3,5,6.7,7.8,4.6,3.4,3.6,3.5,4.3,3.7,2.7],"sn":[5.89,5.87,9.09,8.64,1.62,0,0,0,0.72,3.92,6.57,5.57]},"Minneapolis, MN":{"lat":44.98,"lon":-93.27,"elev":257,"hi":[22.7,28,41,54.8,67.3,77.1,81.5,79.3,71.3,56.6,40.6,27.7],"lo":[6.9,10.9,22.9,35.7,49,59.9,64.9,63.1,55.5,42.2,27.8,13.7],"p":[0.96,1.04,2.01,3.16,4.35,4.45,3.56,3.78,3.22,2.77,1.96,1.36],"wet":[3.2,3.1,4.7,7.4,9.3,9,7.5,7.4,6.7,6.1,4.4,3.6],"sn":[6.18,6.25,6.19,3.62,0.11,0,0,0,0,0.9,5.98,7.24]},"Chicago, IL":{"lat":41.88,"lon":-87.63,"elev":265,"hi":[29.7,31.9,40,51.1,63.5,74.5,79.5,77.9,71.2,59,45.8,35.2],"lo":[18.3,19.3,28,39,51.2,62.8,68.4,67.5,60.5,48.4,35.9,25.6],"p":[2.28,2.09,2.62,4.09,4.23,3.8,3.63,3.75,3.04,3.38,2.66,2.29],"wet":[5.7,5.2,6.6,9,9,8.4,8.3,7.9,6.6,7.3,6.1,5.6],"sn":[7.68,6.7,4.11,1.72,0,0,0,0,0,0.2,1.64,5.98]},"New York, NY":{"lat":40.71,"lon":-74.01,"elev":27,"hi":[38.1,40.5,48.1,59.4,69.1,78.2,83.6,81.7,74.9,63.5,52.6,43],"lo":[23.5,24,31,41.5,51.9,61.8,67.9,66.7,60.2,49,38.3,29.7],"p":[3.23,3.07,4.21,3.61,3.39,3.97,4.1,4.1,3.87,3.87,3.05,3.99],"wet":[6.6,6.3,8.1,7.3,8.3,8,7.8,8.1,6.8,6.1,6.1,7.4],"sn":[6.62,7.69,6.13,0.67,0,0,0,0,0,0.11,0.64,4.16]},"Miami, FL":{"lat":25.76,"lon":-80.19,"elev":1,"hi":[73.8,75.2,77.2,80.2,82.8,84.6,86.2,86.3,84.8,82.2,78.5,75.6],"lo":[64.1,65.6,67.2,70.7,74,77.2,78.5,78.8,77.7,75.1,70.5,67],"p":[2.04,1.63,1.94,2.23,3.88,6.22,4.42,5.61,6.21,4.66,2.19,1.62],"wet":[4.1,3.8,3.8,5.3,7.8,14.4,13.4,15.7,16.1,10.1,4.9,3.7],"sn":[0,0,0,0,0,0,0,0,0,0,0,0]}}, def={"meta":{"lat":45.52,"lon":-122.68,"elev_m":31,"period":"1991-2020","n":10958},"monthly":{"hi":[46.7,50,54.1,58.7,65.7,71.2,80.6,81.4,75.2,62.4,51.7,45.7],"lo":[34.8,35.1,37.8,41.3,47.3,51.9,56.9,57.7,53.6,46.1,39.2,34.7],"mean":[40.2,41.8,45.6,49.8,56.4,61.4,68.4,68.9,63.7,53.6,45,39.7],"hiP10":[39.4,42.3,46.5,50.5,55.2,61,69.6,71,64.3,54.1,44.8,39.5],"hiP90":[53.4,57.6,63.7,69.1,78.6,83.1,91.6,91.7,87.2,72.5,58.9,51.7],"loP10":[27.1,28,31.4,35.3,41,46.6,52.1,53,48.1,39.7,31.1,27.9],"loP90":[42.8,42.4,44.2,47,53.6,57.5,62.1,62.5,58.9,52.7,47.3,42.7],"recHi":[65.2,69,74.1,86.1,92.3,101.6,105.6,104.1,99.4,89.6,68.9,59.2],"recHiY":[2015,1992,1994,1998,1992,1992,2006,2017,2017,1991,2010,1993],"recLo":[14.9,4.3,22.3,29.4,33.5,41.2,46.4,47.6,40.7,27.4,19.8,17],"recLoY":[1996,1996,2019,2012,1999,2001,1999,2000,2019,2006,1993,2013],"precip":[6.6,5.12,5.74,4.51,2.85,1.79,0.5,0.6,1.78,4.25,6.94,7.61],"pMin":[2.72,1.31,1.25,2.08,0.19,0.51,0,0,0.03,0.47,1.94,2.56],"pMed":[6.92,4.58,5.34,4.53,2.84,1.51,0.39,0.36,1.36,3.48,7.03,7.4],"pMax":[14.31,12.85,11.6,7.8,5.11,4.58,2.28,3.09,6.22,12.87,14.72,16.19],"wet":[14.6,11.8,14,12.9,8.2,5.2,1.7,1.8,4.4,9.5,14.2,14.9],"snow":[2.06,2.11,0.77,0.08,0,0,0,0,0,0,0.44,2.43],"snowDays":[2.63,2.33,1.37,0.2,0,0,0,0,0,0,0.6,3.07],"wind":[9,8.6,8.6,8.2,7.5,7.6,7.7,7.4,7.3,7.7,8.8,9.1],"gust":[21.4,20.9,21.7,20.8,18.7,18.8,18.8,18.3,18,19,21.3,22.1],"sun":[4.7,6.2,7.6,9.5,10.6,11.8,13.2,12.3,10.6,7.5,5.2,4.2],"day":[9.2,10.4,12,13.6,14.9,15.6,15.3,14,12.5,10.9,9.5,8.8],"hum":[86,82,81,78,73,69,61,61,67,79,86,86],"cloud":[77,72,74,70,65,58,36,35,43,60,74,78],"bands":[[0.6,3,17.7,9.5,0.2,0,0,0,0],[0.2,1.3,12.5,13,1.3,0,0,0,0],[0,0.2,8.6,16.9,4.9,0.4,0,0,0],[0,0,2.2,17,8,2.5,0.2,0,0],[0,0,0.1,8.7,13.1,6.7,2.3,0.1,0],[0,0,0,2.2,12.8,10.2,3.9,1,0],[0,0,0,0,3.5,10.9,12.2,4,0.4],[0,0,0,0,2.3,11.8,11.9,4.7,0.3],[0,0,0,0.8,8.8,11.1,7.5,1.8,0],[0,0,0.6,12.7,12.5,4.6,0.6,0,0],[0,0.6,10.9,16.2,2.2,0,0,0,0],[0.5,3,21.7,5.8,0,0,0,0,0]]},"daily":{"hi":[45,45.2,45.3,45.2,45.2,45.3,45.3,45.3,45.4,45.6,45.9,46.1,46.3,46.5,46.7,46.8,47,47.1,47.3,47.4,47.6,47.8,48,48.2,48.2,48.3,48.4,48.5,48.7,48.8,48.9,49,49,49.2,49.3,49.5,49.5,49.6,49.8,49.9,50,50,49.9,49.9,49.9,50,50.1,50.1,50.1,50.1,50.1,50.2,50.3,50.3,50.4,50.5,50.6,50.8,51,51.2,51.4,51.6,52,52.3,52.7,52.9,53.1,53.2,53.3,53.5,53.8,54.1,54.3,54.4,54.5,54.6,54.6,54.6,54.6,54.6,54.7,55,55.2,55.4,55.5,55.5,55.5,55.5,55.7,55.9,56.1,56.3,56.5,56.8,56.9,56.8,56.7,56.8,57,57.2,57.4,57.7,58.1,58.3,58.4,58.5,58.7,59.1,59.3,59.5,59.9,60.2,60.6,60.8,61.1,61.3,61.5,61.7,62,62.3,62.5,62.8,63,63.2,63.4,63.8,64.2,64.4,64.6,64.8,65.1,65.2,65.3,65.3,65.4,65.7,66,66.1,66.3,66.5,66.5,66.5,66.8,67.1,67.3,67.5,67.9,68.2,68.6,68.7,68.7,68.8,68.8,68.8,68.9,69.1,69.1,69,68.8,68.9,68.9,68.8,68.9,69.2,69.5,69.8,70,70.4,70.9,71.4,71.9,72.4,73,73.6,74.1,74.6,75,75.2,75.4,75.8,76.1,76.6,77,77.2,77.5,77.7,77.9,78.2,78.4,78.7,78.9,79.2,79.6,79.8,80.2,80.4,80.6,80.8,81.1,81.4,81.7,82.1,82.3,82.5,82.7,82.9,83,83.2,83.5,83.5,83.4,83.2,83.1,83.1,83,82.8,82.7,82.8,82.8,82.7,82.7,82.7,82.6,82.5,82.3,82.2,82.2,82.1,81.9,81.7,81.5,81.4,81.1,80.7,80.4,80,79.7,79.5,79.3,79.1,79,78.8,78.8,78.6,78.4,78.3,78.2,78.1,78,78,77.8,77.4,76.9,76.4,76,75.6,75.4,75.1,74.9,74.7,74.2,73.8,73.5,73.3,73,72.7,72.4,72.1,71.7,71.4,71.2,70.8,70.2,69.7,69.1,68.5,67.9,67.1,66.4,65.9,65.3,64.9,64.6,64.4,64,63.6,63.2,62.9,62.6,62.2,61.9,61.6,61.3,60.9,60.4,60,59.5,59,58.6,58.1,57.7,57.2,56.8,56.4,56,55.6,55.3,54.9,54.6,54.4,54.2,54.1,53.8,53.6,53.2,52.9,52.7,52.3,51.9,51.5,51.3,50.9,50.7,50.4,50,49.6,49.3,49,48.6,48.4,48.1,47.8,47.6,47.3,47.1,46.9,46.7,46.5,46.4,46.3,46.1,45.9,45.9,45.8,45.7,45.7,45.7,45.7,45.7,45.8,45.7,45.6,45.5,45.5,45.4,45.4,45.5,45.3,45.2,45.2,45.2,45.1,45,45,45],"lo":[34,34.1,34.2,34.1,34.1,34.2,34.3,34.4,34.3,34.4,34.6,34.7,34.8,34.9,34.8,34.9,34.9,34.9,34.9,34.8,34.9,34.9,35.1,35.3,35.3,35.2,35.1,35.2,35.2,35.3,35.3,35.3,35.2,35.2,35.2,35.2,35.1,35.1,35.1,35.2,35.3,35.4,35.4,35.4,35.4,35.3,35.2,35.3,35.2,35.2,35.1,35.2,35.2,35.2,35.3,35.2,35.2,35.2,35.3,35.3,35.5,35.8,36.1,36.4,36.7,37,37.2,37.3,37.4,37.5,37.7,37.8,38,38.2,38.3,38.3,38.3,38.3,38.2,38.2,38.2,38.3,38.4,38.5,38.6,38.6,38.6,38.7,38.9,39.1,39.2,39.4,39.7,39.9,40,40.1,40.1,40.1,40.2,40.4,40.6,40.8,41,41.1,41.2,41.3,41.4,41.5,41.6,41.8,42,42.3,42.5,42.6,42.8,43.1,43.2,43.4,43.6,43.8,44,44.2,44.4,44.6,44.8,44.9,45.2,45.5,45.8,46,46.3,46.5,46.7,46.8,47.1,47.3,47.6,47.8,48.1,48.3,48.6,48.7,48.9,49,49.2,49.3,49.5,49.7,49.9,50.1,50.2,50.3,50.4,50.5,50.5,50.6,50.7,50.7,50.7,50.7,50.7,50.8,50.8,50.9,51.1,51.2,51.3,51.5,51.7,52,52.2,52.5,52.8,53.1,53.4,53.6,53.9,54.1,54.3,54.4,54.6,54.8,55,55.2,55.3,55.5,55.6,55.7,55.8,56,56.2,56.3,56.4,56.6,56.8,57.1,57.2,57.3,57.4,57.5,57.6,57.7,57.8,58,58,58,58.1,58.1,58.2,58.3,58.3,58.2,58.2,58.2,58.3,58.3,58.2,58.2,58.2,58.3,58.4,58.4,58.4,58.4,58.3,58.2,58.1,58,57.9,57.8,57.6,57.5,57.4,57.4,57.2,57,56.8,56.6,56.4,56.3,56.2,56.1,56,55.9,55.9,55.8,55.6,55.5,55.3,55.1,55,54.9,54.9,54.7,54.5,54.3,54.1,53.8,53.6,53.4,53.2,53,52.8,52.6,52.4,52.2,52,51.7,51.4,51.1,50.9,50.7,50.6,50.4,50.2,49.8,49.4,49.1,48.8,48.4,48,47.7,47.5,47.3,47.1,47,46.7,46.4,46.1,45.9,45.6,45.4,45.1,44.9,44.7,44.5,44.2,43.9,43.6,43.3,43,42.8,42.6,42.4,42.2,42,41.8,41.6,41.4,41.4,41.2,41.1,40.9,40.9,40.7,40.5,40.2,39.8,39.4,39.2,39,38.8,38.6,38.3,37.9,37.6,37.4,37.2,36.9,36.7,36.4,36.1,36,35.9,35.7,35.5,35.4,35.4,35.4,35.4,35.3,35.2,35,35,35,35,35.1,35.1,35,34.9,34.8,34.6,34.5,34.4,34.4,34.4,34.3,34.2,34.2,34,33.9,33.7,33.7,33.7,33.9],"recHi":[54,57,59,54,54,55,55,55,53,57,56,55,59,56,54,54,58,60,62,59,59,58,59,61,65,60,60,59,61,58,60,55,59,59,63,59,59,61,64,63,59,60,62,63,64,65,63,63,59,59,61,59,60,66,64,69,67,67,66,63,62,61,61,63,67,66,72,65,71,71,68,68,70,65,67,65,68,70,69,69,67,67,68,69,70,74,71,73,74,71,78,75,72,72,72,74,82,78,73,76,78,76,68,72,75,75,79,84,82,76,76,76,77,76,78,82,78,78,83,86,82,81,85,86,90,88,82,76,81,84,87,79,85,85,92,90,86,83,79,75,81,88,85,92,79,84,87,87,84,86,88,83,85,88,99,97,95,91,90,86,82,93,96,91,85,87,83,87,84,87,92,97,102,99,96,97,99,99,98,94,94,96,97,94,95,94,91,92,93,92,102,100,95,102,99,99,97,99,96,99,100,106,100,102,100,96,99,101,104,105,102,99,99,104,104,100,95,91,96,97,97,97,101,96,101,101,99,100,99,100,101,99,92,93,96,100,94,96,94,97,94,91,97,92,98,95,99,95,94,95,91,90,96,95,88,92,91,92,90,92,92,90,93,90,93,88,91,94,87,93,87,86,88,82,86,82,83,83,82,79,82,84,90,86,76,79,89,82,77,74,72,74,72,77,74,73,69,68,73,69,67,70,66,61,64,65,69,67,65,64,66,66,63,66,63,62,65,66,62,61,63,57,58,67,60,65,59,57,57,60,56,56,56,60,55,55,55,55,53,54,56,58,57,59,58,57,53,54,52,54,57,58,55,55,58,54,54,58,53,52,54,52,53,56,55],"recLo":[25,24,24,20,19,16,19,20,16,17,18,16,15,15,18,19,23,25,27,26,26,23,24,23,24,24,28,26,18,16,15,7,4,5,25,21,18,16,24,26,25,26,24,15,24,25,25,24,25,23,24,26,24,20,26,21,21,23,24,29,27,23,23,22,27,27,26,28,29,26,28,28,31,31,31,31,28,27,30,32,30,29,31,28,30,32,33,31,29,31,31,33,30,33,30,29,31,32,30,33,33,35,30,31,35,35,35,34,33,32,33,36,34,34,35,35,37,35,36,36,37,35,36,37,35,37,34,34,34,37,38,37,38,39,39,40,37,37,36,43,42,41,39,43,43,40,43,40,42,43,44,42,44,43,42,44,42,43,42,44,44,43,41,45,43,45,44,44,46,44,46,48,47,46,47,44,47,46,49,49,49,49,48,47,47,46,48,49,47,49,50,50,50,51,51,49,53,51,51,50,51,53,50,51,50,51,53,54,52,53,53,52,52,53,51,53,54,52,51,52,52,51,52,51,51,51,52,52,52,49,51,49,51,51,51,51,50,48,52,48,49,51,48,48,47,50,48,47,49,46,48,49,50,47,48,48,45,48,47,47,47,47,45,43,42,43,43,45,46,43,43,42,41,36,40,41,42,42,41,43,39,36,36,39,39,40,36,35,36,39,38,37,37,39,38,38,39,35,31,33,32,30,28,27,30,29,29,32,33,33,31,32,27,30,27,31,30,24,23,23,26,28,26,27,25,23,21,20,26,24,29,27,24,26,29,26,25,21,22,25,17,17,18,18,20,25,26,24,23,20,22,25,24,18,18,18,17,24,26,25,29,29,23,19,23],"hiP10":[39,39.1,39.1,38.9,38.5,38.3,38.1,38.2,38.1,38.3,38.6,38.8,39.2,39.8,40,40,40,40.3,40.5,40.6,41,41.3,41.4,41.8,42,42.1,42.1,42,41.9,42,41.8,41.6,41.5,41.4,41.8,42,42.1,42.3,42.4,42.4,42.5,42.5,42.7,42.7,42.7,43.1,43.3,43.3,43.5,43.4,43.2,43.1,43.2,43.2,43.3,43.4,43.6,43.6,43.7,43.8,44,44.3,44.6,44.8,45,45.3,45.5,45.5,45.7,45.9,46.2,46.5,46.7,46.9,47.1,47.3,47.4,47.6,47.7,47.9,48.1,48.3,48.5,48.5,48.7,48.6,48.5,48.6,48.7,48.9,48.9,49,49.1,49.4,49.5,49.5,49.6,49.7,49.9,50,50.3,50.5,50.8,51,51.2,51.3,51.4,51.5,51.7,51.9,52,52.3,52.6,52.8,53,53.1,53.1,53.3,53.5,53.6,53.8,53.9,54.2,54.3,54.3,54.5,54.5,54.7,54.9,55.1,55.4,55.8,56,56,56,56.2,56.4,56.5,56.7,57,57.2,57.3,57.6,57.8,58.1,58.1,58.2,58.5,58.6,58.9,59.1,59.3,59.5,59.4,59.4,59.7,59.8,59.9,59.8,59.9,59.9,60,60.1,60.4,60.7,61,61.2,61.4,61.8,62.3,62.4,63,63.5,63.9,64.2,64.6,65,65.2,65.7,66.2,66.5,66.9,67.4,67.8,68.1,68.3,68.7,69,69.2,69.4,69.5,69.9,70.5,70.4,70.7,70.7,70.8,71,71.2,71.5,72.1,72.3,72.2,72.3,72.9,73.5,73.5,73.6,73.8,74,74.1,74.1,74.1,74,73.9,73.7,73.6,73.8,73.7,73.3,73.1,73.1,72.9,72.9,72.5,72.4,72.4,72.1,72.1,71.8,71.6,71.4,71.4,71.3,71.1,70.7,70.5,70.3,69.9,69.7,69.4,69.1,69.2,68.8,68.7,68.4,68.3,68,67.8,67.6,67.1,66.6,66.2,65.8,65.6,65.3,65.1,64.8,64.5,64.5,64.2,63.8,63.6,63.2,62.8,62.6,62.6,62.3,61.9,61.6,61.4,61,60.7,60.4,59.7,59.3,58.9,58.2,57.8,57.7,57.6,57.3,57.1,57,56.8,56.5,56.1,55.8,55.4,55.2,54.9,54.6,54.3,54,53.6,53.1,52.7,52.5,52.2,51.7,51.3,50.9,50.7,50.4,50.1,49.7,49.4,49.1,48.8,48.5,48.4,48.3,47.9,47.6,47.3,47.1,46.8,46.3,45.9,45.5,45.3,45.2,44.9,44.8,44.4,44.1,43.6,43.2,42.9,42.8,42.6,42.1,42,41.7,41.3,40.9,40.7,40.6,40.4,40.3,40.1,40.1,40.1,39.9,39.7,39.5,39.6,39.7,39.8,40,40.1,40,40,39.9,40,40.1,40.2,40,39.9,39.7,39.7,39.6,39.3,39,38.9],"hiP90":[51.4,51.5,51.7,51.7,51.8,52,52,52.2,52.3,52.4,52.7,52.8,52.8,52.9,52.9,53,53.3,53.5,53.7,53.8,54,54,54.2,54.4,54.3,54.3,54.7,55,55.2,55.6,55.8,56,56.1,56.1,56.3,56.4,56.3,56.4,56.6,56.7,56.9,56.7,56.5,56.5,56.5,56.6,56.6,56.6,56.8,56.9,57.1,57.5,57.7,57.6,57.8,57.7,58.1,58.7,59.2,59.7,60,60.2,60.7,61.2,61.6,62,62.1,62.3,62.5,62.7,63.1,63.4,63.1,62.9,62.6,62.8,62.6,62.2,62.1,62,62.2,62.8,63,63.2,63.5,63.8,63.5,63.6,64.2,64.9,65.2,65.6,65.9,66.1,66.2,65.9,65.6,65.6,65.9,66.2,66.4,67,67.7,67.6,67.5,67.7,68.1,68.9,69.2,69.5,69.8,70.2,70.5,71.1,71.3,71.4,71.6,71.8,72.4,72.8,73.1,73.5,73.8,74.5,75.1,75.9,76.5,77,77.1,77.7,78.2,78.2,78.1,77.8,78.1,78.6,78.7,78.4,78.2,78.3,78.3,78.3,78.4,78.7,78.5,78.5,79.1,79.9,80.1,80.2,79.9,79.8,79.8,79.9,79.8,79.6,79.3,79.2,78.8,78.9,79,78.9,78.8,79.1,79.1,79.3,79.8,80.6,81.2,81.8,82.4,83.2,83.8,84.6,85.2,85.7,86,86.5,86.7,86.9,87.4,87.8,87.8,87.8,87.8,88.2,88.2,88.4,88.3,88.4,88.6,89,89,89.4,89.9,90.4,91,91.3,91.4,91.9,92,92.4,92.9,93.5,93.5,93.5,93.4,93.5,93.7,93.6,93.2,92.7,92.6,92.9,92.8,92.5,92.5,92.3,92.1,92.5,92.7,92.9,92.9,92.6,92.6,92.6,92.6,92.4,92,91.9,91.9,91.8,91.6,91.2,90.5,89.9,89.8,89.6,89.6,89.5,89.4,89.4,89.6,89.5,89.3,89.4,89.4,89.1,89.1,89.2,89.2,88.8,88.6,88.2,87.7,87.3,87,86.6,86.4,86.1,85.4,85,84.7,84.4,84.1,83.7,83.2,82.6,82,81.9,81.4,80.8,80.2,79.6,79,78.3,77.4,76.5,75.8,75.2,74.6,74,73.6,73,72.4,72.1,71.7,71.4,70.8,70.3,69.9,69.5,69.3,68.6,67.9,67.2,66.5,65.9,65.5,64.9,64.5,63.9,63.3,62.8,62.4,61.8,61.4,61,60.7,60.5,60.3,60.1,59.8,59.5,59.1,58.7,58.1,57.7,57.3,56.9,56.6,56.3,56,55.7,55.3,55,54.8,54.6,54.2,53.9,53.5,53.3,53.1,52.7,52.6,52.6,52.4,52.3,52.3,52.2,52,51.7,51.7,51.8,51.8,51.9,52.1,52.2,52.4,52.4,52,51.7,51.5,51.4,51.3,51.3,51.5,51.3,51.2,51.3,51.3,51.1,51,51.1,51.2],"loP10":[27,27.1,27,26.8,26.4,26.2,26.2,26.1,26.1,26.3,26.5,26.7,27.2,27.4,27.4,27.5,27.5,27.6,27.6,27.8,28,28,28.2,28.5,28.6,28.4,28.4,28.3,28.4,28.4,28.3,28.3,28.2,28.4,28.5,28.6,28.8,28.8,28.8,28.8,28.9,29,29.1,29,29,29,29,29,28.8,28.6,28.3,28.2,28.3,28.4,28.4,28.5,28.5,28.5,28.6,28.7,28.9,29.1,29.2,29.6,29.9,30.4,30.6,30.7,30.8,30.9,31.1,31.4,31.7,31.9,32,32.2,32.2,32.5,32.5,32.7,32.9,33.1,33.3,33.2,33.3,33.4,33.5,33.5,33.6,33.8,34,34.2,34.4,34.6,34.6,34.6,34.5,34.6,34.9,35.1,35.2,35.3,35.6,35.8,36,36.1,36.4,36.5,36.6,36.9,37,37.3,37.6,37.6,37.7,38.1,38.3,38.4,38.5,38.5,38.8,38.8,38.9,39.2,39.3,39.5,39.9,40,40.2,40.5,40.7,41.1,41.3,41.6,42,42.1,42.5,42.9,43.1,43.4,43.7,43.7,44,44.2,44.4,44.5,44.7,44.8,45.1,45.2,45.4,45.5,45.6,45.6,45.8,45.9,46.1,46.2,46.2,46.3,46.3,46.3,46.4,46.6,46.8,46.9,47.1,47.2,47.5,47.7,47.9,48.1,48.3,48.7,49,49.3,49.6,49.7,49.7,49.9,50.1,50.5,50.7,50.9,51.1,51.3,51.4,51.6,51.7,51.9,52,52.1,52.3,52.5,52.6,52.8,52.8,52.9,52.9,53,53.1,53.2,53.3,53.4,53.3,53.3,53.4,53.5,53.6,53.8,53.7,53.8,53.7,53.8,53.9,53.8,53.8,53.7,53.7,53.8,53.7,53.7,53.7,53.7,53.5,53.5,53.4,53.4,53.3,53.1,52.9,52.9,52.9,53,52.9,52.8,52.6,52.4,52.2,52,51.7,51.5,51.3,51.2,51,51,50.7,50.5,50.1,50,49.9,49.8,49.7,49.5,49.4,49.3,49.1,48.8,48.5,48.3,48.1,48,47.6,47.4,47.2,47.1,46.8,46.5,46.2,45.9,45.7,45.5,45.4,45.3,45.1,44.7,44.4,44.2,44,43.4,42.9,42.5,42.3,42.2,42,41.9,41.7,41.3,41,40.8,40.5,40.3,39.9,39.7,39.4,39,38.4,38.1,37.6,36.9,36.4,36.1,35.9,35.5,35.1,34.9,34.7,34.5,34.2,34,33.9,34.1,34,33.9,33.9,33.7,33.4,33.1,32.6,32.2,32,31.7,31.4,31.3,31,30.6,30.3,30,29.9,29.7,29.4,29,28.9,29,28.9,28.7,28.6,28.4,28.4,28.2,28.3,28.4,28.1,27.8,27.8,27.8,28,28,28,28,28,27.9,27.9,28,28.2,28.2,28.1,28.1,28,27.9,27.7,27.6,27.3,26.9,26.9],"loP90":[41.6,41.6,41.7,41.8,42,42,42.1,42,41.9,42,42.2,42.3,42.4,42.3,42.1,42.1,42.3,42.3,42.3,42.2,42.2,42.3,42.5,42.7,42.6,42.6,42.7,42.8,43,43.2,43.1,43.1,43,42.9,42.9,42.9,42.7,42.4,42.3,42.4,42.4,42.3,42.3,42.3,42.1,42,41.8,41.8,41.7,41.7,41.7,41.7,42,41.9,42,41.9,41.9,41.9,41.9,41.9,42.3,42.6,42.8,43.1,43.3,43.5,43.8,43.5,43.6,43.7,44,44,44.1,44.1,44.2,44.1,44,43.8,43.7,43.8,43.7,43.6,43.9,44,44.2,44,44,44.2,44.4,44.6,44.8,45,45.3,45.4,45.5,45.6,45.6,45.6,45.6,45.6,45.9,46.2,46.2,46.3,46.3,46.4,46.4,46.6,46.9,47,47.3,47.6,47.7,48,48.3,48.6,48.9,49.2,49.6,50,50.2,50.4,50.6,50.8,51,51.1,51.3,51.7,51.9,51.9,52,52.1,52.1,52.1,52.3,52.6,52.8,52.9,53.1,53.2,53.5,53.7,53.9,54,54.2,54.4,54.5,54.9,55.1,55.2,55.2,55.4,55.4,55.5,55.6,55.6,55.6,55.6,55.7,55.6,55.7,55.8,55.7,55.8,56,56.1,56.2,56.3,56.5,56.8,57.1,57.4,57.7,57.9,58.2,58.4,58.6,58.9,59,59,59.2,59.4,59.7,59.9,59.9,60.1,60.2,60.2,60.3,60.5,60.6,60.8,60.9,61.2,61.4,61.8,62,62.1,62.2,62.3,62.3,62.3,62.6,62.9,63,63,63,63.1,63,62.9,62.8,62.6,62.5,62.5,62.6,62.6,62.6,62.6,62.5,62.6,62.8,63,63,63.1,63.1,63,62.9,62.9,62.7,62.5,62.3,62.2,62,61.8,61.5,61.2,60.7,60.5,60.2,60.2,60.1,60.1,60,60.1,60,60,59.8,59.8,59.6,59.5,59.6,59.5,59.5,59.4,59.2,59,58.9,58.7,58.5,58.5,58.4,58.1,58,58,57.7,57.4,57.3,57.1,56.8,56.6,56.5,56.2,56,55.9,55.4,55.1,54.8,54.4,53.9,53.7,53.4,53.2,53.1,53,52.9,52.7,52.5,52.1,51.7,51.4,51.1,50.9,50.7,50.6,50.5,50.6,50.4,50.1,49.8,49.6,49.7,49.6,49.5,49.5,49.5,49.4,49.3,49.1,49,48.9,48.6,48.5,48.3,48.1,47.7,47.2,47,46.6,46.3,46,45.9,45.8,45.5,45.2,44.7,44.3,44,43.8,43.6,43.3,43.1,42.8,42.6,42.4,42.3,42.1,42,42.1,42.3,42.4,42.4,42.1,42.2,42.2,42.3,42.5,42.8,42.7,42.7,42.6,42.3,42.1,41.9,41.6,41.5,41.6,41.8,41.8,41.8,41.7,41.5,41.1,41,41.1,41.4]},"yearly":{"year":[1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020],"t":[53,55,51.6,53.1,53.9,52.3,53.1,53.2,52.1,51.9,52,52.7,53.9,53.9,52.8,53.2,52.2,51.5,52.3,52.4,50.9,52.6,52.4,54.3,55.7,54.3,52.2,53.8,52.1,53.6],"p":[40.6,37.5,38.5,48.5,56.5,71.7,50.4,56.5,57.8,36.3,42.4,43.8,46.2,41.4,45.3,54.9,43.2,41.5,41.9,57.1,46,62.2,33.7,51.5,45.1,55.6,64.5,45.1,42.1,51.2],"d90":[14,19,7,9,9,22,6,13,5,3,3,9,17,12,13,18,6,12,19,11,7,12,6,16,22,14,20,27,7,11],"d100":[0,2,0,1,0,1,0,0,0,0,0,1,0,1,0,2,2,2,3,0,0,1,0,0,1,1,2,0,0,0],"fr":[43,26,66,50,19,36,43,20,40,53,43,38,24,27,44,37,47,42,66,21,51,31,51,40,23,37,51,25,45,27],"wet":[96,96,103,115,126,134,119,129,129,102,114,102,127,107,111,113,110,112,93,133,106,127,91,118,90,129,130,106,111,121],"sn":[2.2,11.2,10.4,7.7,7.8,12.9,1.3,6.6,5.6,3.4,5.8,6.2,6.9,9.6,2.1,3.9,8,27,12.3,3.9,3.4,22.9,1.1,12,2,9.4,10.8,7.5,9.8,3.3],"mxh":[98.7,101.6,96.6,100.3,97.1,101.6,92.6,99.7,91.7,93.5,97,100.6,98.2,100.8,95.8,105.6,101.9,101.1,105.1,96.9,96,100.1,93.2,99.7,102.1,100.5,104.1,98.9,95.6,99.1],"mnl":[21.4,23.2,15.5,21.1,14.9,4.3,24.1,17.4,25.9,25.7,27,26,19.4,18.4,24,22.6,20.9,19.5,17.9,19.9,20.8,24.7,17,15.9,24.2,24.1,15.2,19.6,22.3,26]},"gridT":[[37.9,47.5,43.3,48.8,53.1,58.1,68.6,69.3,67.1,55.3,46.2,40.5],[42.1,46.5,51.2,53.1,62.5,66.7,69.4,70.2,61.4,54.9,45,37.3],[33.8,38.1,47.4,49.3,59,60,61.9,67.8,65.4,56.6,40,39.5],[42.3,39.4,47.5,51.7,57.9,60.3,69.7,67.8,66.1,53.1,40.2,39.9],[42.9,45.1,45.9,48.7,58.5,61.5,68.5,65.2,66.2,52.5,49.8,41.2],[39.7,40.1,46.4,51,52.6,60.3,70.6,69.4,59.7,52.3,44.1,40.6],[40,41.7,45.1,48.9,60,60.5,66.9,70.4,63.5,51.7,48.5,39.4],[42.1,43.9,46.3,50.3,53.5,60.5,69.6,69.2,65.1,52.1,46.2,39.4],[40.5,40.7,43,48.3,51.9,58.7,65.6,67.8,64.1,53.9,48.3,41.6],[38.3,42.6,44.1,52.1,54.6,62.2,66.3,66.2,61.9,53.3,40.9,39.8],[40.4,40.2,45.7,47.2,57,58.5,64.9,67.7,63.2,52.6,46.5,39.7],[39.8,41.9,42.5,49.4,53.7,62.7,69,68.2,63.5,52.7,46.5,42.3],[44.4,41.8,47,48.1,55.2,64.7,70.5,69.1,65.2,56.3,42.6,41.1],[38.3,42.5,48.7,52.9,57.1,63.4,70.8,69.7,60.7,54.3,44.8,42.5],[41.1,41,48.5,50.1,57.7,59,68,69.9,61.4,53.6,42.7,39.3],[43,40.3,43.7,50.5,57.4,63.1,70.2,68.1,64.3,52.9,45,39.1],[36.5,42.4,47.8,49.1,56.2,60.9,69.6,66.7,62.1,51.1,43.9,39.5],[36.8,42.5,42.2,45.4,55.6,58.9,67.8,67.9,64,52.5,48,36.6],[38.5,39.5,41.9,48.8,56.6,63,72.3,68.6,64,52.6,45.4,36],[44.2,44.9,45.9,48,52.2,57.7,66.2,67.4,61.7,53.8,44.1,41.6],[41,38.4,43.9,45.1,51.1,58.7,63.9,67.8,66.6,53.3,43.1,37.3],[39.9,41.7,42.3,50.2,54.6,58.4,66.5,70,65.7,54.8,46.9,40.2],[37.5,42.1,46,50.2,57.4,62.3,69,69.7,62.8,51.2,43.9,35.7],[40.5,39.3,47.1,50.6,57.5,61,70.9,71.6,66.6,58.4,44.1,43.1],[43.3,47.7,50.4,50.1,58.6,68.6,72.9,71.1,61.9,58.4,43.3,41.2],[40.9,46.1,47.3,55.2,59.7,64.1,66.6,70.7,61.7,53.5,49.4,36.1],[32.1,39.5,46,48.5,56.8,62,68.2,71.8,64.6,52.6,45.6,37.7],[43.1,40.4,44,50.1,58.9,62.8,71.9,70.2,61.5,54.5,45.7,41.1],[40.9,35.6,42.6,50.8,58.3,63.2,67.5,69.5,61,48.9,44.5,40.9],[43.8,41.8,43.2,50.9,57.1,60.7,67.9,68.9,67.1,54.1,44.8,41.9]],"gridP":[[3.47,4.07,6.4,5.69,3.66,1.95,0.58,0.75,0.09,2.41,7.11,4.37],[5.1,4.31,1.25,6.33,0.19,1.09,0.9,0.31,1.92,3,5.93,7.16],[4.2,1.31,6.12,7.8,4.57,1.76,2.28,0.37,0.03,1.29,2.19,6.56],[4.55,6.94,4.87,3.03,1.93,1.78,0.08,0.28,0.87,8.94,7.95,7.31],[8.28,4.72,6.07,5.39,1.68,2.41,1.2,1.01,2.34,4.24,11.39,7.73],[8.52,11.89,3.18,6.68,4.91,1.35,0.71,0.27,3.15,5.6,9.3,16.19],[7.31,2.74,9.19,5.3,2.98,1.39,0.74,0.99,3.8,5.81,5.93,4.22],[10.1,6.09,5.33,2.6,4.63,2.04,0.33,0.05,0.59,3.31,11.56,9.93],[9.42,12.85,5.83,2.37,3.78,1.51,0.39,0.93,0.05,2.98,10.18,7.5],[7.34,6.11,3.9,2.56,2.76,2.03,0.1,0.2,1.4,3.1,2.8,3.99],[2.72,2.03,4.33,4.47,1.89,3.04,0.43,1.5,0.7,3.2,9.28,8.82],[9.43,4.28,5.81,4.59,1.93,1.56,0.24,0.13,1.13,0.47,3.78,10.44],[8.41,2.98,7.9,6.01,1.95,0.51,0.05,0.28,1.31,3.07,5.18,8.57],[8,4.99,3.28,2.46,2.19,1.5,0.06,3.09,1.71,5.65,3.11,5.36],[2.87,1.55,5.63,4.87,4.63,2.25,0.73,0.14,2.13,4.27,6.78,9.47],[14.31,2.93,4.83,3.34,2.73,1.43,0.13,0.05,1.04,1.59,14.72,7.85],[4.09,6.25,4.67,3.64,1.24,1.32,0.73,0.89,1.76,3.65,4.28,10.69],[7.17,3.59,5.09,4.35,1.24,1.45,0.09,1.49,0.4,2.47,6.95,7.19],[6.67,3.21,5.35,2.87,3.64,0.63,0.15,0.36,1.78,4.22,8.05,5.03],[6.44,4.44,6.07,5.07,5.11,4.07,0.39,0.37,3.17,4.68,7.75,9.56],[5.63,4.8,8.35,6.96,4.32,1.03,0.94,0.03,1.02,2.85,7.11,2.97],[7.89,4.85,11.6,4.45,2.93,3.01,0.4,0,0.07,8.02,8.6,10.41],[3.51,2.78,3.14,3.57,4.15,1.51,0,1.04,6.22,1.4,3.84,2.56],[3.44,7.21,8.8,5.91,3.58,1.31,0.79,0.28,1.26,6.55,4.77,7.57],[3.17,5.24,4.96,2.69,0.53,0.59,0.24,1.03,0.98,4.11,6.3,15.26],[8,5.08,8.27,2.3,0.98,1.61,0.67,0.22,1.07,12.87,8.96,5.56],[5.26,12.09,10.83,6.2,4.2,2.19,0.03,0.23,3.36,5.52,9.83,4.75],[7.58,3.98,4.24,6.21,0.67,1.43,0.06,0.43,1.6,6.54,4.88,7.49],[3.97,7.26,2.08,5.59,2.7,1.39,1.31,0.86,4.96,3.02,1.94,7],[11.3,3.16,4.77,2.08,3.95,4.58,0.23,0.43,3.39,2.53,7.88,6.87]],"extremes":{"hot":[[105.6,"2006-07-21"],[105.1,"2009-07-29"],[104.1,"2017-08-02"],[103.9,"2017-08-03"],[103.5,"2009-07-28"]],"cold":[[4.3,"1996-02-02"],[5.3,"1996-02-03"],[6.6,"1996-02-01"],[14.9,"1995-02-13"],[14.9,"1996-01-31"]],"wet":[[3,"1994-10-31"],[2.78,"1996-02-07"],[2.44,"1997-11-19"],[2.41,"1999-11-25"],[2.41,"2016-10-13"]],"gust":[[69.59,"2006-12-14"],[67.98,"2017-04-07"],[64.87,"1995-12-12"],[61.76,"1999-03-03"],[60.4,"1999-03-02"]],"snow":[[5.68,"2008-12-20"],[5.15,"2004-01-06"],[4.96,"2009-01-02"],[4.44,"1993-02-19"],[4.44,"1995-02-12"]]},"ytd":{"end":"2026-11-15","hi":[41.7,52.2,50.9,50.4,46.2,45.4,43.5,44.6,50.3,45.5,52.2,51.1,47.4,47,54.5,44.7,42.9,43,43.3,41.1,40.6,38.7,40.8,42.7,43.1,44.1,42.8,50.7,48.9,51.2,58.8,55.7,57.3,57.9,59.2,54.3,54.4,51.7,49.8,53.1,52.7,55.7,52.8,48,47.1,50.4,42.3,43.8,40.9,43.5,46.8,44.1,48.3,47.9,44.7,48.9,51.5,53.2,52.7,58.1,59.5,56.3,51.9,50.1,49.5,61.3,53.5,47.7,45.1,50.7,51.7,54.3,51.7,47.6,67.9,60.4,65.1,62.8,59.7,56.3,56.6,52.3,57.8,55.5,53.9,63.1,60.6,50.1,56.9,54.9,50.1,54.5,58.5,68.5,76.4,75.1,60.3,65.6,73.5,70.7,62.9,54.5,55.9,48.9,49,54.2,55.9,69.5,72.3,66.4,55.2,53.8,56.7,65.2,65.8,66.3,57.9,58.4,69.1,77.6,72.3,73.9,89.7,75,68.1,69.2,69.3,68.7,76.3,70.2,79.5,82,64.3,62.4,56.4,56.7,62.1,69.5,67.7,68.3,82.6,81.4,73.8,79.3,61.9,64.8,75,82.1,65.7,66.8,70.8,84.3,89.1,71.1,72,64.9,60.8,64.8,59.5,63.5,67.1,74.8,77.9,89.2,92.8,96.5,79.7,78.3,84.3,87.6,75.8,79.3,90.3,93.3,90.2,69.6,70.8,65.3,68,65.2,65.9,68.2,72.4,78.6,77.5,80.9,89.1,82.4,79.4,81.9,82.7,79.6,77.9,85.8,88.4,87.6,68.1,76.7,78.8,84,89.1,100.3,97.6,78.5,86.6,73.2,79.1,83.2,78.8,80.2,80.7,88.5,76.1,72.5,85.1,92.2,94,93,89.6,88.6,82.9,79.3,83.9,78.1,82.4,79.3,71.9,78.1,81.5,83.9,84.4,90.3,80.2,76.8,76.6,93.5,88.4,81.4,76.9,76.1,72.3,71.8,85.9,70.7,64.1,64.1,66,68.9,64.5,69.4,78.4,83.8,77.8,69.4,65.9,64.2,68,67.2,79.7,84.8,70.6,73.2,77.5,70.4,72.9,69.6,72.9,62.4,64.3,70.3,69.4,69.3,70.1,76.6,75.1,77.8,78.9,73.1,73.4,75.4,74.4,62.4,57.9,61.4,61.5,62.8,68.9,73.3,78.1,63.9,63.5,62.9,71,71,64,57.8,56.6,51.5,55.1,56.7,54.9,55.6,54.6,54.8,48.5,57.7,56.7,54.5,57.6,58.5,60.5,58.2,55.5,58.9,64,58.8,52,58.2,54.6],"lo":[37.2,41.7,42,42.3,35.4,34.6,36,32.7,37,33.1,38.1,37,36,36.8,39.8,39.6,34.3,32.9,32.4,31.5,30.4,29.6,31.7,28.9,23.3,28.2,35.4,35.4,43.5,42.1,41.6,42.1,40.1,39.6,44.7,41.6,38.7,40.2,43.4,38.3,36.5,36.1,33.8,39.5,37.1,40.5,34.6,29.4,29.4,32.8,31.7,37.2,41.5,40.7,41,32.4,33.3,33.7,35.7,38.5,43.6,42.6,45.2,42.4,43.4,46.2,40.5,34.4,30.5,43.1,43,47.8,38.3,38.2,44,50.2,45.9,52.1,49.1,40.6,36,38.1,46.4,37.1,32.1,37.5,43.5,39.3,36.4,42.3,40.7,37.3,37.1,39.5,48,46,43.9,40.3,41,49.4,50.3,49.1,44.3,43,37.8,32.9,39.4,42,47.4,51.1,50.4,46.2,45,41.2,39.5,39,44.5,47.1,42.1,44,47.9,50.4,54.6,54,53.7,53.4,51.4,49.7,49.8,51.9,50.6,57.5,51.1,50.6,45.4,44.8,42.3,47.3,48.7,51.1,50.3,54.9,53.3,48.7,49.3,49.2,51.4,56.3,50.4,47.4,46.1,50,56.1,56.3,52.4,52.5,48.8,46.8,51.9,52.4,51.3,50.2,53.1,55.3,60,63.3,57.7,54.2,54.4,60.8,57,54.3,57.7,60.9,64.7,54.8,54.9,54.1,54.4,53.6,53.7,51.3,52.8,58.2,56.9,54.2,57.4,57.2,58.8,53.5,56.6,58.8,55.9,55.5,61,60.3,57.5,58,57.5,58.3,61.2,66.6,67.9,65.3,62,58.5,60.5,59,60.9,58.1,57.2,59,59.6,56.7,54.4,59.6,59.7,63.7,63.5,60.5,58.3,57,58.7,62.9,59.2,61.1,59.6,59,57.9,58.5,57.3,61.5,65.4,57.9,62.2,58,64,59,60.9,58.3,56.6,53.6,55.1,58.3,54.4,52.9,51.2,52.8,55,53.8,53.6,54.8,55.9,50.9,53,50.7,54.9,54.5,54,54.7,55.4,54.1,55,56.9,56.8,52.4,50.4,50.3,47.6,49.1,46.7,53.1,56.8,51.1,53.8,54.7,54.1,56.6,55.1,53.5,53.6,50.1,45.4,43.8,39.7,40.5,50,50.8,56.4,50.5,44.2,48.5,47,47,46.4,41.3,40.2,44.1,47.8,47.9,44.4,41.3,40.4,38.6,36.4,41.5,43.3,39.1,45.5,45.4,50.3,49,44.2,49.6,48.5,49.7,49.3,47.1,43.8],"p":[0.41,0.16,0.67,0.37,0,0.96,0.29,0.01,0,0,0.01,0,0,0,0,0,0,0,0,0,0,0.01,0,0,0,0.09,0.11,0.3,0.33,0.29,0,0.49,0.07,0,0,0,0,0.52,0.94,0.23,0,0,0,0.26,0.14,0.06,0.12,0.57,0.43,0.12,0.05,0.2,0.74,1.08,0.42,0,0,0,0,0,0,0.09,0.65,0.08,0.24,0.02,0.02,0.07,0.4,1.27,1.32,0.65,0.31,0.06,0.01,0.01,0,0.01,0.09,0,0,0,0.35,0.12,0,0,0,0.05,0,0.02,0.49,0.06,0,0,0,0,0,0,0,0.17,0.52,0.2,0.07,0.3,0.87,0.02,0,0,0,0.1,0.49,0.35,0,0,0,0,0,0.02,0,0,0.04,0.07,0,0,0,0,0,0,0,0,0,0.01,0.3,0.06,0.17,0.26,0.01,0,0,0,0,0,0,0,0.22,0.09,0,0,0.06,0,0,0,0,0.02,0,0.02,0.8,0.01,0.55,0.15,0.03,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.29,0.14,0.59,0.14,0.02,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.27,0,0,0,0,0,0.07,0.01,0,0,0,0,0,0,0,0,0.04,0,0,0,0,0,0,0,0,0,0,0.02,0,0,0.03,0,0,0,0,0,0,0,0.02,0,0,0,0,0,0.04,0,0,0.02,0.54,0.54,0.26,0.05,0.37,0,0,0,0,0,0.09,0.07,0.03,0.04,0,0,0,0,0,0,0.01,0,0.38,0.21,0,0,0,0,0.02,0,0,0,0,0,0,0,0,0.05,0.02,0,0,0,0,0,0,0.07,0,0,0,0,0,0,0,0.68,1.37,0.31,0.74,0.32,0.37,0,0,0,0.06,0.1,0.01,0.24,0.24,0.07,0.59,0.43,0,0,0.41,0.53,0.5],"year":2026}};
+  var colors=['#2f6fb5','#d9822b','#3f9a6c','#8a5cb8'];
+  var store={portland:{status:'loading'},cities:{status:'loading'}}, draws={};
+  function run(n){ Array.prototype.forEach.call(document.querySelectorAll('[data-draw="'+n+'"]'),function(el){ try{draws[n](el);}catch(e){console.error(n,e);} }); }
+  window.dash={colors:colors,placeKey:'',data:function(id){return store[id]||{status:'error'};},
+    draw:function(n,fn){ if(fn){draws[n]=fn; if(store.portland.status==='ok')run(n);} else if(draws[n])run(n); }};
+  var ENDS=['ytdend'];
+  function monthly2city(d,key,lat,lon,elev){var m=d.monthly;return{lat:lat,lon:lon,elev:elev,hi:m.hi,lo:m.lo,p:m.precip,wet:m.wet,sn:m.snow};}
+  function setText(cls,t){Array.prototype.forEach.call(document.querySelectorAll('.'+cls),function(e){e.textContent=t;});}
+  function fmtD(s){var p=s.split('-').map(Number);return ['January','February','March','April','May','June','July','August','September','October','November','December'][p[1]-1]+' '+p[2];}
+  function setPlace(key,data,lat,lon,elev){
+    var cs=JSON.parse(JSON.stringify(cityBase)); cs[key]=monthly2city(data,key,lat,lon,elev);
+    store.portland={status:'ok',data:data}; store.cities={status:'ok',data:{cities:cs}}; dash.placeKey=key;
+    setText('pname',key); setText('coords',Math.abs(lat).toFixed(2)+'°'+(lat>=0?'N':'S')+', '+Math.abs(lon).toFixed(2)+'°'+(lon>=0?'E':'W'));
+    setText('yr',data.ytd.year); setText('ytdend',fmtD(data.ytd.end)+', '+data.ytd.year);
+    var last=data.ytd.end.split('-').map(Number);
+    document.getElementById('ytdnote').textContent='* '+fmtD(data.ytd.end)+' is the last day with data, so the final month is partial and is compared with a pro-rated normal. Recent days come from the same dataset and can be revised.';
+    document.getElementById('gwrap').style.display=(key==='Portland, OR')?'':'none';
+    document.title=key+' weather averages';
+    Object.keys(draws).forEach(run);
+  }
+  var status=document.getElementById('status'), results=document.getElementById('results');
+  function lag(){return new Date(Date.now()-6*864e5).toISOString().slice(0,10);}
+  async function load(key,lat,lon,elev){
+    status.textContent='Loading 35 years of daily data for '+key+'. This takes 10 to 40 seconds.'; results.replaceChildren();
+    try{
+      var r=await fetch(WXAGG.buildUrl(lat,lon,lag())); var j=await r.json();
+      if(!j.daily){throw new Error(j.reason||'No data returned');}
+      var e=j.elevation!=null?j.elevation:elev;
+      setPlace(key,WXAGG.agg(j,lat,lon,e),lat,lon,e); status.textContent='Loaded. Grid cell elevation '+Math.round(e)+' m.';
+    }catch(err){status.textContent='Could not load: '+err.message+'. Open-Meteo allows limited requests per hour; wait and retry.';}
+  }
+  async function search(){
+    var s=document.getElementById('q').value.trim(); if(!s)return; status.textContent='Searching...'; results.replaceChildren();
+    try{
+      var r=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=8&language=en&name='+encodeURIComponent(s)); var j=await r.json();
+      if(!j.results||!j.results.length){status.textContent='No places found.';return;}
+      status.textContent='Pick a place:';
+      j.results.forEach(function(p){var key=p.name+(p.admin1?', '+p.admin1:'')+(p.country_code&&p.country_code!=='US'?', '+p.country_code:'');var b=document.createElement('button');b.type='button';b.textContent=key+(p.country?' ('+p.country+')':'')+(p.population?', pop. '+p.population.toLocaleString():'');b.onclick=function(){load(key,p.latitude,p.longitude,p.elevation);};results.appendChild(b);});
+    }catch(err){status.textContent='Search failed: '+err.message;}
+  }
+  document.getElementById('go').onclick=search;
+  document.getElementById('q').addEventListener('keydown',function(e){if(e.key==='Enter')search();});
+  window.__startWX=function(){ setPlace('Portland, OR',def,def.meta.lat,def.meta.lon,def.meta.elev_m); status.textContent='Showing Portland. Search above for any other place.'; };
+})();
+</script><script>(function () {
+'use strict';
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MD = [31,28,31,30,31,30,31,31,30,31,30,31], CUM = [0];
+MD.forEach(function (n, i) { CUM.push(CUM[i] + n); });
+var f0 = d3.format('.0f'), f1 = d3.format('.1f'), f2 = d3.format('.2f');
+var state = { sel: new Date().getMonth(), recs: true, ytd: true, metric: 'hi' };
+var GOOGLE = {
+  hi: [47,50,56,61,68,73,80,80,75,63,52,46], lo: [37,38,41,44,49,53,58,58,55,48,42,37],
+  p: [5.9,4.6,4.6,3.3,2.5,1.6,0.5,0.8,1.7,3.5,6.1,6.7], days: [15,12,14,12,9,6,2,2,5,9,15,15]
+};
+var BANDS = ['Below 32','32 to 39','40 to 49','50 to 59','60 to 69','70 to 79','80 to 89','90 to 99','100 and up'];
+
+function isSel(n) { return n === dash.placeKey; }
+  function YR() { var d = dash.data('portland'); return d.status === 'ok' && d.data.ytd && d.data.ytd.year || ''; }
+  function load(id) { var g = dash.data(id); if (g.status !== 'ok') return null; var d = g.data; if (Array.isArray(d)) d = d[0]; return d || null; }
+function P() { var d = load('portland'); return d && d.monthly ? d : null; }
+function CT() { var d = load('cities'); return d && d.cities ? d.cities : null; }
+function none(el) { var g = dash.data('portland'); el.textContent = g.status === 'error' ? 'Data did not load.' : ''; }
+function mean(a) { return d3.sum(a) / a.length; }
+function sgn(v, fmt) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmt(Math.abs(v)); }
+function dateOf(i) { var m = 0; while (m < 11 && i >= CUM[m + 1]) m++; return MON[m] + ' ' + (i - CUM[m] + 1); }
+function fmtDate(s) { var p = s.split('-').map(Number); return MON[p[1] - 1] + ' ' + p[2] + ', ' + p[0]; }
+function monthOfIdx(i) { var m = 0; while (m < 11 && i >= CUM[m + 1]) m++; return m; }
+
+function frame(el, h, aria) {
+  el.replaceChildren();
+  var w = Math.max(240, Math.floor(el.clientWidth || 600));
+  var svg = d3.select(el).append('svg').attr('viewBox', '0 0 ' + w + ' ' + h).attr('width', '100%')
+    .attr('role', 'img').attr('aria-label', aria).style('display', 'block');
+  var tip = d3.select(el).append('div').attr('class', 'wx-tip').style('display', 'none');
+  return { w: w, h: h, svg: svg, tip: tip };
+}
+function showTip(f, x, y, lines) {
+  f.tip.style('display', 'block').text(lines.join('\n'));
+  var tw = f.tip.node().offsetWidth || 140;
+  f.tip.style('left', Math.max(0, Math.min(f.w - tw, x + 14)) + 'px').style('top', Math.max(0, y - 8) + 'px');
+}
+function hideTip(f) { f.tip.style('display', 'none'); }
+function legend(el, items) {
+  var d = d3.select(el).insert('div', ':first-child').attr('class', 'wx-leg');
+  items.forEach(function (it) {
+    var s = d.append('span');
+    s.append('i').attr('class', it.line ? 'ln' : 'bx').style('background', it.c).style('opacity', it.o == null ? 1 : it.o);
+    s.append('em').text(it.t);
+  });
+}
+function hover(f, x0, step, n, cb, leave) {
+  f.svg.append('rect').attr('width', f.w).attr('height', f.h).style('fill', 'transparent')
+    .on('pointermove pointerdown', function (ev) {
+      var px = d3.pointer(ev, f.svg.node())[0];
+      cb(Math.max(0, Math.min(n - 1, Math.floor((px - x0) / step))), ev);
+    })
+    .on('pointerleave', function () { if (leave) leave(); });
+}
+function txt(name, fn) {
+  dash.draw(name, function (el) { var d = P(); el.textContent = d ? fn(d) : ''; });
+}
+
+/* ---------- headline sentence and readouts ---------- */
+txt('l-lo', function (d) { return f1(d3.min(d.monthly.hi)) + '°F'; });
+txt('l-lom', function (d) { return FULL[d.monthly.hi.indexOf(d3.min(d.monthly.hi))]; });
+txt('l-hi', function (d) { return f1(d3.max(d.monthly.hi)) + '°F'; });
+txt('l-him', function (d) { return FULL[d.monthly.hi.indexOf(d3.max(d.monthly.hi))]; });
+txt('l-rain', function (d) { return f1(d3.sum(d.monthly.precip)); });
+txt('l-share', function (d) {
+  var p = d.monthly.precip, w = p[9] + p[10] + p[11] + p[0] + p[1] + p[2];
+  return f0(100 * w / d3.sum(p)) + '%';
+});
+txt('l-snow', function (d) { return f1(d3.sum(d.monthly.snow)); });
+txt('s-month', function (d) { return FULL[state.sel]; });
+txt('s-hi', function (d) { return f1(d.monthly.hi[state.sel]); });
+txt('s-lo', function (d) { return f1(d.monthly.lo[state.sel]); });
+txt('s-rain', function (d) { return f1(d.monthly.precip[state.sel]); });
+txt('s-days', function (d) { return f1(d.monthly.wet[state.sel]); });
+txt('s-snow', function (d) { return f1(d.monthly.snow[state.sel]); });
+var OV = ['ov-temp','ov-rain','ov-snow','s-month','s-hi','s-lo','s-rain','s-days','s-snow'];
+function pick(i) { if (i !== state.sel) { state.sel = i; OV.forEach(function (n) { dash.draw(n); }); } }
+
+/* ---------- overview: the three Google-style charts ---------- */
+dash.draw('ov-temp', function (el) {
+  var d = P(); if (!d) return none(el);
+  var m = d.monthly, f = frame(el, 250, 'Average daily high and low temperature in degrees Fahrenheit by month');
+  legend(el, [{ c: dash.colors[0], t: 'Highs', line: 1 }, { c: dash.colors[1], t: 'Lows', line: 1 }]);
+  var ml = 10, mr = 10, mt = 22, mb = 26, x = d3.scalePoint(d3.range(12), [ml, f.w - mr]).padding(0.5), step = x.step();
+  var y = d3.scaleLinear([d3.min(m.lo) - 9, d3.max(m.hi) + 7], [f.h - mb, mt]);
+  var ln = d3.line().x(function (v, i) { return x(i); }).y(function (v) { return y(v); });
+  f.svg.append('line').attr('x1', ml).attr('x2', f.w - mr).attr('y1', f.h - mb).attr('y2', f.h - mb).style('stroke', 'var(--cds-chart-axis)');
+  f.svg.append('line').attr('x1', x(state.sel)).attr('x2', x(state.sel)).attr('y1', mt - 8).attr('y2', f.h - mb)
+    .attr('stroke-dasharray', '2 3').style('stroke', 'var(--cds-chart-reference)');
+  [[m.hi, dash.colors[0], -9], [m.lo, dash.colors[1], 17]].forEach(function (s) {
+    f.svg.append('path').datum(s[0]).attr('d', ln).style('fill', 'none').style('stroke', s[1]).attr('stroke-width', 2.5).attr('stroke-linejoin', 'round');
+    f.svg.append('circle').attr('cx', x(state.sel)).attr('cy', y(s[0][state.sel])).attr('r', 5).style('fill', s[1]);
+    s[0].forEach(function (v, i) {
+      if (step >= 30 || i === state.sel)
+        f.svg.append('text').attr('class', 'wx-t').attr('x', x(i)).attr('y', y(v) + s[2]).attr('text-anchor', 'middle')
+          .style('font-weight', i === state.sel ? 700 : 400).style('fill', i === state.sel ? 'var(--color-fg)' : null).text(f0(v) + '°');
+    });
+  });
+  MON.forEach(function (n, i) {
+    f.svg.append('text').attr('class', 'wx-t').attr('x', x(i)).attr('y', f.h - 8).attr('text-anchor', 'middle')
+      .style('font-weight', i === state.sel ? 700 : 400).style('fill', i === state.sel ? 'var(--color-fg)' : null).text(n);
+  });
+  hover(f, x(0) - step / 2, step, 12, pick);
+});
+
+function bars(el, d, key, aria, h, extra, fmt) {
+  var m = d.monthly, vals = m[key], f = frame(el, h, aria);
+  var ml = 8, mr = 8, mt = 20, mb = extra ? 46 : 26, x = d3.scaleBand(d3.range(12), [ml, f.w - mr]).padding(0.28);
+  var y = d3.scaleLinear([0, d3.max(vals) * 1.18 || 1], [f.h - mb, mt]), st = x.step();
+  vals.forEach(function (v, i) {
+    f.svg.append('rect').attr('x', x(i)).attr('width', x.bandwidth()).attr('y', y(v)).attr('height', Math.max(1, f.h - mb - y(v)))
+      .attr('rx', 3).style('fill', dash.colors[0]).style('opacity', i === state.sel ? 1 : 0.5);
+    if (st >= 26 || i === state.sel)
+      f.svg.append('text').attr('class', 'wx-t').attr('x', x(i) + x.bandwidth() / 2).attr('y', y(v) - 5).attr('text-anchor', 'middle')
+        .style('font-weight', i === state.sel ? 700 : 400).style('fill', i === state.sel ? 'var(--color-fg)' : null).text(fmt(v));
+  });
+  MON.forEach(function (n, i) {
+    var cx = x(i) + x.bandwidth() / 2;
+    f.svg.append('text').attr('class', 'wx-t').attr('x', cx).attr('y', f.h - mb + 15).attr('text-anchor', 'middle')
+      .style('font-weight', i === state.sel ? 700 : 400).style('fill', i === state.sel ? 'var(--color-fg)' : null).text(n);
+    if (extra && (st >= 26 || i === state.sel))
+      f.svg.append('text').attr('class', 'wx-t').attr('x', cx).attr('y', f.h - 6).attr('text-anchor', 'middle')
+        .style('font-weight', i === state.sel ? 700 : 400).text(f0(m.wet[i]));
+  });
+  if (extra) f.svg.append('text').attr('class', 'wx-t').attr('x', ml).attr('y', f.h - 24).text('Rainy days (0.1 in or more)').style('font-size', '10px');
+  hover(f, x(0) - (st - x.bandwidth()) / 2, st, 12, pick);
+}
+dash.draw('ov-rain', function (el) { var d = P(); if (!d) return none(el); bars(el, d, 'precip', 'Average monthly rainfall in inches, with the average number of rainy days', 250, true, f1); });
+dash.draw('ov-snow', function (el) { var d = P(); if (!d) return none(el); bars(el, d, 'snow', 'Average monthly snowfall in inches', 190, false, f1); });
+
+/* ---------- daily normals ---------- */
+dash.draw('d-band', function (el) {
+  var d = P(); if (!d) return none(el);
+  var D = d.daily, Y = d.ytd, f = frame(el, 360, 'Normal daily high and low temperature for each day of the year, with percentile bands'), n = 365;
+  var ml = 36, mr = 10, mt = 10, mb = 24, x = d3.scaleLinear([0, 364], [ml, f.w - mr]);
+  var showY = state.ytd && Y, lo = state.recs ? Math.min(0, d3.min(D.recLo)) : d3.min(D.loP10) - 3, hi = state.recs ? d3.max(D.recHi) + 2 : d3.max(D.hiP90) + 3;
+  if (showY) { lo = Math.min(lo, d3.min(Y.lo)); hi = Math.max(hi, d3.max(Y.hi)); }
+  var y = d3.scaleLinear([lo, hi], [f.h - mb, mt]).nice(), idx = d3.range(n);
+  var items = [{ c: dash.colors[0], t: 'Normal high, 10th to 90th percentile', o: 0.45 }, { c: dash.colors[1], t: 'Normal low, 10th to 90th percentile', o: 0.45 }];
+  if (state.recs) items.push({ c: 'var(--cds-chart-muted)', t: 'Record high and low, 1991 to 2020', line: 1 });
+  if (showY) items.push({ c: 'var(--color-fg)', t: (YR() + ' daily high and low'), line: 1 });
+  legend(el, items);
+  var ax = f.svg.append('g').attr('class', 'wx-ax').attr('transform', 'translate(' + ml + ',0)')
+    .call(d3.axisLeft(y).ticks(6).tickFormat(function (v) { return v + '°'; }).tickSize(-(f.w - ml - mr)));
+  ax.select('.domain').remove(); ax.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  MON.forEach(function (nme, i) {
+    f.svg.append('text').attr('class', 'wx-t').attr('x', x((CUM[i] + CUM[i + 1]) / 2)).attr('y', f.h - 7).attr('text-anchor', 'middle').text(f.w < 420 && i % 2 ? '' : nme);
+  });
+  function area(a, b, c) {
+    f.svg.append('path').attr('d', d3.area().x(function (i) { return x(i); }).y0(function (i) { return y(a[i]); }).y1(function (i) { return y(b[i]); })(idx))
+      .style('fill', c).style('opacity', 0.22);
+  }
+  function line(a, c, w, o, dash_) {
+    var p = f.svg.append('path').attr('d', d3.line().x(function (i) { return x(i); }).y(function (i) { return y(a[i]); })(idx))
+      .style('fill', 'none').style('stroke', c).attr('stroke-width', w).style('opacity', o);
+    if (dash_) p.attr('stroke-dasharray', dash_);
+  }
+  area(D.hiP10, D.hiP90, dash.colors[0]); area(D.loP10, D.loP90, dash.colors[1]);
+  if (state.recs) { line(D.recHi, 'var(--cds-chart-muted)', 1, 0.9, '3 3'); line(D.recLo, 'var(--cds-chart-muted)', 1, 0.9, '3 3'); }
+  line(D.hi, dash.colors[0], 2.2, 1); line(D.lo, dash.colors[1], 2.2, 1);
+  if (showY) {
+    var yi = d3.range(Y.hi.length);
+    [Y.hi, Y.lo].forEach(function (a) {
+      f.svg.append('path').attr('d', d3.line().x(function (i) { return x(i); }).y(function (i) { return y(a[i]); })(yi))
+        .style('fill', 'none').style('stroke', 'var(--color-fg)').attr('stroke-width', 1.1).style('opacity', 0.8);
+    });
+  }
+  var cross = f.svg.append('line').attr('y1', mt).attr('y2', f.h - mb).style('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+  hover(f, ml, (f.w - ml - mr) / n, n, function (i, ev) {
+    var xx = x(i); cross.style('display', null).attr('x1', xx).attr('x2', xx);
+    var L = [dateOf(i), 'Normal high ' + f0(D.hi[i]) + '°F (' + f0(D.hiP10[i]) + ' to ' + f0(D.hiP90[i]) + ')', 'Normal low ' + f0(D.lo[i]) + '°F (' + f0(D.loP10[i]) + ' to ' + f0(D.loP90[i]) + ')'];
+    if (state.recs) L.push('Record high ' + D.recHi[i] + '°F, record low ' + D.recLo[i] + '°F');
+    if (showY && i < Y.hi.length) L.push((YR() + ': high ') + f0(Y.hi[i]) + '°F, low ' + f0(Y.lo[i]) + '°F, rain ' + f2(Y.p[i]) + ' in');
+    showTip(f, xx, mt + 30, L);
+  }, function () { cross.style('display', 'none'); hideTip(f); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('input[data-wx]'), function (inp) {
+  inp.addEventListener('change', function () { state[inp.getAttribute('data-wx')] = inp.checked; dash.draw('d-band'); });
+});
+
+/* ---------- precipitation detail ---------- */
+dash.draw('p-range', function (el) {
+  var d = P(); if (!d) return none(el);
+  var m = d.monthly, f = frame(el, 270, 'Monthly precipitation range over 30 years in inches: driest, median, average and wettest');
+  legend(el, [{ c: dash.colors[0], t: 'Driest to wettest month of 30', line: 1, o: 0.35 }, { c: 'var(--color-fg)', t: 'Median', line: 1 }, { c: dash.colors[0], t: 'Average' }]);
+  var ml = 34, mr = 10, mt = 12, mb = 24, x = d3.scalePoint(d3.range(12), [ml, f.w - mr]).padding(0.5), step = x.step();
+  var y = d3.scaleLinear([0, d3.max(m.pMax) * 1.05], [f.h - mb, mt]).nice();
+  var ax = f.svg.append('g').attr('class', 'wx-ax').attr('transform', 'translate(' + ml + ',0)').call(d3.axisLeft(y).ticks(5).tickFormat(function (v) { return v + ' in'; }).tickSize(-(f.w - ml - mr)));
+  ax.select('.domain').remove(); ax.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  MON.forEach(function (nme, i) {
+    var xx = x(i);
+    f.svg.append('line').attr('x1', xx).attr('x2', xx).attr('y1', y(m.pMin[i])).attr('y2', y(m.pMax[i])).style('stroke', dash.colors[0]).style('opacity', 0.35).attr('stroke-width', Math.min(14, step * 0.45)).attr('stroke-linecap', 'round');
+    f.svg.append('line').attr('x1', xx - 8).attr('x2', xx + 8).attr('y1', y(m.pMed[i])).attr('y2', y(m.pMed[i])).style('stroke', 'var(--color-fg)').attr('stroke-width', 2);
+    f.svg.append('circle').attr('cx', xx).attr('cy', y(m.precip[i])).attr('r', 3.5).style('fill', dash.colors[0]);
+    f.svg.append('text').attr('class', 'wx-t').attr('x', xx).attr('y', f.h - 7).attr('text-anchor', 'middle').text(nme);
+  });
+  hover(f, x(0) - step / 2, step, 12, function (i) {
+    showTip(f, x(i), 30, [FULL[i], 'Average ' + f2(m.precip[i]) + ' in, median ' + f2(m.pMed[i]) + ' in', 'Driest ' + f2(m.pMin[i]) + ' in, wettest ' + f2(m.pMax[i]) + ' in', 'Rainy days ' + f1(m.wet[i])]);
+  }, function () { hideTip(f); });
+});
+
+dash.draw('p-heat', function (el) {
+  var d = P(); if (!d) return none(el);
+  var G = d.gridP, yrs = d.yearly.year, f = frame(el, 30 * 11 + 40, 'Monthly precipitation in inches for each year from 1991 to 2020');
+  var ml = 34, mr = 6, mt = 18, cw = (f.w - ml - mr) / 12, rh = 11, mx = d3.max(G, function (r) { return d3.max(r); });
+  MON.forEach(function (nme, i) { f.svg.append('text').attr('class', 'wx-t').attr('x', ml + cw * i + cw / 2).attr('y', 12).attr('text-anchor', 'middle').text(f.w < 420 ? nme[0] : nme); });
+  G.forEach(function (row, r) {
+    if (yrs[r] % 5 === 0) f.svg.append('text').attr('class', 'wx-t').attr('x', ml - 5).attr('y', mt + r * rh + 9).attr('text-anchor', 'end').text(yrs[r]);
+    row.forEach(function (v, c) {
+      f.svg.append('rect').attr('x', ml + cw * c + 0.5).attr('y', mt + r * rh + 0.5).attr('width', cw - 1).attr('height', rh - 1).attr('rx', 1.5)
+        .style('fill', dash.colors[0]).style('fill-opacity', 0.05 + 0.95 * Math.sqrt(v / mx))
+        .on('pointermove pointerdown', function () { showTip(f, ml + cw * c + cw / 2, mt + r * rh, [MON[c] + ' ' + yrs[r], f2(v) + ' in']); })
+        .on('pointerleave', function () { hideTip(f); });
+    });
+  });
+});
+
+/* ---------- temperature bands, small multiples ---------- */
+dash.draw('bands', function (el) {
+  var d = P(); if (!d) return none(el);
+  var B = d.monthly.bands, f = frame(el, 270, 'Average number of days per month in each daily high temperature band in degrees Fahrenheit');
+  var cols = BANDS.map(function (b, i) { return d3.interpolateRdYlBu(1 - i / 8); });
+  legend(el, BANDS.map(function (b, i) { return { c: cols[i], t: b + '°F' }; }));
+  var ml = 28, mr = 6, mt = 8, mb = 24, x = d3.scaleBand(d3.range(12), [ml, f.w - mr]).padding(0.2), y = d3.scaleLinear([0, 31], [f.h - mb, mt]);
+  var ax = f.svg.append('g').attr('class', 'wx-ax').attr('transform', 'translate(' + ml + ',0)').call(d3.axisLeft(y).ticks(4).tickSize(-(f.w - ml - mr)));
+  ax.select('.domain').remove(); ax.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  B.forEach(function (row, m) {
+    var acc = 0;
+    row.forEach(function (v, b) {
+      if (v <= 0) return;
+      f.svg.append('rect').attr('x', x(m)).attr('width', x.bandwidth()).attr('y', y(acc + v)).attr('height', Math.max(0.5, y(acc) - y(acc + v))).style('fill', cols[b]);
+      acc += v;
+    });
+    f.svg.append('text').attr('class', 'wx-t').attr('x', x(m) + x.bandwidth() / 2).attr('y', f.h - 7).attr('text-anchor', 'middle').text(MON[m]);
+  });
+  hover(f, x(0) - (x.step() - x.bandwidth()) / 2, x.step(), 12, function (i) {
+    showTip(f, x(i), 30, [FULL[i] + ', days per month'].concat(B[i].map(function (v, b) { return v > 0 ? BANDS[b] + '°F: ' + f1(v) : null; }).filter(Boolean)));
+  }, function () { hideTip(f); });
+});
+
+function mini(host, sp) {
+  var w = Math.max(200, Math.floor(host.clientWidth || 300)), h = sp.h || 170, ml = sp.ml || 38, mr = 8, mt = 24, mb = 22;
+  host.style.position = 'relative';
+  var svg = d3.select(host).append('svg').attr('viewBox', '0 0 ' + w + ' ' + h).attr('width', '100%').attr('role', 'img').attr('aria-label', sp.title).style('display', 'block');
+  var tip = d3.select(host).append('div').attr('class', 'wx-tip').style('display', 'none');
+  var n = sp.x.length, x = d3.scaleBand(d3.range(n), [ml, w - mr]).padding(sp.bar ? 0.2 : 0.05), bw = x.bandwidth();
+  function cx(i) { return x(i) + bw / 2; }
+  var all = []; sp.series.forEach(function (s) { all = all.concat(s.vals); if (s.lo) all = all.concat(s.lo); });
+  if (sp.ref != null) all.push(sp.ref);
+  var mn = d3.min(all), mx = d3.max(all), pad = (mx - mn) * 0.1 || 1;
+  var dom = sp.y || [sp.base0 && mn >= 0 ? 0 : mn - pad, mx + pad];
+  var y = d3.scaleLinear(dom, [h - mb, mt]); if (!sp.y) y.nice(3);
+  var fmt = sp.fmt || f0;
+  svg.append('text').attr('x', 2).attr('y', 12).style('fill', 'var(--color-fg)').style('font-size', '12px').style('font-weight', 600).text(sp.title);
+  var ax = svg.append('g').attr('class', 'wx-ax').attr('transform', 'translate(' + ml + ',0)').call(d3.axisLeft(y).ticks(sp.ticks || 4).tickFormat(fmt).tickSize(-(w - ml - mr)));
+  ax.select('.domain').remove(); ax.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  sp.x.forEach(function (lab, i) {
+    if (i % (sp.every || 1) === 0) svg.append('text').attr('class', 'wx-t').attr('x', cx(i)).attr('y', h - 6).attr('text-anchor', 'middle').text(lab);
+  });
+  var yb = y(Math.max(y.domain()[0], 0));
+  if (sp.ref != null) svg.append('line').attr('x1', ml).attr('x2', w - mr).attr('y1', y(sp.ref)).attr('y2', y(sp.ref)).attr('stroke-dasharray', '3 3').style('stroke', 'var(--cds-chart-reference)');
+  else if (dom[0] < 0 && dom[1] > 0) svg.append('line').attr('x1', ml).attr('x2', w - mr).attr('y1', y(0)).attr('y2', y(0)).style('stroke', 'var(--cds-chart-reference)');
+  sp.series.forEach(function (s) {
+    if (s.type === 'bar') {
+      s.vals.forEach(function (v, i) {
+        var base = sp.ref != null ? y(sp.ref) : yb, yy = y(v);
+        svg.append('rect').attr('x', x(i)).attr('width', bw).attr('y', Math.min(yy, base)).attr('height', Math.max(1, Math.abs(base - yy)))
+          .attr('rx', 2).style('fill', (v < (sp.ref || 0) && s.neg) ? s.neg : s.c).style('opacity', s.o == null ? 0.9 : s.o);
+      });
+    } else if (s.type === 'band') {
+      svg.append('path').attr('d', d3.area().x(function (v, i) { return cx(i); }).y0(function (v, i) { return y(s.lo[i]); }).y1(function (v) { return y(v); })(s.vals)).style('fill', s.c).style('opacity', 0.22);
+    } else {
+      svg.append('path').attr('d', d3.line().x(function (v, i) { return cx(i); }).y(function (v) { return y(v); })(s.vals)).style('fill', 'none').style('stroke', s.c).attr('stroke-width', 2).attr('stroke-linejoin', 'round');
+      if (n <= 14) s.vals.forEach(function (v, i) { svg.append('circle').attr('cx', cx(i)).attr('cy', y(v)).attr('r', 2.5).style('fill', s.c); });
+    }
+  });
+  if (sp.trend) svg.append('line').attr('x1', cx(0)).attr('x2', cx(n - 1)).attr('y1', y(sp.trend[0])).attr('y2', y(sp.trend[1])).attr('stroke-dasharray', '5 4').attr('stroke-width', 1.5).style('stroke', 'var(--color-fg)');
+  var cross = svg.append('line').attr('y1', mt).attr('y2', h - mb).style('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+  svg.append('rect').attr('width', w).attr('height', h).style('fill', 'transparent')
+    .on('pointermove pointerdown', function (ev) {
+      var px = d3.pointer(ev, svg.node())[0], i = Math.max(0, Math.min(n - 1, Math.floor((px - ml) / ((w - ml - mr) / n))));
+      cross.style('display', null).attr('x1', cx(i)).attr('x2', cx(i));
+      var L = [sp.xfull ? sp.xfull[i] : sp.x[i]];
+      sp.series.forEach(function (s) { if (s.name) L.push(s.name + ': ' + (sp.tipFmt || fmt)(s.vals[i])); });
+      tip.style('display', 'block').text(L.join('\n'));
+      var tw = tip.node().offsetWidth || 120;
+      tip.style('left', Math.max(0, Math.min(w - tw, cx(i) + 12)) + 'px').style('top', (mt + 6) + 'px');
+    })
+    .on('pointerleave', function () { cross.style('display', 'none'); tip.style('display', 'none'); });
+}
+function grid(el, specs) {
+  el.replaceChildren();
+  specs.forEach(function (sp) { mini(d3.select(el).append('div').attr('class', 'wx-mini').node(), sp); });
+}
+dash.draw('sm', function (el) {
+  var d = P(); if (!d) return none(el);
+  var m = d.monthly, c0 = dash.colors[0], c1 = dash.colors[1], pc = function (v) { return f0(v) + '%'; };
+  grid(el, [
+    { title: 'Sunshine and daylight, hours per day', x: MON, xfull: FULL, bar: true, base0: true, fmt: f0, tipFmt: f1, every: 2,
+      series: [{ name: 'Daylight', vals: m.day, type: 'bar', c: 'var(--cds-chart-muted)', o: 0.55 }, { name: 'Sunshine', vals: m.sun, type: 'bar', c: c0 }] },
+    { title: 'Humidity and cloud cover, percent', x: MON, xfull: FULL, y: [0, 100], fmt: pc, every: 2,
+      series: [{ name: 'Relative humidity', vals: m.hum, type: 'line', c: c0 }, { name: 'Cloud cover', vals: m.cloud, type: 'line', c: c1 }] },
+    { title: 'Wind, miles per hour', x: MON, xfull: FULL, base0: true, fmt: f0, tipFmt: f1, every: 2,
+      series: [{ name: 'Average daily max gust', vals: m.gust, type: 'line', c: c1 }, { name: 'Average daily max wind', vals: m.wind, type: 'line', c: c0 }] },
+    { title: 'Daily high and low, 10th to 90th percentile', x: MON, xfull: FULL, fmt: function (v) { return f0(v) + '°'; }, every: 2,
+      series: [{ vals: m.hiP90, lo: m.hiP10, type: 'band', c: c0 }, { vals: m.loP90, lo: m.loP10, type: 'band', c: c1 },
+               { name: 'Average high', vals: m.hi, type: 'line', c: c0 }, { name: 'Average low', vals: m.lo, type: 'line', c: c1 }] }
+  ]);
+});
+
+/* ---------- trends ---------- */
+function trendFit(d) {
+  var x = d.yearly.year, y = d.yearly.t, xb = mean(x), yb = mean(y);
+  var sxx = d3.sum(x, function (v) { return (v - xb) * (v - xb); });
+  var b = d3.sum(x.map(function (v, i) { return (v - xb) * (y[i] - yb); })) / sxx, a = yb - b * xb;
+  var sse = d3.sum(x.map(function (v, i) { var r = y[i] - (a + b * v); return r * r; }));
+  return { a: a, b: b, se: Math.sqrt(sse / (x.length - 2) / sxx) };
+}
+txt('trend-val', function (d) {
+  var t = trendFit(d), lo = (t.b - 2 * t.se) * 10, hi = (t.b + 2 * t.se) * 10;
+  return (t.b >= 0 ? 'a rise of ' : 'a drop of ') + f2(Math.abs(t.b * 10)) + '°F per decade (approximate 95% range ' + sgn(lo, f2) + ' to ' + sgn(hi, f2) + '°F)';
+});
+dash.draw('an', function (el) {
+  var d = P(); if (!d) return none(el);
+  var Y = d.yearly, t = trendFit(d), c0 = dash.colors[0], c1 = dash.colors[1], yrs = Y.year.map(String);
+  var base = { x: yrs.map(function (s) { return "'" + s.slice(2); }), xfull: yrs, every: 5, bar: true, base0: true };
+  function sp(title, key, fmt, c) { return Object.assign({}, base, { title: title, fmt: fmt, series: [{ name: title.split(',')[0], vals: Y[key], type: 'bar', c: c }] }); }
+  grid(el, [
+    { title: 'Annual mean temperature, °F', x: base.x, xfull: yrs, every: 5, fmt: f0, tipFmt: f1, trend: [t.a + t.b * Y.year[0], t.a + t.b * Y.year[29]],
+      series: [{ name: 'Mean temperature', vals: Y.t, type: 'line', c: c0 }] },
+    sp('Days per year with a high of 90°F or more', 'd90', f0, c0),
+    sp('Days per year with a low of 32°F or less', 'fr', f0, c1),
+    sp('Annual precipitation, inches', 'p', f0, c0),
+    sp('Rainy days per year (0.1 in or more)', 'wet', f0, c1),
+    sp('Annual snowfall, inches', 'sn', f0, c0)
+  ]);
+});
+dash.draw('stripes', function (el) {
+  var d = P(); if (!d) return none(el);
+  var G = d.gridT, yrs = d.yearly.year, mm = d.monthly.mean, f = frame(el, 12 * 16 + 40, 'Monthly mean temperature minus the 1991 to 2020 average for that month, by year');
+  var ml = 30, mr = 6, mt = 4, cw = (f.w - ml - mr) / 30, rh = 16, mx = 0;
+  var A = G.map(function (row) { return row.map(function (v, m) { var a = v - mm[m]; mx = Math.max(mx, Math.abs(a)); return a; }); });
+  MON.forEach(function (nme, m) { f.svg.append('text').attr('class', 'wx-t').attr('x', ml - 4).attr('y', mt + m * rh + 12).attr('text-anchor', 'end').text(nme); });
+  A.forEach(function (row, yi) {
+    if (yrs[yi] % 5 === 0) f.svg.append('text').attr('class', 'wx-t').attr('x', ml + yi * cw + cw / 2).attr('y', mt + 12 * rh + 14).attr('text-anchor', 'middle').text(yrs[yi]);
+    row.forEach(function (a, m) {
+      f.svg.append('rect').attr('x', ml + yi * cw + 0.3).attr('y', mt + m * rh + 0.5).attr('width', cw - 0.6).attr('height', rh - 1)
+        .style('fill', a >= 0 ? '#d9534f' : '#3b7dd8').style('fill-opacity', 0.1 + 0.9 * Math.min(1, Math.abs(a) / (mx * 0.8)))
+        .on('pointermove pointerdown', function () { showTip(f, ml + yi * cw + cw / 2, mt + m * rh, [MON[m] + ' ' + yrs[yi], f1(G[yi][m]) + '°F mean', sgn(a, f1) + '°F vs average']); })
+        .on('pointerleave', function () { hideTip(f); });
+    });
+  });
+});
+
+/* ---------- records and extremes ---------- */
+dash.draw('rec-body', function (el) {
+  var d = P(); if (!d) return; var m = d.monthly;
+  var rows = d3.select(el).selectAll('tr').data(d3.range(12)).join('tr');
+  rows.selectAll('td').data(function (i) {
+    return [FULL[i], m.recHi[i] + '°F (' + m.recHiY[i] + ')', f1(m.hi[i]) + '°F', f1(m.lo[i]) + '°F', m.recLo[i] + '°F (' + m.recLoY[i] + ')'];
+  }).join('td').text(function (v) { return v; });
+});
+[['ex-hot', 'hot', function (v) { return f1(v) + '°F'; }], ['ex-cold', 'cold', function (v) { return f1(v) + '°F'; }],
+ ['ex-wet', 'wet', function (v) { return f2(v) + ' in'; }], ['ex-gust', 'gust', function (v) { return f0(v) + ' mph'; }],
+ ['ex-snow', 'snow', function (v) { return f1(v) + ' in'; }]].forEach(function (c) {
+  dash.draw(c[0], function (el) {
+    var d = P(); if (!d) return;
+    d3.select(el).selectAll('li').data(d.extremes[c[1]]).join('li').text(function (r) { return c[2](r[0]) + ', ' + fmtDate(r[1]); });
+  });
+});
+
+/* ---------- this year versus normal ---------- */
+function ytdStats(d) {
+  var Y = d.ytd, m = d.monthly, H = Array(12).fill(0), L = Array(12).fill(0), Pp = Array(12).fill(0), C = Array(12).fill(0);
+  Y.hi.forEach(function (v, i) { var k = monthOfIdx(i); C[k]++; H[k] += v; L[k] += Y.lo[i]; Pp[k] += Y.p[i]; });
+  var last = 11; while (last > 0 && !C[last]) last--;
+  var dep = [], pct = [], wsum = 0, wt = 0, ps = 0, pn = 0;
+  for (var k = 0; k <= last; k++) {
+    var dv = (H[k] + L[k]) / 2 / C[k] - (m.hi[k] + m.lo[k]) / 2, nrm = m.precip[k] * C[k] / MD[k];
+    dep.push(dv); pct.push(100 * Pp[k] / nrm); wsum += dv * C[k]; wt += C[k]; ps += Pp[k]; pn += nrm;
+  }
+  return { dep: dep, pct: pct, depAll: wsum / wt, pctAll: 100 * ps / pn, last: last, days: wt, partial: C[last] < MD[last] };
+}
+txt('y-lead', function (d) {
+  var s = ytdStats(d);
+  return 'Through ' + dateOf(d.ytd.hi.length - 1) + ', this year has run ' + f1(Math.abs(s.depAll)) + '°F ' + (s.depAll >= 0 ? 'warmer' : 'cooler') + ' than the 1991 to 2020 normal, with ' + f0(s.pctAll) + '% of normal precipitation.';
+});
+dash.draw('ytd', function (el) {
+  var d = P(); if (!d) return none(el);
+  var s = ytdStats(d), lab = MON.slice(0, s.last + 1).map(function (n, i) { return i === s.last && s.partial ? n + '*' : n; });
+  grid(el, [
+    { title: 'Monthly mean temperature minus normal, °F', x: lab, xfull: lab, bar: true, fmt: function (v) { return sgn(v, f0); }, tipFmt: function (v) { return sgn(v, f1) + '°F'; }, every: 1,
+      series: [{ name: (YR() + ' vs 1991 to 2020'), vals: s.dep, type: 'bar', c: '#d9534f', neg: '#3b7dd8' }] },
+    { title: 'Monthly precipitation, percent of normal', x: lab, xfull: lab, bar: true, base0: true, ref: 100, fmt: function (v) { return f0(v) + '%'; }, every: 1,
+      series: [{ name: String(YR()), vals: s.pct, type: 'bar', c: dash.colors[0] }] }
+  ]);
+});
+
+/* ---------- Google comparison ---------- */
+dash.draw('cmp-body', function (el) {
+  var d = P(); if (!d) return; var m = d.monthly;
+  var rows = d3.select(el).selectAll('tr').data(d3.range(12)).join('tr');
+  rows.selectAll('td').data(function (i) {
+    return [MON[i], GOOGLE.hi[i], f1(m.hi[i]), GOOGLE.lo[i], f1(m.lo[i]), GOOGLE.p[i], f1(m.precip[i]), GOOGLE.days[i], f0(m.wet[i])];
+  }).join('td').text(function (v) { return v; });
+});
+txt('cmp-sum', function (d) {
+  var m = d.monthly, dh = mean(m.hi.map(function (v, i) { return v - GOOGLE.hi[i]; })), dl = mean(m.lo.map(function (v, i) { return v - GOOGLE.lo[i]; }));
+  var pr = 100 * d3.sum(m.precip) / d3.sum(GOOGLE.p), dd = mean(m.wet.map(function (v, i) { return v - GOOGLE.days[i]; }));
+  return 'This page minus Google: highs ' + sgn(dh, f1) + '°F on average, lows ' + sgn(dl, f1) + '°F, annual precipitation ' + f0(pr) + '% of Google’s total, rainy days ' + sgn(dd, f1) + ' per month.';
+});
+
+/* ---------- city comparison ---------- */
+var UNIT = { hi: '°F', lo: '°F', p: ' in', wet: ' days', sn: ' in' };
+dash.draw('c-lines', function (el) {
+  var C = CT(); if (!C) { el.textContent = ''; return; }
+  var key = state.metric, names = Object.keys(C), fm = (key === 'hi' || key === 'lo') ? f0 : f1;
+  var f = frame(el, 330, 'Monthly average by city: ' + key), ml = 34, mr = 10, mt = 10, mb = 24;
+  var col = {}, k = 0; names.forEach(function (n) { col[n] = isSel(n) ? dash.colors[0] : d3.schemeTableau10[(k++ + 1) % 10]; });
+  var all = d3.merge(names.map(function (n) { return C[n][key]; }));
+  var x = d3.scalePoint(d3.range(12), [ml, f.w - mr]).padding(0.3), step = x.step();
+  var y = d3.scaleLinear([(key === 'hi' || key === 'lo') ? d3.min(all) - 5 : 0, d3.max(all) * 1.06], [f.h - mb, mt]).nice();
+  legend(el, names.map(function (n) { return { c: col[n], t: n, line: 1 }; }));
+  var ax = f.svg.append('g').attr('class', 'wx-ax').attr('transform', 'translate(' + ml + ',0)').call(d3.axisLeft(y).ticks(6).tickFormat(function (v) { return fm(v) + (UNIT[key].trim() === '°F' ? '°' : ''); }).tickSize(-(f.w - ml - mr)));
+  ax.select('.domain').remove(); ax.selectAll('.tick line').style('stroke', 'var(--cds-chart-grid)');
+  MON.forEach(function (n, i) { f.svg.append('text').attr('class', 'wx-t').attr('x', x(i)).attr('y', f.h - 7).attr('text-anchor', 'middle').text(f.w < 420 && i % 2 ? '' : n); });
+  names.slice().sort(function (a, b) { return (isSel(a)) - (isSel(b)); }).forEach(function (n) {
+    var port = isSel(n);
+    f.svg.append('path').attr('d', d3.line().x(function (v, i) { return x(i); }).y(function (v) { return y(v); })(C[n][key]))
+      .style('fill', 'none').style('stroke', col[n]).attr('stroke-width', port ? 3.2 : 1.6).style('opacity', port ? 1 : 0.85).attr('stroke-linejoin', 'round');
+  });
+  var cross = f.svg.append('line').attr('y1', mt).attr('y2', f.h - mb).style('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+  hover(f, x(0) - step / 2, step, 12, function (i) {
+    cross.style('display', null).attr('x1', x(i)).attr('x2', x(i));
+    var L = [FULL[i]].concat(names.slice().sort(function (a, b) { return C[b][key][i] - C[a][key][i]; }).map(function (n) { return n + ': ' + fm(C[n][key][i]) + UNIT[key]; }));
+    showTip(f, x(i), mt + 20, L);
+  }, function () { cross.style('display', 'none'); hideTip(f); });
+});
+Array.prototype.forEach.call(document.querySelectorAll('select[data-wx-metric]'), function (s) {
+  s.addEventListener('change', function () { state.metric = s.value; dash.draw('c-lines'); });
+});
+dash.draw('c-table', function (el) {
+  var C = CT(); if (!C) return;
+  var names = Object.keys(C).sort(), rows = d3.select(el).selectAll('tr').data(names).join('tr').classed('wx-me', function (n) { return isSel(n); });
+  rows.selectAll('td').data(function (n) {
+    var c = C[n]; return [n, f1(mean(c.hi)) + '°F', f1(mean(c.lo)) + '°F', f1(d3.sum(c.p)) + ' in', f0(d3.sum(c.wet)) + ' days', f1(d3.sum(c.sn)) + ' in'];
+  }).join('td').text(function (v) { return v; });
+});
+})();
+</script><script>window.__startWX();</script></body></html>
